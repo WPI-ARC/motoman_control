@@ -1,0 +1,8 @@
+<launch>
+
+  <include file="$(find motoman_sda10f_moveit_config)/launch/demo.launch"/>
+
+  <node name="move_group_listen" pkg="motoman_moveit" type="move_group_listen" respawn="false" output="screen">
+  </node>
+
+</launch>
