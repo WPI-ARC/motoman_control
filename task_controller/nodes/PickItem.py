@@ -16,7 +16,7 @@ class PICKITEM(smach.State):
     def execute(self, userdata):
         rospy.loginfo("Trying to pick '"+userdata.item+"'...")
         # TODO: Get real grasps
-        result = self.arm.pick(userdata.item, [userdata.pose])
-        print "Result: ", result
+        # result = self.arm.pick(userdata.item, [userdata.pose])
+        # print "Result: ", result
         userdata.output = userdata.input
         return 'Success'

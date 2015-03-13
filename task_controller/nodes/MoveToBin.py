@@ -37,6 +37,13 @@ class MOVETOBIN(smach.State):
 # Currently only returns bin A
 # TODO: Support all bins
 def bin_pose(bin, bin_x=1.32, bin_y=0, bin_z=0):
+    # Setting Configuration:
+    # 	A		B		C
+    # 	D		E		F
+    # 	G		H		I
+    # 	J		K		L
+    # 		   Base
+
     # Gripper dimension
     GripperLength = 0.2
 
@@ -64,18 +71,49 @@ def bin_pose(bin, bin_x=1.32, bin_y=0, bin_z=0):
 
     Entry_X_shiftvalue = bin_x - Bin_depth - Start_Gap - GripperLength
 
-    # Setting Configuration:
-
-    # 	1		2		3
-    # 	4		5		6
-    # 	7		8		9
-    # 	10		11		12
-    # 		   Base	
-
     pose = PoseStamped()
     pose.pose.position.x = Entry_X_shiftvalue
-    pose.pose.position.y = bin_y + Left_horizontal_ShiftValue
-    pose.pose.position.z = bin_z + TopLayer_vertical_shiftvalue
+
+    if bin == "A":
+        pose.pose.position.y = bin_y + Left_horizontal_ShiftValue
+        pose.pose.position.z = bin_z + TopLayer_vertical_shiftvalue
+    elif bin == "B":
+        pose.pose.position.y = bin_y
+        pose.pose.position.z = bin_z + TopLayer_vertical_shiftvalue
+    elif bin == "C":
+        pose.pose.position.y = bin_y - Right_horizontal_ShiftValue
+        pose.pose.position.z = bin_z + TopLayer_vertical_shiftvalue
+    elif bin == "D":
+        pose.pose.position.y = bin_y + Left_horizontal_ShiftValue
+        pose.pose.position.z = bin_z + ThirdLayer_vertical_shiftvalue
+    elif bin == "E":
+        pose.pose.position.y = bin_y
+        pose.pose.position.z = bin_z + ThirdLayer_vertical_shiftvalue
+    elif bin == "F":
+        pose.pose.position.y = bin_y - Right_horizontal_ShiftValue
+        pose.pose.position.z = bin_z + ThirdLayer_vertical_shiftvalue
+    elif bin == "G":
+        pose.pose.position.y = bin_y + Left_horizontal_ShiftValue
+        pose.pose.position.z = bin_z + SecndLayer_vertical_shiftvalue
+    elif bin == "H":
+        pose.pose.position.y = bin_y
+        pose.pose.position.z = bin_z + SecndLayer_vertical_shiftvalue
+    elif bin == "I":
+        pose.pose.position.y = bin_y - Right_horizontal_ShiftValue
+        pose.pose.position.z = bin_z + SecndLayer_vertical_shiftvalue
+    elif bin == "J":
+        pose.pose.position.y = bin_y + Left_horizontal_ShiftValue
+        pose.pose.position.z = bin_z + BottomLayer_vertical_shiftvalue
+    elif bin == "K":
+        pose.pose.position.y = bin_y
+        pose.pose.position.z = bin_z + BottomLayer_vertical_shiftvalue
+    elif bin == "L":
+        pose.pose.position.y = bin_y - Right_horizontal_ShiftValue
+        pose.pose.position.z = bin_z + BottomLayer_vertical_shiftvalue
+    else:
+        raise Exception("Bin `%s` not supported."%bin)
+        # TODO: Throw exception
+
     pose.pose.orientation.x = 0.5
     pose.pose.orientation.y = -0.5
     pose.pose.orientation.z = -0.5

@@ -85,7 +85,7 @@ class MotomanController:
         self.running = True
         self.safed = False
         self.sm.userdata.sm_input = "Testing"
-        self.sm.userdata.bin = "A"
+        self.sm.userdata.bin = "F"
         self.sm.userdata.item = "crayola"
         print "Starting..."
         print self.sm.userdata.sm_input
