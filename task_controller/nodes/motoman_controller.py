@@ -15,6 +15,7 @@ import ctypes
 import MoveToBin
 import ScanForItem
 import PickItem
+import PlaceItem
 import FinishTask
 import SafeMode
 import ErrorHandler
@@ -54,9 +55,16 @@ class MotomanController:
 
             smach.StateMachine.add(
                 'PickItem', PickItem.PICKITEM(self.robot),
+                transitions={'Success': 'PlaceItem', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
+                remapping={'input': 'sm_data', 'output': 'sm_data'}
+            )
+
+            smach.StateMachine.add(
+                'PlaceItem', PlaceItem.PLACEITEM(self.robot),
                 transitions={'Success': 'FinishTask', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
                 remapping={'input': 'sm_data', 'output': 'sm_data'}
             )
+
             smach.StateMachine.add(
                 'FinishTask', FinishTask.FINISHTASK(),
                 transitions={'Success': 'DONE', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
@@ -85,7 +93,7 @@ class MotomanController:
         self.running = True
         self.safed = False
         self.sm.userdata.sm_input = "Testing"
-        self.sm.userdata.bin = "F"
+        self.sm.userdata.bin = "A"
         self.sm.userdata.item = "crayola"
         print "Starting..."
         print self.sm.userdata.sm_input
