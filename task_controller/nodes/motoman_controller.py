@@ -12,10 +12,7 @@ import subprocess
 import threading
 import ctypes
 
-import MoveToBin
-import ScanForItem
-import PickItem
-import PlaceItem
+import PickAndPlaceItem
 import FinishTask
 import SafeMode
 import ErrorHandler
@@ -33,7 +30,8 @@ class MotomanController:
         
         self.sm = smach.StateMachine(
             outcomes=['DONE', 'FAILED', 'SAFE'],
-            input_keys=['sm_input', 'bin', 'item'],
+            # input_keys=['sm_input', 'bin', 'item'],
+            input_keys=['sm_input'],
             output_keys=['sm_output']
         )
         
@@ -42,25 +40,13 @@ class MotomanController:
             self.safemode = SafeMode.SAFEMODE()
 
             smach.StateMachine.add(
-                'MoveToBin', MoveToBin.MOVETOBIN(self.robot),
-                transitions={'Success': 'ScanForItem', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
+                'PickAndPlaceCrayola', PickAndPlaceItem.PICKANDPLACEITEM(self.robot, "Crayola", "A"),
+                transitions={'Success': 'PickAndPlaceSoap', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
                 remapping={'input': 'sm_input', 'output': 'sm_data'}
             )
 
             smach.StateMachine.add(
-                'ScanForItem', ScanForItem.SCANFORITEM(),
-                transitions={'Success': 'PickItem', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
-                remapping={'input': 'sm_data', 'output': 'sm_data'}
-            )
-
-            smach.StateMachine.add(
-                'PickItem', PickItem.PICKITEM(self.robot),
-                transitions={'Success': 'PlaceItem', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
-                remapping={'input': 'sm_data', 'output': 'sm_data'}
-            )
-
-            smach.StateMachine.add(
-                'PlaceItem', PlaceItem.PLACEITEM(self.robot),
+                'PickAndPlaceSoap', PickAndPlaceItem.PICKANDPLACEITEM(self.robot, "Soap", "G"),
                 transitions={'Success': 'FinishTask', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
                 remapping={'input': 'sm_data', 'output': 'sm_data'}
             )
@@ -79,8 +65,8 @@ class MotomanController:
 
             smach.StateMachine.add(
                 'ErrorHandler', ErrorHandler.ERRORHANDLER(),
-                transitions={'ReMove': 'MoveToBin', 'ReScan': 'ScanForItem', 'RePick': 'PickItem',
-                             'ReFinish': 'FinishTask', 'Failed': 'FAILED', 'Fatal': 'SafeMode'},
+                transitions={'ReMove': 'SafeMode', 'ReScan': 'SafeMode', 'RePick': 'SafeMode',
+                             'ReFinish': 'SafeMode', 'Failed': 'FAILED', 'Fatal': 'SafeMode'},
                 remapping={'input': 'sm_data', 'output': 'sm_output'}
             )
             
@@ -93,8 +79,8 @@ class MotomanController:
         self.running = True
         self.safed = False
         self.sm.userdata.sm_input = "Testing"
-        self.sm.userdata.bin = "A"
-        self.sm.userdata.item = "crayola"
+        # self.sm.userdata.bin = "A"
+        # self.sm.userdata.item = "crayola"
         print "Starting..."
         print self.sm.userdata.sm_input
         print "...starting"
