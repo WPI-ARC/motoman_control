@@ -41,6 +41,8 @@ int main(int argc, char** argv)
 
     ros::ServiceClient client = nh.serviceClient<grasp_logic::grasp>("grasp_logic");
     grasp_logic::grasp srv;
+    geometry_msgs::PoseStamped EE_pose;
+/*
 
     // Stamped Pose
     EE_pose.header.frame_id = "camera_frame";
@@ -56,7 +58,7 @@ int main(int argc, char** argv)
     Eigen::Quaterniond rotation(EE_pose.pose.orientation.w, EE_pose.pose.orientation.x, EE_pose.pose.orientation.y, EE_pose.pose.orientation.z);
     Eigen::Affine3d target_pose = translation * rotation;
 
-    srv.request.obj_pose = target_pose;
+    srv.request.obj_pose = EE_pose;
     srv.request.object = "Crayons";
 
     if (client.call(srv))
@@ -67,7 +69,7 @@ int main(int argc, char** argv)
      {
        ROS_ERROR("Failed to call service grasp_logic");
        return 1;
-
+*/
     ros::spin();
 
     return 0;
