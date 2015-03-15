@@ -1,0 +1,6 @@
+<launch>
+
+  <node name="camera_pose" pkg="motoman_moveit" type="camera_pose" respawn="false" output="screen">
+  </node>
+
+</launch>

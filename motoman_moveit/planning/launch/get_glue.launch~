@@ -1,0 +1,5 @@
+<launch>
+  <node name="get_glue" pkg="motoman_moveit" type="get_glue" respawn="false" output="screen">
+  </node>
+
+</launch>
