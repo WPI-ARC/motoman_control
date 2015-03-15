@@ -1,0 +1,6 @@
+<launch>
+
+  <node name="gripper_srv" pkg="gripper_srv" type="gripper_controller.py" respawn="false" output="screen">
+  </node>
+
+</launch>

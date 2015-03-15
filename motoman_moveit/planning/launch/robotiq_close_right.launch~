@@ -1,0 +1,6 @@
+<launch>
+
+  <node name="robotiq_close_right" pkg="motoman_moveit" type="robotiq_close_right" respawn="false" output="screen">
+  </node>
+
+</launch>
