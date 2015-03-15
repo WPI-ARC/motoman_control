@@ -21,7 +21,7 @@ bool move_callback(motoman_moveit::move_group_server::Request &req,
 
     // compute and visualize plan
     moveit::planning_interface::MoveGroup::Plan plan;
-    bool success = move_group.plan(plan);
+    //bool success = move_group.plan(plan);
     
     std::cout << "VISUALIZING..." << std::endl;
     
@@ -31,8 +31,8 @@ bool move_callback(motoman_moveit::move_group_server::Request &req,
     std::cout << "MOVING..." << std::endl;
     
     // move to target pose
-    res.success = move_group.execute(plan);
-	
+    //res.success = move_group.execute(plan);
+	res.success = move_group.move();
 	std::cout << "Executed!" << std::endl;
 	
 	std::cout << "ENDED!" << std::endl;
