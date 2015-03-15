@@ -60,11 +60,7 @@ called it will set all the values to 0. So probably if you set a speed, it will 
 
 #---------------------------------------------------------------------
 
-command = outputMsg.SModel_robot_output();
-
 def genCommand(req):
-    global command
-
     #Update the command according to request command
 
     if req.command == 'activate':
@@ -126,12 +122,9 @@ def genCommand(req):
         command.rFRA -= 25
         if command.rFRA < 0:
             command.rFRA = 0
-    print "---------------------------------"
-    print req.command
-    print " "
-    print command
-    print "---------------------------------"
 
+
+    pub = rospy.Publisher('SModelRobotOutput', outputMsg.SModel_robot_output)
     pub.publish(command)
 
     return gripperResponse(True)
@@ -157,12 +150,11 @@ def genCommand(req):
 '''
 
 def publisher():
-    global pub
     """Main loop which requests new commands and publish them on the SModelRobotOutput topic."""
 
     rospy.init_node('gripper_service')
 
-    pub = rospy.Publisher('SModelRobotOutput', outputMsg.SModel_robot_output,queue_size=5)
+    command = outputMsg.SModel_robot_output();
 
     s = rospy.Service('command_gripper', gripper, genCommand)
 

@@ -47,58 +47,42 @@ import rospy
 from robotiq_s_model_control.msg import _SModel_robot_output  as outputMsg
 from time import sleep
 
-from gripper_srv.srv import *
 
+def genCommand(char, command):
+    """Update the command according to the character entered by the user."""
 
-#--------------------------------------------------------------------
-'''
-Need to fix command = outputMsg.SModel_robot_output() locatation. When
-called it will set all the values to 0. So probably if you set a speed, it will be overwritten everytime command is called since its inside the callback function.
-
-
-'''
-
-#---------------------------------------------------------------------
-
-command = outputMsg.SModel_robot_output();
-
-def genCommand(req):
-    global command
-
-    #Update the command according to request command
-
-    if req.command == 'activate':
+    if char == 'a':
         command = outputMsg.SModel_robot_output();
         command.rACT = 1
         command.rGTO = 1
         command.rSPA = 255
         command.rFRA = 150
 
-    if req.command == 'reset':
+    if char == 'r':
         command = outputMsg.SModel_robot_output();
         command.rACT = 0
 
-    if req.command == 'close':
+    if char == 'c':
         command.rPRA = 255
 
-    if req.command == 'open':
+    if char == 'o':
         command.rPRA = 0
 
-    if req.command == 'basic':
+    if char == 'b':
         command.rMOD = 0
 
-    if req.command == 'pinch':
+    if char == 'p':
         command.rMOD = 1
 
-    if req.command == 'wide':
+    if char == 'w':
         command.rMOD = 2
 
-    if req.command == 'scissor':
+    if char == 's':
         command.rMOD = 3
 
     #If the command entered is a int, assign this value to rPRA
     try:
-        command.rPRA = int(req.command)
+        command.rPRA = int(char)
         if command.rPRA > 255:
             command.rPRA = 255
         if command.rPRA < 0:
@@ -106,67 +90,46 @@ def genCommand(req):
     except ValueError:
         pass
 
-    if req.command == 'f':
+    if char == 'f':
         command.rSPA += 25
         if command.rSPA > 255:
             command.rSPA = 255
 
-    if req.command == 'l':
+    if char == 'l':
         command.rSPA -= 25
         if command.rSPA < 0:
             command.rSPA = 0
 
 
-    if req.command == 'i':
+    if char == 'i':
         command.rFRA += 25
         if command.rFRA > 255:
             command.rFRA = 255
 
-    if req.command == 'd':
+    if char == 'd':
         command.rFRA -= 25
         if command.rFRA < 0:
             command.rFRA = 0
-    print "---------------------------------"
-    print req.command
-    print " "
-    print command
-    print "---------------------------------"
 
-    pub.publish(command)
+    return command
 
-    return gripperResponse(True)
-
-
-'''
-
-    strAskForCommand  = '-----\nAvailable commands\n\n'
-    strAskForCommand += 'r: Reset\n'
-    strAskForCommand += 'a: Activate\n'
-    strAskForCommand += 'c: Close\n'
-    strAskForCommand += 'o: Open\n'
-    strAskForCommand += 'b: Basic mode\n'
-    strAskForCommand += 'p: Pinch mode\n'
-    strAskForCommand += 'w: Wide mode\n'
-    strAskForCommand += 's: Scissor mode\n'
-    strAskForCommand += '(0-255): Go to that position\n'
-    strAskForCommand += 'f: Faster\n'
-    strAskForCommand += 'l: Slower\n'
-    strAskForCommand += 'i: Increase force\n'
-    strAskForCommand += 'd: Decrease force\n'
-
-'''
 
 def publisher():
-    global pub
     """Main loop which requests new commands and publish them on the SModelRobotOutput topic."""
 
-    rospy.init_node('gripper_service')
+    rospy.init_node('SModelSimpleController')
 
-    pub = rospy.Publisher('SModelRobotOutput', outputMsg.SModel_robot_output,queue_size=5)
+    pub = rospy.Publisher('SModelRobotOutput', outputMsg.SModel_robot_output)
 
-    s = rospy.Service('command_gripper', gripper, genCommand)
+    command = outputMsg.SModel_robot_output();
 
-    rospy.spin()
+    while not rospy.is_shutdown():
+
+        command = genCommand(askForCommand(command), command)
+
+        pub.publish(command)
+
+        rospy.sleep(0.1)
 
 
 if __name__ == '__main__':
