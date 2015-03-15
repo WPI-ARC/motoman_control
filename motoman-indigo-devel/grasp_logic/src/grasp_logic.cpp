@@ -8,26 +8,73 @@
 bool service_cb(grasp_logic::grasp::Request  &req,
          grasp_logic::grasp::Response &res)
  {
-    geometry_msgs::PoseStamped obj_pose;
-    Eigen::Affine3d desired_pose;
+    geometry_msgs::PoseStamped cam_pose;
+    Eigen::Affine3d Tpalm_objframe;
+    std::string object;
+    float offset_x = 0;
+    float offset_y = 0;
+    float offset_z = 0;
+    float palm_offset = 0.0525; // offset from EE to palm on the hand
+    float finger_offset = 0.011; // offset from the pam to hand
 
-    // Stamped Pose msg
-    obj_pose.header.frame_id = req.obj_pose.header.frame_id;
-    obj_pose.header.stamp = ros::Time::now();
 
-    obj_pose.pose.position.x = req.obj_pose.pose.position.x;
-    obj_pose.pose.position.y = req.obj_pose.pose.position.y;
-    obj_pose.pose.position.z = req.obj_pose.pose.position.z;
-    obj_pose.pose.orientation.x = req.obj_pose.pose.orientation.x;
-    obj_pose.pose.orientation.y = req.obj_pose.pose.orientation.y;
-    obj_pose.pose.orientation.z = req.obj_pose.pose.orientation.z;
-    obj_pose.pose.orientation.w = req.obj_pose.pose.orientation.w;
-    Eigen::Translation3d translation(obj_pose.pose.position.x, obj_pose.pose.position.y, obj_pose.pose.position.z);
-    Eigen::Quaterniond rotation(obj_pose.pose.orientation.w, obj_pose.pose.orientation.x, obj_pose.pose.orientation.y, obj_pose.pose.orientation.z);
+    // Extract target object name
+    object = req.object;
+
+    // Offsets wrt to robot base frame
+    if (object == "glue")
+    {
+        offset_x = palm_offset+finger_offset;
+        offset_y = 0;
+        offset_z = 0;
+    }
+    else if (object == "stir_sticks")
+    {
+        offset_x = palm_offset+finger_offset-0.005;
+        offset_y = 0;
+        offset_z = 0;
+    }
+    else if (object == "cheezit")
+    {
+        offset_x = palm_offset+finger_offset-0.005;
+        offset_y = 0;
+        offset_z = 0;
+    }
+    else if (object == "eraser")
+    {
+        offset_x = palm_offset+finger_offset;
+        offset_y = 0;
+        offset_z = 0;
+    }
+    else if (object == "colored_eggs")
+    {
+        offset_x = palm_offset+finger_offset;
+        offset_y = 0;
+        offset_z = 0;
+    }
+
+    // Extract pose of object from passed in variable req.obj_pose
+    cam_pose.header.frame_id = req.obj_pose.header.frame_id;
+    cam_pose.header.stamp = req.obj_pose.header.stamp;
+    cam_pose.pose.position.x = req.obj_pose.pose.position.x-offset_x;
+    cam_pose.pose.position.y = req.obj_pose.pose.position.y-offset_y;
+    cam_pose.pose.position.z = req.obj_pose.pose.position.z-offset_z;
+    cam_pose.pose.orientation.x = req.obj_pose.pose.orientation.x;
+    cam_pose.pose.orientation.y = req.obj_pose.pose.orientation.y;
+    cam_pose.pose.orientation.z = req.obj_pose.pose.orientation.z;
+    cam_pose.pose.orientation.w = req.obj_pose.pose.orientation.w;
+
+    // Transform from palm of gripper to
+    Eigen::Translation3d translation(cam_pose.pose.position.x, cam_pose.pose.position.y, cam_pose.pose.position.z);
+    Eigen::Quaterniond rotation(cam_pose.pose.orientation.w, cam_pose.pose.orientation.x, cam_pose.pose.orientation.y, cam_pose.pose.orientation.z);
     Eigen::Affine3d target_pose = translation * rotation;
 
+    // set output for arm_pose
+    res.arm_pose = cam_pose;
 
-    res.arm_pose = obj_pose;
+    // set output for object
+    res.object = object;
+
 
     return true;
  }
