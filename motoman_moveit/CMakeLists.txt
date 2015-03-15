@@ -8,6 +8,17 @@ find_package(catkin REQUIRED COMPONENTS moveit_core moveit_ros_planning moveit_r
 
 find_package(Boost REQUIRED system filesystem date_time thread)
 
+add_service_files(
+    FILES
+    move_group_server.srv
+)
+
+generate_messages(
+    DEPENDENCIES
+    std_msgs
+    geometry_msgs
+)
+
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES motoman_moveit
@@ -20,22 +31,6 @@ catkin_package(
     message_runtime
 )
 find_package(Eigen REQUIRED)
-
-add_message_files(
-    FILES
-    Pose.msg
-)
-
-add_service_files(
-    FILES
-    move_group_server.srv
-)
-
-generate_messages(
-    DEPENDENCIES
-    std_msgs
-)
-
 
 ###########
 ## Build ##

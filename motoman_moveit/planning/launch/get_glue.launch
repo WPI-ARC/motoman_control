@@ -1,7 +1,9 @@
 <launch>
   <!-- The planning and execution components of MoveIt! configured to run -->
   <!-- using the ROS-Industrial interface. -->
- 
+  <include file="$(find apc_vision)/launch/apc_vision.launch"/>
+  <include file="$(find grasp_logic)/launch/grasp_logic.launch"/>
+  <node name="move_group_server" pkg="motoman_moveit" type="move_group_server" output="screen"/>
   <rosparam command="load" file="$(find motoman_sda10f_support)/config/joint_names_sda10f.yaml"/>
  
   <!-- the "sim" argument controls whether we connect to a Simulated or Real robot -->
@@ -39,7 +41,6 @@
   
   <include file="$(find motoman_sda10f_moveit_config)/launch/default_warehouse_db.launch" />
 
-  <node name="get_glue" pkg="motoman_moveit" type="get_glue" respawn="false" output="screen">
-  </node>
+  <node name="get_glue" pkg="motoman_moveit" type="get_glue" respawn="false" output="screen"/>
 
 </launch>

@@ -9,10 +9,11 @@
 
 // currently this function takes a Pose and tells the right end-effector to move there
 bool move_callback(motoman_moveit::move_group_server::Request &req,
-    motoman_moveit::move_group_server::Request &res)
+    motoman_moveit::move_group_server::Response &res)
 {
+	std::cout << "PLANNING..." << std::endl;
     moveit::planning_interface::MoveGroup move_group(req.arm);
-    move_group.setPlannerId("RRTstarkConfigDefault");
+    //move_group.setPlannerId("RRTstarkConfigDefault");
 	move_group.setPlanningTime(20.0);
 	move_group.setStartStateToCurrentState();
 
@@ -22,15 +23,19 @@ bool move_callback(motoman_moveit::move_group_server::Request &req,
     moveit::planning_interface::MoveGroup::Plan plan;
     bool success = move_group.plan(plan);
     
-    std::cout << "VISUALIZING..." << "\n";
+    std::cout << "VISUALIZING..." << std::endl;
     
     // Sleep while plan is shown in Rviz
-    sleep(5.0);
+    sleep(10.0);
 
-    std::cout << "MOVING..." << "\n";
+    std::cout << "MOVING..." << std::endl;
     
     // move to target pose
     res.success = move_group.execute(plan);
+	
+	std::cout << "Executed!" << std::endl;
+	
+	std::cout << "ENDED!" << std::endl;
 
     return true;
 }
@@ -40,7 +45,8 @@ int main(int argc, char **argv) {
     ros::NodeHandle node_handle;
     
     ros::ServiceServer service = node_handle.advertiseService("move_group_service", move_callback);
-    ros::spin();
+    ros::MultiThreadedSpinner spinner(4);
+    spinner.spin();
 
     return 0;
 }

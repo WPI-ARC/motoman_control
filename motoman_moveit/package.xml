@@ -19,6 +19,8 @@
   <build_depend>interactive_markers</build_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>cmake_modules</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
 
   <build_depend>message_generation</build_depend>
   <run_depend>message_runtime</run_depend>
@@ -29,6 +31,8 @@
   <run_depend>moveit_ros_planning_interface</run_depend>
   <run_depend>moveit_ros_perception</run_depend>
   <run_depend>interactive_markers</run_depend>
+  <run_depend>std_msgs</run_depend>
   <run_depend>sensor_msgs</run_depend>
+  <run_depend>geometry_msgs</run_depend>
 
 </package>
