@@ -51,7 +51,7 @@ from robotiq_s_model_control.msg import _SModel_robot_input  as inputMsg
 from robotiq_s_model_control.msg import _SModel_robot_output as outputMsg
 
 def mainLoop(address):
-
+    
     #Gripper is a S-Model with a TCP connection
     gripper = robotiq_s_model_control.baseSModel.robotiqBaseSModel()
     gripper.client = robotiq_modbus_tcp.comModbusTcp.communication()
@@ -65,26 +65,15 @@ def mainLoop(address):
     pub = rospy.Publisher('SModelRobotInput', inputMsg.SModel_robot_input)
 
     #The Gripper command is received from the topic named 'SModelRobotOutput'
-    rospy.Subscriber('SModelRobotOutput', outputMsg.SModel_robot_output, gripper.refreshCommand)
-
-    # Publish activate hand command msg to topic
-    send_cmd = rospy.Publisher('SModelRobotOutput', outputMsg.SModel_robot_output)
-
-    # Activate gripper command
-    command = outputMsg.SModel_robot_output();
-    command.rACT = 1
-    command.rGTO = 1
-    command.rSPA = 255
-    command.rFRA = 150
-    send_cmd.publish(command)
-    rospy.sleep(0.1)
+    rospy.Subscriber('SModelRobotOutput', outputMsg.SModel_robot_output, gripper.refreshCommand)    
+    
 
     #We loop
     while not rospy.is_shutdown():
 
       #Get and publish the Gripper status
       status = gripper.getStatus()
-      pub.publish(status)
+      pub.publish(status)     
 
       #Wait a little
       rospy.sleep(0.05)
@@ -94,7 +83,7 @@ def mainLoop(address):
 
       #Wait a little
       rospy.sleep(0.05)
-
+            
 if __name__ == '__main__':
     try:
         #TODO: Add verification that the argument is an IP address
