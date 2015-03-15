@@ -47,97 +47,100 @@ import rospy
 from robotiq_s_model_control.msg import _SModel_robot_output  as outputMsg
 from time import sleep
 
-from gripper_srv.srv import *
 
-
-#--------------------------------------------------------------------
-'''
-Need to fix command = outputMsg.SModel_robot_output() locatation. When
-called it will set all the values to 0. So probably if you set a speed, it will be overwritten everytime command is called since its inside the callback function.
-
-
-'''
-
-#---------------------------------------------------------------------
-
-command = outputMsg.SModel_robot_output();
-
-def genCommand(req):
-    global command
-
-    #Update the command according to request command
-
-    if req.command == 'activate':
+def genCommand(char, command):
+    """Update the command according to the character entered by the user."""    
+        
+    if char == 'a':
         command = outputMsg.SModel_robot_output();
         command.rACT = 1
         command.rGTO = 1
         command.rSPA = 255
         command.rFRA = 150
 
-    if req.command == 'reset':
+    if char == 'r':
         command = outputMsg.SModel_robot_output();
         command.rACT = 0
 
-    if req.command == 'close':
+    if char == 'c':
         command.rPRA = 255
 
-    if req.command == 'open':
+    if char == 'o':
         command.rPRA = 0
 
-    if req.command == 'basic':
+    if char == 'b':
         command.rMOD = 0
-
-    if req.command == 'pinch':
+        
+    if char == 'p':
         command.rMOD = 1
-
-    if req.command == 'wide':
+        
+    if char == 'w':
         command.rMOD = 2
-
-    if req.command == 'scissor':
+        
+    if char == 's':
         command.rMOD = 3
 
     #If the command entered is a int, assign this value to rPRA
-    try:
-        command.rPRA = int(req.command)
+    try: 
+        command.rPRA = int(char)
         if command.rPRA > 255:
             command.rPRA = 255
         if command.rPRA < 0:
             command.rPRA = 0
     except ValueError:
-        pass
-
-    if req.command == 'f':
+        pass                    
+        
+    if char == 'f':
         command.rSPA += 25
         if command.rSPA > 255:
             command.rSPA = 255
-
-    if req.command == 'l':
+            
+    if char == 'l':
         command.rSPA -= 25
         if command.rSPA < 0:
             command.rSPA = 0
 
-
-    if req.command == 'i':
+            
+    if char == 'i':
         command.rFRA += 25
         if command.rFRA > 255:
             command.rFRA = 255
-
-    if req.command == 'd':
+            
+    if char == 'd':
         command.rFRA -= 25
         if command.rFRA < 0:
             command.rFRA = 0
-    print "---------------------------------"
-    print req.command
-    print " "
-    print command
-    print "---------------------------------"
 
-    pub.publish(command)
+    return command
+        
 
-    return gripperResponse(True)
+def askForCommand(command):
+    """Ask the user for a command to send to the gripper."""    
 
+    currentCommand  = 'Simple S-Model Controller\n-----\nCurrent command:'
+    currentCommand += ' rACT = '  + str(command.rACT)
+    currentCommand += ', rMOD = ' + str(command.rMOD)
+    currentCommand += ', rGTO = ' + str(command.rGTO)
+    currentCommand += ', rATR = ' + str(command.rATR)
+##    currentCommand += ', rGLV = ' + str(command.rGLV)
+##    currentCommand += ', rICF = ' + str(command.rICF)
+##    currentCommand += ', rICS = ' + str(command.rICS)
+    currentCommand += ', rPRA = ' + str(command.rPRA)
+    currentCommand += ', rSPA = ' + str(command.rSPA)
+    currentCommand += ', rFRA = ' + str(command.rFRA)
 
-'''
+    #We only show the simple control mode
+##    currentCommand += ', rPRB = ' + str(command.rPRB)
+##    currentCommand += ', rSPB = ' + str(command.rSPB)
+##    currentCommand += ', rFRB = ' + str(command.rFRB)
+##    currentCommand += ', rPRC = ' + str(command.rPRC)
+##    currentCommand += ', rSPC = ' + str(command.rSPC)
+##    currentCommand += ', rFRC = ' + str(command.rFRC)
+##    currentCommand += ', rPRS = ' + str(command.rPRS)
+##    currentCommand += ', rSPS = ' + str(command.rSPS)
+##    currentCommand += ', rFRS = ' + str(command.rFRS)
+
+    print currentCommand
 
     strAskForCommand  = '-----\nAvailable commands\n\n'
     strAskForCommand += 'r: Reset\n'
@@ -153,21 +156,28 @@ def genCommand(req):
     strAskForCommand += 'l: Slower\n'
     strAskForCommand += 'i: Increase force\n'
     strAskForCommand += 'd: Decrease force\n'
+    
+    strAskForCommand += '-->'
 
-'''
+    return raw_input(strAskForCommand)
 
 def publisher():
-    global pub
     """Main loop which requests new commands and publish them on the SModelRobotOutput topic."""
 
-    rospy.init_node('gripper_service')
+    rospy.init_node('SModelSimpleController')
+    
+    pub = rospy.Publisher('SModelRobotOutput', outputMsg.SModel_robot_output)
 
-    pub = rospy.Publisher('SModelRobotOutput', outputMsg.SModel_robot_output,queue_size=5)
+    command = outputMsg.SModel_robot_output();
 
-    s = rospy.Service('command_gripper', gripper, genCommand)
+    while not rospy.is_shutdown():
 
-    rospy.spin()
+        command = genCommand(askForCommand(command), command)            
+        
+        pub.publish(command)
 
+        rospy.sleep(0.1)
+                        
 
 if __name__ == '__main__':
     publisher()
