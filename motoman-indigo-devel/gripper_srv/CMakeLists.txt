@@ -1,19 +1,18 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(grasp_logic)
+project(gripper_srv)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  std_msgs
-  moveit_core
-  geometry_msgs
-  message_runtime
+  rospy
+  std_msgs 
+  message_generation
   cmake_modules
 )
+
 find_package(cmake_modules REQUIRED)
-find_package(Eigen REQUIRED)
+
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -57,7 +56,7 @@ find_package(Eigen REQUIRED)
 ## Generate services in the 'srv' folder
 add_service_files(
   FILES
-  grasp.srv
+  gripper.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -67,11 +66,10 @@ add_service_files(
 #   Action2.action
 # )
 
-## Generate added messages and services with any dependencies listed here
+# Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
   std_msgs  # Or other packages containing msgs
-  geometry_msgs
 )
 
 ###################################
@@ -97,11 +95,11 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
-include_directories(include 
-  ${catkin_INCLUDE_DIRS}
-  ${Eigen_INCLUDE_DIRS}
-  ${catkin_LIBRARY_DIRS}
-)
+#include_directories(include 
+#  ${catkin_INCLUDE_DIRS}
+#  ${Eigen_INCLUDE_DIRS}
+#  ${catkin_LIBRARY_DIRS}
+#)
 
 ## Declare a cpp library
 # add_library(right_arm
@@ -168,16 +166,11 @@ include_directories(include
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-add_executable(grasp_logic src/grasp_logic.cpp)
-target_link_libraries(grasp_logic ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-install(TARGETS grasp_logic DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+#add_executable(gripper_srv src/gripper_controller.py)
+#target_link_libraries(gripper_srv ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+#install(TARGETS gripper_srv DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
-add_executable(grasp_logic_client src/grasp_logic_client.cpp)
-target_link_libraries(grasp_logic_client ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-install(TARGETS grasp_logic_client DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
-
-
-install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+#install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 
 
