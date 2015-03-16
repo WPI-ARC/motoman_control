@@ -22,7 +22,7 @@ bool service_cb(grasp_logic::grasp::Request  &req,
     object = req.object;
 
     // Offsets wrt to robot base frame
-    if (object == "glue")
+    if (object == "elmers_washable_no_run_school_glue")
     {
         offset_x = palm_offset+finger_offset;
         offset_y = 0;
