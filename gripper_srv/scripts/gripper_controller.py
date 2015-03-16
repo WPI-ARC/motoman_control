@@ -158,11 +158,22 @@ def genCommand(req):
 
 def publisher():
     global pub
+    global command
+
     """Main loop which requests new commands and publish them on the SModelRobotOutput topic."""
 
     rospy.init_node('gripper_service')
 
     pub = rospy.Publisher('SModelRobotOutput', outputMsg.SModel_robot_output,queue_size=5)
+
+    # Activate gripper command
+    #command = outputMsg.SModel_robot_output();
+    command.rACT = 1
+    command.rGTO = 1
+    command.rSPA = 255
+    command.rFRA = 150
+    pub.publish(command)
+    rospy.sleep(0.1)
 
     s = rospy.Service('command_gripper', gripper, genCommand)
 
