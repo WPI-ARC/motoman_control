@@ -15,7 +15,7 @@ bool service_cb(grasp_logic::grasp::Request  &req,
     float offset_y = 0;
     float offset_z = 0;
     float palm_offset = 0.0525; // offset from EE to palm on the hand
-    float finger_offset = 0.011; // offset from the pam to hand
+    float finger_offset = 0.0705; // offset from the pam to hand
 
 
     // Extract target object name
@@ -26,7 +26,7 @@ bool service_cb(grasp_logic::grasp::Request  &req,
     {
         offset_x = palm_offset+finger_offset;
         offset_y = 0;
-        offset_z = 0;
+        offset_z = -0.005;
     }
     else if (object == "stir_sticks")
     {
@@ -40,11 +40,11 @@ bool service_cb(grasp_logic::grasp::Request  &req,
         offset_y = 0;
         offset_z = 0;
     }
-    else if (object == "eraser")
+    else if (object == "expo_dry_erase_board_eraser")
     {
         offset_x = palm_offset+finger_offset;
         offset_y = 0;
-        offset_z = 0;
+        offset_z = -0.005;
     }
     else if (object == "colored_eggs")
     {

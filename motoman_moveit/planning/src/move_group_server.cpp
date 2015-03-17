@@ -13,10 +13,15 @@ bool move_callback(motoman_moveit::move_group_server::Request &req,
 {
 	std::cout << "PLANNING..." << std::endl;
     moveit::planning_interface::MoveGroup move_group(req.arm);
-    //move_group.setPlannerId("RRTstarkConfigDefault");
-	move_group.setPlanningTime(20.0);
+    move_group.setPlannerId("RRTstarkConfigDefault");
+	move_group.setPlanningTime(30.0);
 	move_group.setStartStateToCurrentState();
-
+	
+	if (req.tolerance) {
+		move_group.setGoalOrientationTolerance(0.2);
+		move_group.setGoalPositionTolerance(0.02);
+	}
+	
     move_group.setPoseTarget(req.pose.pose);
 
     // compute and visualize plan
@@ -26,7 +31,7 @@ bool move_callback(motoman_moveit::move_group_server::Request &req,
     std::cout << "VISUALIZING..." << std::endl;
     
     // Sleep while plan is shown in Rviz
-    sleep(10.0);
+    //sleep(10.0);
 
     std::cout << "MOVING..." << std::endl;
     

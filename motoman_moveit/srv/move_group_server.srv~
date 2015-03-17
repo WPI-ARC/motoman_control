@@ -1,4 +1,4 @@
-geometry_msgs/Pose pose
+geometry_msgs/PoseStamped pose
 string arm
 ---
 bool success

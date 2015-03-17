@@ -3,7 +3,7 @@
   <!-- using the ROS-Industrial interface. -->
   <include file="$(find apc_vision)/launch/apc_vision.launch"/>
   <include file="$(find grasp_logic)/launch/grasp_logic.launch"/>
-  <node name="move_group_server" pkg="motoman_moveit" type="move_group_server"/>
+  <node name="move_group_server" pkg="motoman_moveit" type="move_group_server" output="screen"/>
   <rosparam command="load" file="$(find motoman_sda10f_support)/config/joint_names_sda10f.yaml"/>
  
   <!-- the "sim" argument controls whether we connect to a Simulated or Real robot -->
@@ -41,6 +41,27 @@
   
   <include file="$(find motoman_sda10f_moveit_config)/launch/default_warehouse_db.launch" />
 
+  <!-- Publish shelf model -->
+
+<!--
+<node pkg="apc_models" type="publish_mesh.py" name="publish_pod"
+        args="kiva_pod $(find apc_models)/meshes/pod_lowres.stl -1.2 0 -0.045 0.5 0.5 0.5 0.5" />
+-->
+<!--
+<node pkg="apc_models" type="publish_mesh.py" name="publish_pod"
+        args="kiva_pod $(find apc_models)/meshes/pod_lowres.stl 1.28 0 -0.045 0.5 0.5 0.5 0.5" />
+-->
+<node pkg="apc_models" type="publish_box.py" name="publish_wall"
+        args="wall -.8 0 1.5 0 0 0 1 .1 5 3" />
+
+
+<!--
+  <node pkg="apc_models" type="publish_mesh.py" name="publish_pod"
+        args="kiva_pod $(find apc_models)/meshes/kiva_shelf.stl 1.28 0 -0.045 0.5 0.5 0.5 0.5" />
+-->
+  <!--<node pkg="trajectory_srv" type="trajectory_server.py" name="trajectory_server" output="screen"/>-->
+  <node pkg="grasp_logic" type="SModelTcpNode.py" name="gripper_tcp_node" args="10.0.0.10"/>
+  <node pkg="gripper_srv" type="gripper_controller.py" name="gripper_server"/>
   <node name="get_glue" pkg="motoman_moveit" type="get_glue" respawn="false" output="screen"/>
 
 </launch>

@@ -1,0 +1,5 @@
+<launch>
+    <node name="left_pose" pkg="motoman_moveit" type="left_pose" respawn="false" output="screen"/>
+
+
+</launch>
