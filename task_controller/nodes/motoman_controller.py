@@ -39,16 +39,23 @@ class MotomanController:
         with self.sm:
             self.safemode = SafeMode.SAFEMODE()
 
-            smach.StateMachine.add(
-                'PickAndPlaceCrayola', PickAndPlaceItem.PICKANDPLACEITEM(self.robot, "Crayola", "A"),
-                transitions={'Success': 'PickAndPlaceSoap', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
-                remapping={'input': 'sm_input', 'output': 'sm_data'}
-            )
+            # smach.StateMachine.add(
+            #     'PickAndPlaceCrayola', PickAndPlaceItem.PICKANDPLACEITEM(self.robot, "Crayola", "A"),
+            #     transitions={'Success': 'PickAndPlaceSoap', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
+            #     remapping={'input': 'sm_input', 'output': 'sm_data'}
+            # )
+
+            # smach.StateMachine.add(
+            #     'PickAndPlaceSoap', PickAndPlaceItem.PICKANDPLACEITEM(self.robot, "Soap", "G"),
+            #     transitions={'Success': 'FinishTask', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
+            #     remapping={'input': 'sm_data', 'output': 'sm_data'}
+            # )
 
             smach.StateMachine.add(
-                'PickAndPlaceSoap', PickAndPlaceItem.PICKANDPLACEITEM(self.robot, "Soap", "G"),
+                'PickAndPlaceGlue',
+                PickAndPlaceItem.PICKANDPLACEITEM(self.robot, "elmers_washable_no_run_school_glue", "B"),
                 transitions={'Success': 'FinishTask', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
-                remapping={'input': 'sm_data', 'output': 'sm_data'}
+                remapping={'input': 'sm_input', 'output': 'sm_data'}
             )
 
             smach.StateMachine.add(

@@ -18,25 +18,28 @@ def PICKANDPLACEITEM(robot, item, bin):
         smach.StateMachine.add(
             'MoveToBin', MoveToBin.MOVETOBIN(robot),
             transitions={'Success': 'ScanForItem', 'Failure': 'Failure', 'Fatal': 'Fatal'},
-            remapping={'output': 'sm_data'}
+            # remapping={'output': 'sm_data'}
         )
 
         smach.StateMachine.add(
             'ScanForItem', ScanForItem.SCANFORITEM(),
             transitions={'Success': 'PickItem', 'Failure': 'Failure', 'Fatal': 'Fatal'},
-            remapping={'input': 'sm_data', 'output': 'sm_data'}
+            remapping={'input': 'output'}
+            # remapping={'input': 'sm_data', 'output': 'sm_data'}
         )
 
         smach.StateMachine.add(
             'PickItem', PickItem.PICKITEM(robot),
             transitions={'Success': 'PlaceItem', 'Failure': 'Failure', 'Fatal': 'Fatal'},
-            remapping={'input': 'sm_data', 'output': 'sm_data'}
+            remapping={'input': 'output'}
+            # remapping={'input': 'sm_data', 'output': 'sm_data'}
         )
 
         smach.StateMachine.add(
             'PlaceItem', PlaceItem.PLACEITEM(robot),
             transitions={'Success': 'Success', 'Failure': 'Failure', 'Fatal': 'Fatal'},
-            remapping={'input': 'sm_data'}
+            remapping={'input': 'output'}
+            # remapping={'input': 'sm_data'}
         )
 
     sm.userdata.bin = bin
