@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   message_runtime
   cmake_modules
+  message_generation
 )
 find_package(cmake_modules REQUIRED)
 find_package(Eigen REQUIRED)
@@ -170,14 +171,14 @@ include_directories(include
 
 add_executable(grasp_logic src/grasp_logic.cpp)
 target_link_libraries(grasp_logic ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-install(TARGETS grasp_logic DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+#install(TARGETS grasp_logic DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 add_executable(grasp_logic_client src/grasp_logic_client.cpp)
 target_link_libraries(grasp_logic_client ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-install(TARGETS grasp_logic_client DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+#install(TARGETS grasp_logic_client DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+add_dependencies(grasp_logic grasp_logic_gencpp)
 
-
-install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+#install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 
 

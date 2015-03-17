@@ -42,10 +42,43 @@ void right_callback(geometry_msgs::Pose msg) {
     std::cout << "MOVING..." << "\n";
     
     // move to target pose
-    group_right.move();
+    group_right.execute(right_plan);
+}
+
+// currently this function takes a Pose and tells the right end-effector to move there
+void left_callback(geometry_msgs::Pose msg) {
+    moveit::planning_interface::MoveGroup group_left("arm_left");
+    geometry_msgs::Pose target_pose_left;
+    geometry_msgs::Pose currentPose;
+
+    currentPose = group_left.getCurrentPose().pose;
+
+    target_pose_left.position.x = msg.position.x;
+    target_pose_left.position.y = msg.position.y;
+    target_pose_left.position.z = msg.position.z;
+    target_pose_left.orientation.x = msg.orientation.x;
+    target_pose_left.orientation.y = msg.orientation.y;
+    target_pose_left.orientation.z = msg.orientation.z;
+    target_pose_left.orientation.w = msg.orientation.w;
+
+    group_left.setPoseTarget(target_pose_left);
+
+    // compute and visualize plan
+    moveit::planning_interface::MoveGroup::Plan left_plan;
+    bool success = group_left.plan(left_plan);
+    
+    std::cout << "VISUALIZING..." << "\n";
+    
+    // Sleep while plan is shown in Rviz
+    sleep(5.0);
+
+    std::cout << "MOVING..." << "\n";
+    
+    // move to target pose
+    group_left.execute(left_plan);
 }
     
-
+/*
 // currently this function takes a Pose from the camera, transforms it into robot frame
 // and tells the left end-effector to move there
 void left_callback(geometry_msgs::Pose msg) {
@@ -152,6 +185,7 @@ void left_callback(geometry_msgs::Pose msg) {
     // move to target pose
     group_left.move();    
 }
+* */
     
 int main(int argc, char **argv) {
     ros::init(argc, argv, "move_group_listen");

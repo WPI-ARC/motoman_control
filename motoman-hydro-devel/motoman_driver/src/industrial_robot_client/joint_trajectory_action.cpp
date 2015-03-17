@@ -495,14 +495,14 @@ void JointTrajectoryAction::cancelCB(
   if (active_goal_map_[group_number] == gh)
   {
     // Stops the controller.
-    motoman_msgs::DynamicJointTrajectory empty;
-    empty.joint_names = robot_groups_[group_number].get_joint_names();
+    //motoman_msgs::DynamicJointTrajectory empty;
+    //empty.joint_names = robot_groups_[group_number].get_joint_names();
     ROS_WARN("Cancelling execution for group %d - publishing empty trajectory", group_number);
-    this->pub_trajectories_[group_number].publish(empty);
+    //this->pub_trajectories_[group_number].publish(empty);
 
     // Marks the current goal as canceled.
-    active_goal_map_[group_number].setCanceled();
-    has_active_goal_map_[group_number] = false;
+    //active_goal_map_[group_number].setCanceled();
+    //has_active_goal_map_[group_number] = false;
   }
   else
   {

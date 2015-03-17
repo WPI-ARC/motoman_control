@@ -1,0 +1,69 @@
+<launch>
+
+  <!-- Example launch file for a generic SoftKinetic ToF 3D camera -->
+
+  <!-- Standard parameters to set node output and enable divorced TF trees -->
+  <arg name="output" default="screen" />
+  <arg name="remapped_tf" default="/tf" />
+
+  <!-- Camera-generic parameters -->
+  <arg name="camera_name" default="softkinetic_camera" />
+  <arg name="device_index" default="0" /> <!-- Selects between multiple cameras - uses the camera index provided by the SoftKinetic daemon -->
+  <!-- Color camera parameters -->
+  <arg name="rgb_resolution" default="VGA" /> <!-- Options are QQVGA, QVGA, VGA, NHD, and WXGA_H -->
+  <arg name="rgb_framerate" default="30" /> <!-- 0 means color camera is disabled -->
+  <arg name="rgb_compression_type" default="MJPEG" /> <!-- Options are MJPEG and YUY2 - simultaneous color and depth data are only possible with MJPEG selected -->
+  <arg name="powerline_frequency" default="60" /> <!-- Options are 60, 50, and 0 - set according to your local mains power frequency, or 0 to disable powerline frequency compensation -->
+  <arg name="rgb_brightness" default="0" />
+  <arg name="rgb_contrast" default="5" />
+  <arg name="rgb_saturation" default="5" />
+  <arg name="rgb_hue" default="0" />
+  <arg name="rgb_gamma" default="3" />
+  <arg name="rgb_sharpness" default="5" />
+  <arg name="rgb_exposure" default="0" /> <!-- 0 means autoexposure -->
+  <arg name="rgb_white_balance" default="0" /> <!-- 0 means automatic white balance -->
+  <arg name="enable_rgb_compression" default="false" /> <!-- Options are true and false -->
+  <arg name="rgb_calibration_file" default="" /> <!-- Provide a package:// link to a ROS .yaml or .ini camera calibration file -->
+  <!-- Depth camera parameters -->
+  <arg name="depth_resolution" default="QVGA" /> <!-- Options are QQVGA, QVGA, and VGA -->
+  <arg name="depth_framerate" default="30" /> <!-- 0 means depth camera is disabled -->
+  <arg name="depth_camera_mode" default="CLOSE" /> <!-- Options are CLOSE and LONG -->
+  <arg name="depth_saturation" default="false" /> <!-- Options are true and false -->
+  <arg name="depth_illumination_level" default="100" />
+  <arg name="confidence_threshold" default="100" /> <!-- Sets the threshold for confidence filtering in pointclouds and registered depth images -->
+  <arg name="depth_calibration_file" default="" /> <!-- Provide a package:// link to a ROS .yaml or .ini camera calibration file -->
+
+  <!-- Start the driver node -->
+
+  <node pkg="softkinetic_camera" type="softkinetic_driver_node" name="$(arg camera_name)" output="$(arg output)" >
+    <!-- Overall driver parameters -->
+    <param name="camera_name" type="string" value="$(arg camera_name)" />
+    <param name="device_index" type="int" value="$(arg device_index)" />
+    <!-- RGB camera parameters -->
+    <param name="rgb_resolution" type="string" value="$(arg rgb_resolution)" />
+    <param name="rgb_framerate" type="int" value="$(arg rgb_framerate)" />
+    <param name="rgb_compression_type" type="string" value="$(arg rgb_compression_type)" />
+    <param name="powerline_frequency" type="int" value="$(arg powerline_frequency)" />
+    <param name="rgb_brightness" type="int" value="$(arg rgb_brightness)" />
+    <param name="rgb_contrast" type="int" value="$(arg rgb_contrast)" />
+    <param name="rgb_saturation" type="int" value="$(arg rgb_saturation)" />
+    <param name="rgb_hue" type="int" value="$(arg rgb_hue)" />
+    <param name="rgb_gamma" type="int" value="$(arg rgb_gamma)" />
+    <param name="rgb_sharpness" type="int" value="$(arg rgb_sharpness)" />
+    <param name="rgb_exposure" type="int" value="$(arg rgb_exposure)" />
+    <param name="rgb_white_balance" type="int" value="$(arg rgb_white_balance)" />
+    <param name="enable_rgb_compression" type="bool" value="$(arg enable_rgb_compression)" />
+    <param name="rgb_calibration_file" type="string" value="$(arg rgb_calibration_file)" />
+    <!-- Set depth camera parameters -->
+    <param name="depth_resolution" type="string" value="$(arg depth_resolution)" />
+    <param name="depth_framerate" type="int" value="$(arg depth_framerate)" />
+    <param name="depth_camera_mode" type="string" value="$(arg depth_camera_mode)" />
+    <param name="depth_saturation" type="bool" value="$(arg depth_saturation)" />
+    <param name="depth_illumination_level" type="int" value="$(arg depth_illumination_level)" />
+    <param name="confidence_threshold" type="int" value="$(arg confidence_threshold)" />
+    <param name="depth_calibration_file" type="string" value="$(arg depth_calibration_file)" />
+    <!-- Remap TF as needed for divorced TF trees -->
+    <remap from="/tf" to="$(arg remapped_tf)" />
+  </node>
+
+</launch>

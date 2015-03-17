@@ -1,5 +1,0 @@
-string object
-geometry_msgs/PoseStamped obj_pose
----
-string object
-geometry_msgs/PoseStamped arm_pose
