@@ -18,7 +18,7 @@ The task controller contains a state machine that runs the Amazon
 Picking Challenge pick and place code.
 
 1. To run it, first launch the demo:
-   - `roslaunch task_controller demo.launch`
+   - `roslaunch task_controller main.launch`
 2. (Optional) If you want to view the state machine, run:
    - `rosrun smach_viewer smach_viewer.py`
 3. Run the task controller:

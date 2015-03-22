@@ -11,17 +11,12 @@ class MOVETOBIN(smach.State):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],
                              input_keys=['input', 'bin'], output_keys=['output'])
         self.arm = robot.arm_left
-        self.arm.set_planner_id("RRTstarkConfigDefault")
-        self.arm.set_planning_time(30)
-        self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
 
     def execute(self, userdata):
         rospy.loginfo("Trying to move to bin '"+userdata.bin+"'...")
         print "Input data: " + str(userdata.input)
         pose = bin_pose(userdata.bin)
         print "Pose: ", pose
-        result = self.arm.go(pose.pose)
-        print "Result: ", result
 
         # TODO: Remove?
         output = {}
@@ -29,14 +24,23 @@ class MOVETOBIN(smach.State):
         output['error'] = "None"
         userdata.output = output
 
-        if not result:
-            return 'Failure'
-        return 'Success'
+        self.arm.set_planner_id("RRTstarkConfigDefault")
+        self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
+
+        for t in [1, 5, 30, 60]:
+            self.arm.set_planning_time(t)
+            rospy.loginfo("Planning for "+str(t)+" seconds...")
+            result = self.arm.go(pose.pose)
+            print "Result: ", result
+            if result:
+                return 'Success'
+
+        return 'Failure'
 
 
 # Currently only returns bin A
 # TODO: Support all bins
-def bin_pose(bin, bin_x=1.32, bin_y=0, bin_z=0):
+def bin_pose(bin, bin_x=1.32, bin_y=0, bin_z=-0.01):
     # Setting Configuration:
     # 	A		B		C
     # 	D		E		F
@@ -69,7 +73,7 @@ def bin_pose(bin, bin_x=1.32, bin_y=0, bin_z=0):
     SecndLayer_vertical_shiftvalue = WorkBase_Height + BottomLay_Height + SecndLayer_Height/2
     BottomLayer_vertical_shiftvalue = WorkBase_Height + BottomLay_Height/2
 
-    Entry_X_shiftvalue = bin_x - Bin_depth - Start_Gap - GripperLength
+    Entry_X_shiftvalue = bin_x - Bin_depth - Start_Gap - GripperLength - 0.035
 
     pose = PoseStamped()
     pose.pose.position.x = Entry_X_shiftvalue
@@ -114,9 +118,17 @@ def bin_pose(bin, bin_x=1.32, bin_y=0, bin_z=0):
         raise Exception("Bin `%s` not supported."%bin)
         # TODO: Throw exception
 
-    pose.pose.orientation.x = 0.5
-    pose.pose.orientation.y = -0.5
-    pose.pose.orientation.z = -0.5
-    pose.pose.orientation.w = 0.5
+    #pose.pose.orientation.x = -0.12384;
+    #pose.pose.orientation.y = 0.0841883;
+    #pose.pose.orientation.z = -0.730178;
+    #pose.pose.orientation.w = 0.666646;
+    #pose.pose.orientation.x = 0.5
+    #pose.pose.orientation.y = -0.5
+    #pose.pose.orientation.z = -0.5
+    #pose.pose.orientation.w = 0.5
+    pose.pose.orientation.x = -0.484592
+    pose.pose.orientation.y = 0.384602
+    pose.pose.orientation.z = 0.615524
+    pose.pose.orientation.w = -0.488244
 
     return pose

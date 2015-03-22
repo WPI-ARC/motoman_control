@@ -15,7 +15,9 @@ bool service_cb(grasp_logic::grasp::Request  &req,
     float offset_y = 0;
     float offset_z = 0;
     float palm_offset = 0.0525; // offset from EE to palm on the hand
-    float finger_offset = 0.0705; // offset from the pam to hand
+    float finger_offset = 0.0705; // offset from the palm to hand
+    float wrist_offset = 0.08; // offset from the wrist to palm
+    float total_offset = palm_offset+finger_offset+wrist_offset; // offset from the pam to hand
 
 
     // Extract target object name
@@ -24,31 +26,31 @@ bool service_cb(grasp_logic::grasp::Request  &req,
     // Offsets wrt to robot base frame
     if (object == "elmers_washable_no_run_school_glue")
     {
-        offset_x = palm_offset+finger_offset;
+        offset_x = total_offset;
         offset_y = 0;
         offset_z = -0.005;
     }
     else if (object == "stir_sticks")
     {
-        offset_x = palm_offset+finger_offset-0.005;
+        offset_x = total_offset-0.005;
         offset_y = 0;
         offset_z = 0;
     }
     else if (object == "cheezit")
     {
-        offset_x = palm_offset+finger_offset-0.005;
+        offset_x = total_offset-0.005;
         offset_y = 0;
         offset_z = 0;
     }
     else if (object == "expo_dry_erase_board_eraser")
     {
-        offset_x = palm_offset+finger_offset;
+        offset_x = total_offset;
         offset_y = 0;
         offset_z = -0.005;
     }
     else if (object == "colored_eggs")
     {
-        offset_x = palm_offset+finger_offset;
+        offset_x = total_offset;
         offset_y = 0;
         offset_z = 0;
     }

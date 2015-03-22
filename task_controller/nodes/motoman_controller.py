@@ -53,7 +53,7 @@ class MotomanController:
 
             smach.StateMachine.add(
                 'PickAndPlaceGlue',
-                PickAndPlaceItem.PICKANDPLACEITEM(self.robot, "elmers_washable_no_run_school_glue", "B"),
+                PickAndPlaceItem.PICKANDPLACEITEM(self.robot, "elmers_washable_no_run_school_glue", "A"),
                 transitions={'Success': 'FinishTask', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
                 remapping={'input': 'sm_input', 'output': 'sm_data'}
             )
