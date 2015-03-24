@@ -2,10 +2,11 @@ import roslib; roslib.load_manifest('task_controller')
 import rospy
 import smach
 
+from copy import deepcopy
 from grasp_logic.srv import grasp, graspRequest
 from gripper_srv.srv import gripper, gripperRequest
 
-from util import goto_pose, bin_pose
+from util import follow_path, bin_pose
 
 class PICKITEM(smach.State):
 
@@ -16,13 +17,14 @@ class PICKITEM(smach.State):
         self.grasp_generator = rospy.ServiceProxy("grasp_logic", grasp)
         self.gripper_control = rospy.ServiceProxy("command_gripper", gripper)
 
-        request = gripperRequest(command="ACTIVATE")
+        request = gripperRequest(command="activate")
         # TODO: Handle response error
         response = self.gripper_control.call(request)
         print "Activate Gripper:", response
 
     def execute(self, userdata):
         rospy.loginfo("Trying to pick '"+userdata.item+"'...")
+        userdata.output = userdata.input
 
         request = graspRequest(
             object=userdata.item,
@@ -37,7 +39,9 @@ class PICKITEM(smach.State):
         self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
         
         print "Moving to grasp pose"
-        if not goto_pose(self.arm, pose, [10, 30, 60]):
+        up = deepcopy(self.arm.get_current_pose().pose)
+        up.position.z += 0.03 # 3cm
+        if not follow_path(self.arm, [self.arm.get_current_pose().pose, up, pose]):
             return 'Failure'
 
         request = gripperRequest(command="close")
@@ -45,17 +49,12 @@ class PICKITEM(smach.State):
         response = self.gripper_control.call(request)
         print "Close Gripper:", response
 
-        print "Lifting Item"
-        pose.position.z += 0.03
-        if not goto_pose(self.arm, pose, [10, 30, 60]):
+        print "Retreat from grasp"
+        up = deepcopy(self.arm.get_current_pose().pose)
+        up.position.z += 0.03 # 3cm
+        pose = bin_pose(userdata.bin).pose
+        pose.position.x -= 0.1
+        if not follow_path(self.arm, [self.arm.get_current_pose().pose, up, pose]):
             return 'Failure'
 
-        pose = bin_pose(userdata.bin)
-        pose.pose.position.x -= 0.1
-        print "Backing Out"
-        print "Pose: ", pose
-        if not goto_pose(self.arm, pose.pose, [10, 30, 60]):
-            return 'Failure'
-
-        userdata.output = userdata.input
         return 'Success'

@@ -12,6 +12,18 @@ def goto_pose(group, pose, times=[5, 20, 40, 60]):
             return True
     return False
 
+def follow_path(group, path, collision_checking=True):
+    traj, success = group.compute_cartesian_path(
+        path,
+        0.01, # 1cm interpolation resolution
+        0.0, # jump_threshold disabled
+        avoid_collisions = collision_checking,
+    )
+    if success < 1:
+        rospy.logwarn("Cartesian trajectory could not be completed. Only solved for: '"+str(success)+"'...")
+        return False
+    return group.execute(traj)
+
 def bin_pose(bin, bin_x=1.32, bin_y=0, bin_z=-0.01):
     # Setting Configuration:
     # 	A		B		C
