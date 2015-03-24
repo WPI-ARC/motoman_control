@@ -3,6 +3,9 @@ import rospy
 import smach
 
 from geometry_msgs.msg import Pose
+from gripper_srv.srv import gripper, gripperRequest
+
+from util import goto_pose, bin_pose
 
 class PLACEITEM(smach.State):
 
@@ -10,6 +13,7 @@ class PLACEITEM(smach.State):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],
                              input_keys=['input'], output_keys=['output'])
         self.arm = robot.arm_left
+        self.gripper_control = rospy.ServiceProxy("command_gripper", gripper)
 
     def execute(self, userdata):
         rospy.loginfo("Trying to place...")
@@ -21,9 +25,6 @@ class PLACEITEM(smach.State):
         output['error'] = "None"
         userdata.output = output
 
-        self.arm.set_planner_id("RRTstarkConfigDefault")
-        self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
-
         pose = Pose()
         pose.position.x = 0.212677
         pose.position.y = 0.492155
@@ -33,12 +34,13 @@ class PLACEITEM(smach.State):
         pose.orientation.z = -0.790298
         pose.orientation.w = 0.610082
 
-        for t in [1, 5, 30, 60, 120]:
-            self.arm.set_planning_time(t)
-            rospy.loginfo("Planning for "+str(t)+" seconds...")
-            result = self.arm.go(pose)
-            print "Result: ", result
-            if result:
-                return 'Success'
-
-        return 'Failure'
+        self.arm.set_planner_id("RRTstarkConfigDefault")
+        self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
+        if not goto_pose(self.arm, pose, [10, 30, 60, 120]):
+            return 'Failure'
+        
+        request = gripperRequest(command="open")
+        # TODO: Handle response error
+        response = self.gripper_control.call(request)
+        print "Open Gripper:", response
+        return 'Success'

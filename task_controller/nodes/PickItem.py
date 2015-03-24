@@ -5,7 +5,7 @@ import smach
 from grasp_logic.srv import grasp, graspRequest
 from gripper_srv.srv import gripper, gripperRequest
 
-from MoveToBin import bin_pose
+from util import goto_pose, bin_pose
 
 class PICKITEM(smach.State):
 
@@ -15,6 +15,11 @@ class PICKITEM(smach.State):
         self.arm = robot.arm_left
         self.grasp_generator = rospy.ServiceProxy("grasp_logic", grasp)
         self.gripper_control = rospy.ServiceProxy("command_gripper", gripper)
+
+        request = gripperRequest(command="ACTIVATE")
+        # TODO: Handle response error
+        response = self.gripper_control.call(request)
+        print "Activate Gripper:", response
 
     def execute(self, userdata):
         rospy.loginfo("Trying to pick '"+userdata.item+"'...")
@@ -30,15 +35,9 @@ class PICKITEM(smach.State):
 
         self.arm.set_planner_id("RRTstarkConfigDefault")
         self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
-
-        for t in [1, 5, 30, 60]:
-            self.arm.set_planning_time(t)
-            rospy.loginfo("Planning for "+str(t)+" seconds...")
-            result = self.arm.go(pose)
-            print "Move: ", result
-            if result:
-                break
-        if not result:
+        
+        print "Moving to grasp pose"
+        if not goto_pose(self.arm, pose, [10, 30, 60]):
             return 'Failure'
 
         request = gripperRequest(command="close")
@@ -46,30 +45,17 @@ class PICKITEM(smach.State):
         response = self.gripper_control.call(request)
         print "Close Gripper:", response
 
+        print "Lifting Item"
         pose.position.z += 0.03
-        for t in [1, 5, 30, 60]:
-            self.arm.set_planning_time(t)
-            rospy.loginfo("Planning for "+str(t)+" seconds...")
-            result = self.arm.go(pose)
-            print "Lift: ", result
-            if result:
-                break
-        if not result:
+        if not goto_pose(self.arm, pose, [10, 30, 60]):
             return 'Failure'
 
         pose = bin_pose(userdata.bin)
         pose.pose.position.x -= 0.1
+        print "Backing Out"
         print "Pose: ", pose
-        for t in [1, 5, 30, 60]:
-            self.arm.set_planning_time(t)
-            rospy.loginfo("Planning for "+str(t)+" seconds...")
-            result = self.arm.go(pose.pose)
-            print "Backout: ", result
-            if result:
-                break
-        if not result:
+        if not goto_pose(self.arm, pose.pose, [10, 30, 60]):
             return 'Failure'
-
 
         userdata.output = userdata.input
         return 'Success'
