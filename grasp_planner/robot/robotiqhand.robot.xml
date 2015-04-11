@@ -1,0 +1,12 @@
+<Robot>
+  <KinBody file="robotiqhand.kinbody.xml"/>
+  <Manipulator name="hand">
+	<translation>0.055 0.085 0.055</translation>
+    <base>handbase</base>
+    <effector>handbase</effector>
+    <Translation>0 0 0</Translation>
+    <joints>JF1 JF2 JF3 JF4 JF5 JF6 JF7 JF8 JF9</joints>
+    <closingdirection>-1 -1 -1 -1 -1 -1 -1 -1 -1</closingdirection>
+    <direction>0 1 0</direction>
+  </Manipulator>
+</Robot>
