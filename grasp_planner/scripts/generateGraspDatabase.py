@@ -23,7 +23,7 @@ if __name__ == "__main__":
     RaveSetDebugLevel(DebugLevel.Verbose)
 
     # Set program options
-    showgoodgrasp = True # Use to show or not show good grasp. False will skip showing good grasps
+    showgoodgrasp = False # Use to show or not show good grasp. False will skip showing good grasps
 
     ''' current objects that have strange no point error.
     ['env/cheezit.env.xml', 'env/dentaltreat.env.xml', 'env/outletplugs.env.xml', 'env/pencilcup.env.xml', 'env/sparkplug.env.xml', 'env/stickynotes.env.xml', 'env/strawcups.env.xml']
