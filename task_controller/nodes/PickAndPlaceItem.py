@@ -6,7 +6,7 @@ import ScanForItem
 import PickItem
 import PlaceItem
 
-def PICKANDPLACEITEM(robot, item, bin):
+def PICKANDPLACEITEM(robot):
     sm = smach.StateMachine(
         outcomes=['Success', 'Failure', 'Fatal'],
         input_keys=['input', 'bin', 'item'],
@@ -42,6 +42,4 @@ def PICKANDPLACEITEM(robot, item, bin):
             # remapping={'input': 'sm_data'}
         )
 
-    sm.userdata.bin = bin
-    sm.userdata.item = item
     return sm

@@ -13,6 +13,7 @@ import threading
 import ctypes
 
 import PickAndPlaceItem
+import Scheduler
 import FinishTask
 import SafeMode
 import ErrorHandler
@@ -27,34 +28,30 @@ class MotomanController:
         self.running = False
         self.safed = False
         self.robot = moveit_commander.RobotCommander()
-        
+
         self.sm = smach.StateMachine(
             outcomes=['DONE', 'FAILED', 'SAFE'],
             # input_keys=['sm_input', 'bin', 'item'],
             input_keys=['sm_input'],
             output_keys=['sm_output']
         )
-        
+
         # Populate the state machine from the modules
         with self.sm:
             self.safemode = SafeMode.SAFEMODE()
 
-            # smach.StateMachine.add(
-            #     'PickAndPlaceCrayola', PickAndPlaceItem.PICKANDPLACEITEM(self.robot, "Crayola", "A"),
-            #     transitions={'Success': 'PickAndPlaceSoap', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
-            #     remapping={'input': 'sm_input', 'output': 'sm_data'}
-            # )
-
-            # smach.StateMachine.add(
-            #     'PickAndPlaceSoap', PickAndPlaceItem.PICKANDPLACEITEM(self.robot, "Soap", "G"),
-            #     transitions={'Success': 'FinishTask', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
-            #     remapping={'input': 'sm_data', 'output': 'sm_data'}
-            # )
+            schedule = [("grab_empty", "A", "elmers_washable_no_run_school_glue")]
+            smach.StateMachine.add(
+                'Scheduler', Scheduler.SIMPLESCHEDULER(schedule),
+                transitions={'Pick': 'PickAndPlaceItem', 'Scoop': 'FAILED', 'ToolChange': 'FAILED',
+                             # 'Scoop': 'ScoopAndPlaceItem', 'ToolChange': 'ChangeScoop',
+                             'Success': 'FinishTask', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
+            )
 
             smach.StateMachine.add(
-                'PickAndPlaceGlue',
-                PickAndPlaceItem.PICKANDPLACEITEM(self.robot, "elmers_washable_no_run_school_glue", "A"),
-                transitions={'Success': 'FinishTask', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
+                'PickAndPlaceItem',
+                PickAndPlaceItem.PICKANDPLACEITEM(self.robot),
+                transitions={'Success': 'Scheduler', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
                 remapping={'input': 'sm_input', 'output': 'sm_data'}
             )
 
@@ -76,7 +73,7 @@ class MotomanController:
                              'ReFinish': 'SafeMode', 'Failed': 'FAILED', 'Fatal': 'SafeMode'},
                 remapping={'input': 'sm_data', 'output': 'sm_output'}
             )
-            
+
         # Set up the introspection server
         self.sis = smach_ros.IntrospectionServer('apc_smach_server', self.sm, '/SM_ROOT')
         self.sis.start()
@@ -86,12 +83,11 @@ class MotomanController:
         self.running = True
         self.safed = False
         self.sm.userdata.sm_input = "Testing"
-        # self.sm.userdata.bin = "A"
-        # self.sm.userdata.item = "crayola"
         print "Starting..."
         print self.sm.userdata.sm_input
         print "...starting"
         final_outcome = self.sm.execute()
+        print "Finished:", final_outcome
         self.running = False
         self.safemode.execute([])
         self.safed = True

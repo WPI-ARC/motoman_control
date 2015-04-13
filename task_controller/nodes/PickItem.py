@@ -8,11 +8,13 @@ from gripper_srv.srv import gripper, gripperRequest
 
 from util import follow_path, bin_pose
 
+
 class PICKITEM(smach.State):
 
     def __init__(self, robot):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],
-                             input_keys=['input', 'item', 'pose', 'bin'], output_keys=['output'])
+                             input_keys=['input', 'item', 'pose', 'bin'],
+                             output_keys=['output'])
         self.arm = robot.arm_left
         self.grasp_generator = rospy.ServiceProxy("grasp_logic", grasp)
         self.gripper_control = rospy.ServiceProxy("command_gripper", gripper)
@@ -37,10 +39,10 @@ class PICKITEM(smach.State):
 
         self.arm.set_planner_id("RRTstarkConfigDefault")
         self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
-        
+
         print "Moving to grasp pose"
         up = deepcopy(self.arm.get_current_pose().pose)
-        up.position.z += 0.03 # 3cm
+        up.position.z += 0.03  # 3cm
         if not follow_path(self.arm, [self.arm.get_current_pose().pose, up, pose]):
             return 'Failure'
 
@@ -51,7 +53,7 @@ class PICKITEM(smach.State):
 
         print "Retreat from grasp"
         up = deepcopy(self.arm.get_current_pose().pose)
-        up.position.z += 0.03 # 3cm
+        up.position.z += 0.03  # 3cm
         pose = bin_pose(userdata.bin).pose
         pose.position.x -= 0.1
         if not follow_path(self.arm, [self.arm.get_current_pose().pose, up, pose]):

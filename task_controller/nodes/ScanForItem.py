@@ -11,7 +11,8 @@ class SCANFORITEM(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],
                              input_keys=['input', 'bin', 'item'], output_keys=['output', 'pose'])
-        self.detector = rospy.ServiceProxy("object_detect", ObjectDetect)
+        self.sample = rospy.ServiceProxy("sample_vision", SampleVision)
+        self.process = rospy.ServiceProxy("process_vision", ProcessVision)
 
     def execute(self, userdata):
         rospy.loginfo("Trying to find "+userdata.item+"...")
@@ -22,13 +23,18 @@ class SCANFORITEM(smach.State):
         output['error'] = "None"
         userdata.output = output
 
-        request = ObjectDetectRequest(
+        sample_request = SimpleVisionRequest(
+            command=userdata.bin
+        )
+        process_request = ProcessVisionRequest(
             bin=userdata.bin,
             object=userdata.item
         )
         for i in range(5):
-            response = self.detector.call(request)
-            print response
+            response = self.sample.call(sample_request)
+            print "Sample:", response
+            response = self.process.call(process_request)
+            print "Process:", response
             if response.found:
                 response.pose.pose.orientation.x = -0.484592
                 response.pose.pose.orientation.y = 0.384602
