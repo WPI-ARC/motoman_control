@@ -23,7 +23,7 @@ class SCANFORITEM(smach.State):
         output['error'] = "None"
         userdata.output = output
 
-        sample_request = SimpleVisionRequest(
+        sample_request = SampleVisionRequest(
             command=userdata.bin
         )
         process_request = ProcessVisionRequest(
@@ -35,7 +35,7 @@ class SCANFORITEM(smach.State):
             print "Sample:", response
             response = self.process.call(process_request)
             print "Process:", response
-            if response.found:
+            if True or response.found:
                 response.pose.pose.orientation.x = -0.484592
                 response.pose.pose.orientation.y = 0.384602
                 response.pose.pose.orientation.z = 0.615524

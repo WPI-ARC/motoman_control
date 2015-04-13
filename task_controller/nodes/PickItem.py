@@ -43,7 +43,9 @@ class PICKITEM(smach.State):
         print "Moving to grasp pose"
         up = deepcopy(self.arm.get_current_pose().pose)
         up.position.z += 0.03  # 3cm
-        if not follow_path(self.arm, [self.arm.get_current_pose().pose, up, pose]):
+        target = deepcopy(pose)
+        target.position.z += 0.02  # 2cm
+        if not follow_path(self.arm, [self.arm.get_current_pose().pose, up, target]):
             return 'Failure'
 
         request = gripperRequest(command="close")

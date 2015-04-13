@@ -56,8 +56,8 @@
 
 
 
-  <!--<node pkg="apc_models" type="publish_mesh.py" name="publish_pod"
-        args="kiva_pod $(find apc_models)/meshes/kiva_shelf.stl 1.28 0 -0.045 0.5 0.5 0.5 0.5" /> -->
+  <node pkg="apc_models" type="publish_mesh.py" name="publish_pod"
+        args="kiva_pod $(find apc_models)/meshes/kiva_shelf.stl 1.28 0 -0.045 0.5 0.5 0.5 0.5" />
 
   <!--<node pkg="trajectory_srv" type="trajectory_server.py" name="trajectory_server" output="screen"/>-->
   <node pkg="grasp_logic" type="SModelTcpNode.py" name="gripper_tcp_node" args="10.0.0.10"/>
