@@ -19,10 +19,10 @@ class PICKITEM(smach.State):
         self.grasp_generator = rospy.ServiceProxy("grasp_logic", grasp)
         self.gripper_control = rospy.ServiceProxy("command_gripper", gripper)
 
-        request = gripperRequest(command="activate")
+        # request = gripperRequest(command="activate")
         # TODO: Handle response error
-        response = self.gripper_control.call(request)
-        print "Activate Gripper:", response
+        # response = self.gripper_control.call(request)
+        # print "Activate Gripper:", response
 
     def execute(self, userdata):
         rospy.loginfo("Trying to pick '"+userdata.item+"'...")
