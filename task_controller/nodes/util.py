@@ -9,23 +9,23 @@ from moveit_msgs.msg import CollisionObject
 scene = moveit_commander.PlanningSceneInterface()
 
 
-def goto_pose(group, pose, times=[5, 20, 40, 60], add_shelf=True):
+def goto_pose(group, pose, times=[5, 20, 40, 60], with_shelf=True):
     """Moves the hand to a given `pose`, using the configured `group`. The
     planning time is modified based on the passed in `times` to try to
     plan quickly if possible, but fall back on longer plans if
     necessary. If `add_shelf` is true, a box model of the shelf is
     added to the environment to avoid collisions."""
-    if add_shelf:
+    if with_shelf:
         add_shelf()
     for t in times:
         group.set_planning_time(t)
         rospy.loginfo("Planning for "+str(t)+" seconds...")
         result = group.go(pose)
         if result:
-            if add_shelf:
+            if with_shelf:
                 remove_shelf()
             return True
-    if add_shelf:
+    if with_shelf:
         remove_shelf()
     return False
 
@@ -57,16 +57,21 @@ def add_shelf():
     pose.pose.orientation.y = 0.5
     pose.pose.orientation.z = 0.5
     pose.pose.orientation.w = 0.5
+    print "Adding shelf", scene._pub_co.get_num_connections()
+    while scene._pub_co.get_num_connections() == 0:
+        rospy.sleep(1)
+        print "Waiting..."
     scene.add_box(
         name="shelf",
         pose=pose,
-        size=(1, 2.5, 1)
+        size=(0.86, 2.5, 0.86)
     )
+    print "Added"
 
 
 def remove_shelf():
     co = CollisionObject()
-    co.operation = CollisionObject.Remove
+    co.operation = CollisionObject.REMOVE
     co.id = "shelf"
     co.header.frame_id = "/base_link"
     co.header.stamp = rospy.Time.now()
