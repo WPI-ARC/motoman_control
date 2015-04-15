@@ -19,10 +19,10 @@ class PICKITEM(smach.State):
         self.grasp_generator = rospy.ServiceProxy("grasp_logic", grasp)
         self.gripper_control = rospy.ServiceProxy("command_gripper", gripper)
 
-        request = gripperRequest(command="activate")
+        # request = gripperRequest(command="activate")
         # TODO: Handle response error
-        response = self.gripper_control.call(request)
-        print "Activate Gripper:", response
+        # response = self.gripper_control.call(request)
+        # print "Activate Gripper:", response
 
     def execute(self, userdata):
         rospy.loginfo("Trying to pick '"+userdata.item+"'...")
@@ -43,7 +43,9 @@ class PICKITEM(smach.State):
         print "Moving to grasp pose"
         up = deepcopy(self.arm.get_current_pose().pose)
         up.position.z += 0.03  # 3cm
-        if not follow_path(self.arm, [self.arm.get_current_pose().pose, up, pose]):
+        target = deepcopy(pose)
+        target.position.z += 0.02  # 2cm
+        if not follow_path(self.arm, [self.arm.get_current_pose().pose, up, target]):
             return 'Failure'
 
         request = gripperRequest(command="close")
