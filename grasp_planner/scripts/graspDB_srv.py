@@ -2,12 +2,18 @@
 
 import rospy
 import numpy
-from graspDB.srv import *
+from grasp_planner.srv import *
 import sys
 import traceback
 import time
 import openravepy
 from itertools import izip
+from geometry_msgs.msg import(
+    PoseArray,
+    PoseStamped,
+    Pose,
+    Point,
+    Quaternion)
 
 if not __openravepy_build_doc__:
     from openravepy import *
@@ -22,16 +28,94 @@ Position is an array: [ ]
 Quaternion is an array: [ ]
 """
 
-def matrixToQuat(matrix):
-    qw = numpy.sqrt(1 + matrix.item(00) + matrix.item(11) + matrix.item(22))/2
+"""
+camObjectPose = PoseStamped(
+        header=hdr,
+        pose=Pose(
+            position=Point(
+                x=rightInputX,
+                y=rightInputY,
+                z=rightInputZ,
+            ),
+            orientation=Quaternion(
+                x=rightInputXR,
+                y=rightInputYR,
+                z=rightInputZR,
+                w=rightInputWR,
+            ),
+        ),
+    )
+
+camObjectPose = Pose(
+        position=Point(
+            x=rightInputX,
+            y=rightInputY,
+            z=rightInputZ,
+        ),
+        orientation=Quaternion(
+            x=rightInputXR,
+            y=rightInputYR,
+            z=rightInputZR,
+            w=rightInputWR,
+        ),
+"""
+
+def matrixToPose(matrix):    
+    qw = numpy.sqrt(1 + matrix.item(0,0) + matrix.item(1,1) + matrix.item(2,2))/2
     qx = (matrix.item(2,1) - matrix.item(1,2)) / (4*qw)
     qy = (matrix.item(0,2) - matrix.item(2,0)) / (4*qw)
     qz = (matrix.item(1,0) - matrix.item(0,1)) / (4*qw)
-    quat = [qw qx qy qz]
-    return quat
+    """
+    quat.position.x = matrix.item(0,3)
+    quat.position.y = matrix.item(1,3)
+    quat.position.z = matrix.item(2,3)
+    quat.orientation.w = qw
+    quat.orientation.x = qx
+    quat.orientation.y = qy
+    quat.orientation.z = qz
+    """
+    pose = Pose(
+        position=Point(
+            x=matrix.item(0,3),
+            y=matrix.item(1,3),
+            z=matrix.item(2,3),
+        ),
+        orientation=Quaternion(
+            x=qx,
+            y=qy,
+            z=qz,
+            w=qw,
+        )
+    )
+    print "convert matrix to pose msg"           
+    return pose
+
+def quatToMatrix(quat):
+    x = quat.position.x
+    y = quat.position.y
+    z = quat.position.z
+    qw = quat.orientation.w
+    qx = quat.orientation.x
+    qy = quat.orientation.y
+    qz = quat.orientation.z
+
+    Trobobj = numpy.matrix([[1-2*qy*qy-2*qz*qz, 2*qx*qy-2*qz*qw, 2*qx*qz + 2*qy*qw, x],
+        [2*qx*qy + 2*qz*qw, 1 - 2*qx*qx - 2*qz*qz, 2*qy*qz - 2*qx*qw, y],
+        [2*qx*qz - 2*qy*qw, 2*qy*qz + 2*qx*qw, 1 - 2*qx*qx - 2*qy*qy, z],
+        [0, 0, 0, 1]])             
+    print "Inside quatToMatrix(). Conversion of req.Trob_obj to numpy matrix"
+    print Trobobj
+    return Trobobj
+    
+#def genTargetPose(graspPoseMsg, graspPoseReq):
+    # take pose of multiply together to get trasnfrom of robot frame to grasping frame.
+    # Outputs transform from grasping frame wrt to base frame to use for arm code.    
 
 def CB_getGrasp(req):
     print "Returning valid grasps for %s"%req.item
+    print "Input Transform pose:"
+    Trob_obj = req.Trob_obj
+    print Trob_obj
     env = Environment()
     env.SetViewer('qtcoin')
     env.Reset()
@@ -84,10 +168,12 @@ def CB_getGrasp(req):
         item = '../env/strawcups.env.xml'
     elif req.item == 'tennisball':
         item = '../env/tennisball.env.xml'
-    else
+    else:
         print "could not find scene xml for object: %s"%req.item
 
     try:
+        approachList=[]
+        poseList=[]
         object = env.Load(item) # Set request item
         print "loading object XML: "+ item
 
@@ -120,24 +206,71 @@ def CB_getGrasp(req):
             print "Global approach vector: "+str(approach)
             print "Global grasp transform: "
             transform = gmodel.getGlobalGraspTransform(validgrasp)
+            print "Transfrom from library: %i"%index
             print transform
-            # append approach and pose to list
-            approahList[index] = approach
-            quatList[index] = matrixToQuat(transform)
+            Tobjgrasp = numpy.matrix([[transform.item(0,0), transform.item(0,1), transform.item(0,2), transform.item(0,3)],
+                                    [transform.item(1,0), transform.item(1,1), transform.item(1,2), transform.item(1,3)],
+                                    [transform.item(2,0), transform.item(2,1), transform.item(2,2), transform.item(2,3)],
+                                    [transform.item(3,0), transform.item(3,1), transform.item(3,2), transform.item(3,3)]])             
+            print "Transform from library after conversion to numpy matrix. should be same as above"
+            print Tobjgrasp
+            Trobobj = quatToMatrix(Trob_obj)
+            Trobgrasp = Trobobj * Tobjgrasp
 
+            # Reponse msg
+            """
+            Trobgrasp = PoseArray(
+                header = "base_link",
+                poses= Pose(
+                        position=Point(
+                            x=transform.item(0,1),
+                            y=transform.item(0,2),
+                            z=transform.item(0,3),
+                        ),
+                        orientation=Quaternion(
+                            x=quat.qx,
+                            y=quat.qy,
+                            z=quat.qz,
+                            w=quat.qw+1,
+                        )
+                    )
+                )
+            """
+            print "Concatenated Transform Trobgrasp:"
+            print Trobgrasp
+            print "Converted Trobgrasp into Pose msg"
+            Trobgrasp_msg = matrixToPose(Trobgrasp)
+            print Trobgrasp_msg
+
+            poseList.append(Trobgrasp_msg)
+            #print poseList                
+            # append approach and pose to list  
+            #approachList.append = approach
+            poseList.append = Trobgrasp_msg
     except:
         print "Failed to load grasp from database for object: " + item
         print "Traceback of error:"
         print traceback.format_exc()
 
-    return itemResponse(True)
+
+    temp = []
+    
+    print "PoseList:"
+    poseArrayList = PoseArray(
+            #header = Header(stamp=rospy.time.now(), frame_id='base_link'),
+            header = "base_link",
+            poses = temp
+        )
+    print poseArrayList
+
+    return graspDBResponse(status=True,Trobgrasp=poseArrayList)
 
 def publisher():
     # Main loop which requests validgrasps from database and returns it
     # Valid grasps should be in object frame I think
 
     rospy.init_node('graspDatabase_service')
-    s = rospy.Service('getGrasp', item, CB_getGrasp)
+    s = rospy.Service('getGrasps', graspDB, CB_getGrasp)
     print "Ready to retrieve grasps from database"
     rospy.spin()
 
