@@ -1,0 +1,6 @@
+<launch>
+
+  <node name="graspDB_srv" pkg="grasp_planner" type="graspDB_SRV.py" respawn="false" output="screen">
+  </node>
+
+</launch>

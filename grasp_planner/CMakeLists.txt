@@ -4,7 +4,18 @@ project(grasp_planner)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED COMPONENTS
+  rospy
+  std_msgs 
+  message_generation
+  cmake_modules
+  geometry_msgs
+  message_runtime
+  cmake_modules
+)
+
+find_package(cmake_modules REQUIRED)
+find_package(Eigen REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -40,18 +51,18 @@ find_package(catkin REQUIRED)
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+add_message_files(
+  FILES
+  apcGraspPose.msg
+  apcGraspArray.msg
+)
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+  FILES
+  apcGraspDB.srv
+  graspDB.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -60,11 +71,12 @@ find_package(catkin REQUIRED)
 #   Action2.action
 # )
 
-## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+# Generate added messages and services with any dependencies listed here
+generate_messages(
+  DEPENDENCIES
+  std_msgs  # Or other packages containing msgs
+  geometry_msgs
+)
 
 ###################################
 ## catkin specific configuration ##
@@ -77,7 +89,7 @@ find_package(catkin REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES grasp_planner
+#  LIBRARIES right_arm
 #  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
 )
@@ -89,21 +101,26 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
+include_directories(include 
+  ${catkin_INCLUDE_DIRS}
+  ${Eigen_INCLUDE_DIRS}
+  ${catkin_LIBRARY_DIRS}
+)
 
 ## Declare a cpp library
-# add_library(grasp_planner
-#   src/${PROJECT_NAME}/grasp_planner.cpp
+# add_library(right_arm
+#   src/${PROJECT_NAME}/right_arm.cpp
 # )
 
 ## Declare a cpp executable
-# add_executable(grasp_planner_node src/grasp_planner_node.cpp)
+# add_executable(right_arm_node src/right_arm_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(grasp_planner_node grasp_planner_generate_messages_cpp)
+# add_dependencies(right_arm_node right_arm_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(grasp_planner_node
+# target_link_libraries(right_arm_node
 #   ${catkin_LIBRARIES}
 # )
 
@@ -122,7 +139,7 @@ catkin_package(
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS grasp_planner grasp_planner_node
+# install(TARGETS right_arm right_arm_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -147,10 +164,23 @@ catkin_package(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_grasp_planner.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_right_arm.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+#add_executable(gripper_srv src/gripper_controller.py)
+#target_link_libraries(gripper_srv ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+#install(TARGETS gripper_srv DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+#install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
+
+
+
+
+
+

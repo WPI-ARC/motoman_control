@@ -1,0 +1,5 @@
+string item
+geometry_msgs/Pose Trob_obj
+---
+bool status
+grasp_planner/apcGraspArray apcGraspArray
