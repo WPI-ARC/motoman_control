@@ -1,4 +1,8 @@
 <launch>
+  <!-- Control max speed of planned trajectories -->
+  <arg name="joint_limits" default="$(find motoman_sda10f_moveit_config)/config/joint_limits_slow.yaml" />
+  <!-- <node pkg="task_controller" type="print.sh" name="$(anon print)" args="Joint Limits: $(arg joint_limits) | tee test.log"/> -->
+
   <!-- By default we do not overwrite the URDF. Change the following to true to change the default behavior -->
   <arg name="load_robot_description" default="false"/>
 
@@ -13,7 +17,7 @@
   
   <!-- Load updated joint limits (override information from URDF) -->
   <group ns="$(arg robot_description)_planning">
-    <rosparam command="load" file="$(find motoman_sda10f_moveit_config)/config/joint_limits.yaml"/>
+    <rosparam command="load" file="$(arg joint_limits)"/>
   </group>
 
   <!-- Load default settings for kinematics; these settings are overridden by settings in a node's namespace -->
