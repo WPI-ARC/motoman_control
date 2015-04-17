@@ -1,19 +1,25 @@
 #!/usr/bin/env python
 
+import math
 import rospy
 import numpy
-from grasp_planner.srv import *
+from grasp_planner.srv import apcGraspDB, apcGraspDBResponse
 import sys
 import traceback
 import time
 import openravepy
 from itertools import izip
+from std_msgs.msg import Header
 from geometry_msgs.msg import(
     PoseArray,
     PoseStamped,
     Pose,
     Point,
-    Quaternion)
+    Quaternion,
+    Vector3)
+from grasp_planner.msg import(
+    apcGraspPose,
+    apcGraspArray)
 
 if not __openravepy_build_doc__:
     from openravepy import *
@@ -60,7 +66,7 @@ camObjectPose = Pose(
         ),
 """
 
-def matrixToPose(matrix):    
+def genAPCGraspPose(matrix,vector):    
     qw = numpy.sqrt(1 + matrix.item(0,0) + matrix.item(1,1) + matrix.item(2,2))/2
     qx = (matrix.item(2,1) - matrix.item(1,2)) / (4*qw)
     qy = (matrix.item(0,2) - matrix.item(2,0)) / (4*qw)
@@ -74,21 +80,29 @@ def matrixToPose(matrix):
     quat.orientation.y = qy
     quat.orientation.z = qz
     """
-    pose = Pose(
-        position=Point(
-            x=matrix.item(0,3),
-            y=matrix.item(1,3),
-            z=matrix.item(2,3),
-        ),
-        orientation=Quaternion(
-            x=qx,
-            y=qy,
-            z=qz,
-            w=qw,
+    grasp = apcGraspPose(
+        posegrasp = Pose(
+            position=Point(
+                x=matrix.item(0,3),
+                y=matrix.item(1,3),
+                z=matrix.item(2,3),
+            ),
+            orientation=Quaternion(
+                x=qx,
+                y=qy,
+                z=qz,
+                w=qw,
+            )
+        ),    
+        poseapproach = Vector3(
+            x=vector.item(0),
+            y=vector.item(1),
+            z=vector.item(2)
+            )
         )
-    )
+
     print "convert matrix to pose msg"           
-    return pose
+    return grasp
 
 def quatToMatrix(quat):
     x = quat.position.x
@@ -122,57 +136,56 @@ def CB_getGrasp(req):
     #RaveSetDebugLevel(DebugLevel.Verbose)
 
     # Load Scene
-    if req.item == 'cheezit':
+    if req.item == 'cheezit_big_original':
         item = '../env/cheezit.env.xml'
-    elif req.item == 'colorballs':
+    elif req.item == 'kyjen_squeakin_eggs_plush_puppies':
         item = '../env/colorballs.env.xml'
-    elif req.item == 'crayon':
+    elif req.item == 'crayola_64_ct':
         item = '../env/crayon.env.xml'
-    elif req.item == 'dentaltreat':
+    elif req.item == 'feline_greenies_dental_treats':
         item = '../env/dentaltreat.env.xml'
-    elif req.item == 'eraser':
+    elif req.item == 'expo_dry_erase_board_eraser':
         item = '../env/eraser.env.xml'
-    elif req.item == 'glue':
+    elif req.item == 'elmers_washable_no_run_school_glue':
         item = '../env/glue.env.xml'
-    elif req.item == 'highlighters':
+    elif req.item == 'sharpie_accent_tank_style_highlighters':
         item = '../env/highlighters.env.xml'
-    elif req.item == 'huckfinn':
+    elif req.item == 'mark_twain_huckleberry_finn':
         item = '../env/huckfinn.env.xml'
-    elif req.item == 'indexcards':
+    elif req.item == 'mead_index_cards':
         item = '../env/indexcards.env.xml'
-    elif req.item == 'oreo':
+    elif req.item == 'oreo_mega_stuf':
         item = '../env/oreo.env.xml'
-    elif req.item == 'outletplugs':
+    elif req.item == 'mommys_helper_outlet_plugs':
         item = '../env/outletplugs.env.xml'
-    elif req.item == 'pencil':
+    elif req.item == 'paper_mate_12_count_mirado_black_warrior':
         item = '../env/pencil.env.xml'
-    elif req.item == 'pencilcup':
+    elif req.item == 'rolodex_jumbo_pencil_cup':
         item = '../env/pencilcup.env.xml'
-    elif req.item == 'plushduck':
+    elif req.item == 'kong_duck_dog_toy':
         item = '../env/plushduck.env.xml'
-    elif req.item == 'plushfrog':
+    elif req.item == 'kong_sitting_frog_dog_toy':
         item = '../env/plushfrog.env.xml'
-    elif req.item == 'rubberduck':
+    elif req.item == 'munchkin_white_hot_duck_bath_toy':
         item = '../env/rubberduck.env.xml'
-    elif req.item == 'safetyglasses':
+    elif req.item == 'safety_works_safety_glasses':
         item = '../env/safetyglasses.env.xml'
-    elif req.item == 'screwdrivers':
+    elif req.item == 'stanley_66_052':
         item = '../env/screwdrivers.env.xml'
-    elif req.item == 'sparkplug':
+    elif req.item == 'champion_copper_plus_spark_plug':
         item = '../env/sparkplug.env.xml'
-    elif req.item == 'stickynotes':
+    elif req.item == 'highland_6539_self_stick_notes':
         item = '../env/stickynotes.env.xml'
-    elif req.item == 'stirsticks':
+    elif req.item == 'genuine_joe_plastic_stir_sticks':
         item = '../env/stirsticks.env.xml'
-    elif req.item == 'stawcups':
+    elif req.item == 'first_years_take_and_toss_straw_cup':
         item = '../env/strawcups.env.xml'
-    elif req.item == 'tennisball':
+    elif req.item == 'kong_air_dog_squeakair_tennis_ball':
         item = '../env/tennisball.env.xml'
     else:
         print "could not find scene xml for object: %s"%req.item
 
     try:
-        approachList=[]
         poseList=[]
         object = env.Load(item) # Set request item
         print "loading object XML: "+ item
@@ -208,6 +221,7 @@ def CB_getGrasp(req):
             transform = gmodel.getGlobalGraspTransform(validgrasp)
             print "Transfrom from library: %i"%index
             print transform
+            approachVector = numpy.array([approach.item(0), approach.item(1), approach.item(2)])
             Tobjgrasp = numpy.matrix([[transform.item(0,0), transform.item(0,1), transform.item(0,2), transform.item(0,3)],
                                     [transform.item(1,0), transform.item(1,1), transform.item(1,2), transform.item(1,3)],
                                     [transform.item(2,0), transform.item(2,1), transform.item(2,2), transform.item(2,3)],
@@ -235,18 +249,39 @@ def CB_getGrasp(req):
                         )
                     )
                 )
+
+            camObjectPose = PoseStamped(
+                header=hdr,
+                pose=Pose(
+                    position=Point(
+                        x=rightInputX,
+                        y=rightInputY,
+                        z=rightInputZ,
+                    ),
+                    orientation=Quaternion(
+                        x=rightInputXR,
+                        y=rightInputYR,
+                        z=rightInputZR,
+                        w=rightInputWR,
+                    ),
+                ),
+            )
             """
             print "Concatenated Transform Trobgrasp:"
             print Trobgrasp
-            print "Converted Trobgrasp into Pose msg"
-            Trobgrasp_msg = matrixToPose(Trobgrasp)
+            print "Converted Trobgrasp into APCGraspPose msg"
+            Trobgrasp_msg = genAPCGraspPose(Trobgrasp,approachVector) # This is a pose msg
             print Trobgrasp_msg
+            qw = Trobgrasp_msg.posegrasp.orientation.w
+            if math.isnan(float(qw)) == False:
+                poseList.append(Trobgrasp_msg) # append pose to poselist                
+            elif math.isnan(float(qw)) == True:
+                print "Nan value detected. Not appending pose to pose list"
 
-            poseList.append(Trobgrasp_msg)
             #print poseList                
             # append approach and pose to list  
             #approachList.append = approach
-            poseList.append = Trobgrasp_msg
+            #poseList.append = Trobgrasp_msg
     except:
         print "Failed to load grasp from database for object: " + item
         print "Traceback of error:"
@@ -256,21 +291,22 @@ def CB_getGrasp(req):
     temp = []
     
     print "PoseList:"
-    poseArrayList = PoseArray(
-            #header = Header(stamp=rospy.time.now(), frame_id='base_link'),
-            header = "base_link",
-            poses = temp
+    grasps = apcGraspArray(
+            grasps = poseList
         )
-    print poseArrayList
+    print grasps
+    #res.status=True
+    #res.Trobgrasp=poseArrayList
 
-    return graspDBResponse(status=True,Trobgrasp=poseArrayList)
-
+    #return graspDBResponse(res)
+    return apcGraspDBResponse(status=True,apcGraspArray=grasps)
+    #return graspDBResponse(status=True)
 def publisher():
     # Main loop which requests validgrasps from database and returns it
     # Valid grasps should be in object frame I think
 
     rospy.init_node('graspDatabase_service')
-    s = rospy.Service('getGrasps', graspDB, CB_getGrasp)
+    s = rospy.Service('getGrasps', apcGraspDB, CB_getGrasp)
     print "Ready to retrieve grasps from database"
     rospy.spin()
 

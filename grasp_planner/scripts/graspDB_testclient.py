@@ -1,19 +1,25 @@
 #!/usr/bin/env python
 
+import math
 import rospy
 import numpy
-from grasp_planner.srv import *
+from grasp_planner.srv import apcGraspDB, apcGraspDBResponse
 import sys
 import traceback
 import time
 import openravepy
 from itertools import izip
+from std_msgs.msg import Header
 from geometry_msgs.msg import(
     PoseArray,
     PoseStamped,
     Pose,
     Point,
-    Quaternion)
+    Quaternion,
+    Vector3)
+from grasp_planner.msg import(
+    apcGraspPose,
+    apcGraspArray)
 
 if not __openravepy_build_doc__:
     from openravepy import *
@@ -70,8 +76,8 @@ def matrixToQuat(matrix):
 
 def main():
     try:
-        client = rospy.ServiceProxy('getGrasps', graspDB)
-        item = 'cheezit' # Set response item
+        client = rospy.ServiceProxy('getGrasps', apcGraspDB)
+        item = 'cheezit_big_original' # Set response item
         """
         Trob_obj = PoseStamped(
             header='base',
@@ -106,7 +112,8 @@ def main():
 
         pose = client(item, Trobobj)
         print "returned pose"
-        print pose.Trob_grasp
+        print pose.status
+        print pose.apcGraspArray
 
     except rospy.ServiceException, e:
         print "Service call failed: %s"%e
