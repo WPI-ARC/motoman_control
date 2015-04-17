@@ -1,3 +1,3 @@
 geometry_msgs/Pose posegrasp
-geometry_msgs/Vector3 poseapproach
+geometry_msgs/Pose poseapproach
 

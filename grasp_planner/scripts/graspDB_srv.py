@@ -71,6 +71,45 @@ def genAPCGraspPose(matrix,vector):
     qx = (matrix.item(2,1) - matrix.item(1,2)) / (4*qw)
     qy = (matrix.item(0,2) - matrix.item(2,0)) / (4*qw)
     qz = (matrix.item(1,0) - matrix.item(0,1)) / (4*qw)
+
+    offset = 0.1 #offset by 10 cm
+    vecx = vector.item(0)
+    vecy = vector.item(1)
+    vecz = vector.item(2)
+    #vector = numpy.vector([vecx, vecy, vecz]) #approach vector
+    vectorMagnitude = numpy.sqrt(vecx*vecx+vecy*vecy+vecz*vecy) #magnitude of approach vector
+    unitVector = vector/vectorMagnitude
+    offsetVector = -unitVector*offset #new grasp point
+    newApproachVector = vector + offsetVector
+
+    grasp = apcGraspPose(
+        posegrasp = Pose(
+            position=Point(
+                x=matrix.item(0,3),
+                y=matrix.item(1,3),
+                z=matrix.item(2,3),
+            ),
+            orientation=Quaternion(
+                x=qx,
+                y=qy,
+                z=qz,
+                w=qw,
+            )
+        ),    
+        poseapproach = Pose(
+            position=Point(
+                x=newApproachVector.item(0),
+                y=newApproachVector.item(1),
+                z=newApproachVector.item(2),
+            ),
+            orientation=Quaternion(
+                x=qx,
+                y=qy,
+                z=qz,
+                w=qw,
+            )
+        )
+    )
     """
     quat.position.x = matrix.item(0,3)
     quat.position.y = matrix.item(1,3)
@@ -79,6 +118,7 @@ def genAPCGraspPose(matrix,vector):
     quat.orientation.x = qx
     quat.orientation.y = qy
     quat.orientation.z = qz
+    """
     """
     grasp = apcGraspPose(
         posegrasp = Pose(
@@ -100,9 +140,29 @@ def genAPCGraspPose(matrix,vector):
             z=vector.item(2)
             )
         )
+    """
+
+    #graspOffset(grasp)
 
     print "convert matrix to pose msg"           
     return grasp
+"""
+def graspOffset(apcPose):
+    offset = 0.1 #offset by 10 cm
+    x = apcPose.posegrasp.position.x
+    y = apcPose.posegrasp.position.y
+    z = apcPose.posegrasp.position.z
+    vecx = apcPose.poseapproach.x
+    vecy = apcPose.poseapproach.y
+    vecz = apcPose.poseapproach.z
+    vector = numpy.vector([vecx, vecy, vecz]) #approach vector
+    vectorMagnitude = numpy.sqrt(vecx,vecy,vecz) #magnitude of approach vector
+    unitVector = vector/vectorMagnitude
+    offsetVector = -unitVector*offset #new grasp point
+
+    print newPoint
+"""
+
 
 def quatToMatrix(quat):
     x = quat.position.x
@@ -272,11 +332,19 @@ def CB_getGrasp(req):
             print "Converted Trobgrasp into APCGraspPose msg"
             Trobgrasp_msg = genAPCGraspPose(Trobgrasp,approachVector) # This is a pose msg
             print Trobgrasp_msg
-            qw = Trobgrasp_msg.posegrasp.orientation.w
-            if math.isnan(float(qw)) == False:
+            grasp_qw = Trobgrasp_msg.posegrasp.orientation.w
+            grasp_x = Trobgrasp_msg.posegrasp.position.x
+            grasp_y = Trobgrasp_msg.posegrasp.position.y
+            grasp_z = Trobgrasp_msg.posegrasp.position.z
+            approach_qw = Trobgrasp_msg.poseapproach.orientation.w
+            approach_x = Trobgrasp_msg.poseapproach.position.x
+            approach_y = Trobgrasp_msg.poseapproach.position.y
+            approach_z = Trobgrasp_msg.poseapproach.position.z
+            
+            if math.isnan(float(grasp_qw)) == False and math.isnan(float(approach_qw)) == False  and math.isnan(float(grasp_x)) == False and math.isnan(float(approach_x)) == False  and math.isnan(float(grasp_y)) == False and math.isnan(float(approach_y)) == False  and math.isnan(float(grasp_z)) == False and math.isnan(float(approach_z)) == False:
                 poseList.append(Trobgrasp_msg) # append pose to poselist                
-            elif math.isnan(float(qw)) == True:
-                print "Nan value detected. Not appending pose to pose list"
+            else:
+                print "Nan/inf value detected. Not appending pose to pose list"
 
             #print poseList                
             # append approach and pose to list  
