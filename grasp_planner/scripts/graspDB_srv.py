@@ -1,29 +1,20 @@
 #!/usr/bin/env python
 
+import roslib
+import tf
+
 import math
 import rospy
 import numpy
 from grasp_planner.srv import apcGraspDB, apcGraspDBResponse
 import sys
-import traceback
+#import traceback
 import time
 import openravepy
-from itertools import izip
+#from itertools import izip
 from std_msgs.msg import Header
-from geometry_msgs.msg import(
-    PoseArray,
-    PoseStamped,
-    Pose,
-    Point,
-    Quaternion,
-    Vector3)
-from grasp_planner.msg import(
-    apcGraspPose,
-    apcGraspArray)
-
-if not __openravepy_build_doc__:
-    from openravepy import *
-    from numpy import *
+from geometry_msgs.msg import PoseArray, PoseStamped, Pose, Point, Quaternion
+from grasp_planner.msg import apcGraspPose apcGraspArray
 
 """@package docstring
 This service takes as input the item. It then searches the database for
@@ -32,9 +23,7 @@ Approach vector is an array: [x y z]
 Pose is a split into position and quaternion
 Position is an array: [ ]
 Quaternion is an array: [ ]
-"""
 
-"""
 camObjectPose = PoseStamped(
         header=hdr,
         pose=Pose(
@@ -64,6 +53,66 @@ camObjectPose = Pose(
             z=rightInputZR,
             w=rightInputWR,
         ),
+"""
+"""
+quat.position.x = matrix.item(0,3)
+quat.position.y = matrix.item(1,3)
+quat.position.z = matrix.item(2,3)
+quat.orientation.w = qw
+quat.orientation.x = qx
+quat.orientation.y = qy
+quat.orientation.z = qz
+"""
+"""
+grasp = apcGraspPose(
+    posegrasp = Pose(
+        position=Point(
+            x=matrix.item(0,3),
+            y=matrix.item(1,3),
+            z=matrix.item(2,3),
+        ),
+        orientation=Quaternion(
+            x=qx,
+            y=qy,
+            z=qz,
+            w=qw,
+        )
+    ),    
+    poseapproach = Vector3(
+        x=vector.item(0),
+        y=vector.item(1),
+        z=vector.item(2)
+        )
+    )
+"""
+
+
+"""
+br = tf2_ros.TransformBroadcaster()
+t.header.stamp = rospy.Time.now()
+t.header.frame_id = "base_link"
+t.child_frame_id = "grasp"
+t.transform.translation = grasp.position
+t.transform.rotation = grasp.orientation
+br.sendTransform(t)
+
+"""
+
+"""
+def graspOffset(apcPose):
+    offset = 0.1 #offset by 10 cm
+    x = apcPose.posegrasp.position.x
+    y = apcPose.posegrasp.position.y
+    z = apcPose.posegrasp.position.z
+    vecx = apcPose.poseapproach.x
+    vecy = apcPose.poseapproach.y
+    vecz = apcPose.poseapproach.z
+    vector = numpy.vector([vecx, vecy, vecz]) #approach vector
+    vectorMagnitude = numpy.sqrt(vecx,vecy,vecz) #magnitude of approach vector
+    unitVector = vector/vectorMagnitude
+    offsetVector = -unitVector*offset #new grasp point
+
+    print newPoint
 """
 
 def genAPCGraspPose(matrix,vector):    
@@ -110,59 +159,12 @@ def genAPCGraspPose(matrix,vector):
             )
         )
     )
-    """
-    quat.position.x = matrix.item(0,3)
-    quat.position.y = matrix.item(1,3)
-    quat.position.z = matrix.item(2,3)
-    quat.orientation.w = qw
-    quat.orientation.x = qx
-    quat.orientation.y = qy
-    quat.orientation.z = qz
-    """
-    """
-    grasp = apcGraspPose(
-        posegrasp = Pose(
-            position=Point(
-                x=matrix.item(0,3),
-                y=matrix.item(1,3),
-                z=matrix.item(2,3),
-            ),
-            orientation=Quaternion(
-                x=qx,
-                y=qy,
-                z=qz,
-                w=qw,
-            )
-        ),    
-        poseapproach = Vector3(
-            x=vector.item(0),
-            y=vector.item(1),
-            z=vector.item(2)
-            )
-        )
-    """
+
 
     #graspOffset(grasp)
 
     print "convert matrix to pose msg"           
     return grasp
-"""
-def graspOffset(apcPose):
-    offset = 0.1 #offset by 10 cm
-    x = apcPose.posegrasp.position.x
-    y = apcPose.posegrasp.position.y
-    z = apcPose.posegrasp.position.z
-    vecx = apcPose.poseapproach.x
-    vecy = apcPose.poseapproach.y
-    vecz = apcPose.poseapproach.z
-    vector = numpy.vector([vecx, vecy, vecz]) #approach vector
-    vectorMagnitude = numpy.sqrt(vecx,vecy,vecz) #magnitude of approach vector
-    unitVector = vector/vectorMagnitude
-    offsetVector = -unitVector*offset #new grasp point
-
-    print newPoint
-"""
-
 
 def quatToMatrix(quat):
     x = quat.position.x
@@ -191,7 +193,9 @@ def CB_getGrasp(req):
     Trob_obj = req.Trob_obj
     print Trob_obj
     env = Environment()
-    env.SetViewer('qtcoin')
+    showGUI = False
+    if showGUI:
+        env.SetViewer('qtcoin')
     env.Reset()
     #RaveSetDebugLevel(DebugLevel.Verbose)
 
@@ -267,13 +271,15 @@ def CB_getGrasp(req):
         validgrasps,validindices = gmodel.computeValidGrasps(returnnum=inf, checkik=False)
         print "Number of good grasps found: " + str(len(validgrasps))
 
-        raw_input("Press enter to show grasp")
+        if showGUI:
+            raw_input("Press enter to show grasp")
 
         # Show grasps
         for index in range(0, len(validgrasps)):
             print "Showing grasp #: " + str(index)
             validgrasp=validgrasps[index] # choose grasp based index number
-            gmodel.showgrasp(validgrasp) # show the grasp
+            if showGUI:
+                gmodel.showgrasp(validgrasp) # show the grasp
             # It says global but the object is at (0,0,0) so this is actually object frame.
             approach = gmodel.getGlobalApproachDir(validgrasp)
             print "Global approach vector: "+str(approach)
@@ -374,9 +380,14 @@ def publisher():
     # Valid grasps should be in object frame I think
 
     rospy.init_node('graspDatabase_service')
-    s = rospy.Service('getGrasps', apcGraspDB, CB_getGrasp)
-    print "Ready to retrieve grasps from database"
-    rospy.spin()
+    rate = rospy.Rate(10.0)
+    while not rospy.is_shutdown():
+        t.header.stamp = rospy.Time.now()
+        br.sendTransform(t)
+        s = rospy.Service('getGrasps', apcGraspDB, CB_getGrasp)
+        print "Ready to retrieve grasps from database"
+        rate.sleep()
+        rospy.spin()
 
 if __name__ == '__main__':
     publisher()

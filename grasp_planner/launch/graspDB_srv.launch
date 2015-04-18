@@ -1,6 +1,8 @@
 <launch>
-
-  <node name="graspDB_srv" pkg="grasp_planner" type="graspDB_SRV.py" respawn="false" output="screen">
+<!--  <include file="$(find grasp_planner)/launch/graspDB_srv.launch"/>-->
+  <node pkg="grasp_planner" type="graspDB_srv.py" name="graspDB_srv"/>
+<!--
+  <node name="graspDB_srv" pkg="grasp_planner" type="$(find grasp_planner)/scripts/graspDB_SRV.py" respawn="false" output="screen">
   </node>
-
+-->
 </launch>
