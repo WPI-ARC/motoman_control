@@ -1,7 +1,7 @@
 <launch>
   <!-- The planning and execution components of MoveIt! configured to run -->
   <!-- using the ROS-Industrial interface. -->
-  <node name="move_group_server" pkg="motoman_moveit" type="move_group_server" output="screen"/>
+  <node name="convert_trajectory_server" pkg="motoman_moveit" type="convert_trajectory_server" output="screen"/>
   <rosparam command="load" file="$(find motoman_sda10f_support)/config/joint_names_sda10f.yaml"/>
  
   <!-- the "sim" argument controls whether we connect to a Simulated or Real robot -->
@@ -40,6 +40,6 @@
   <include file="$(find motoman_sda10f_moveit_config)/launch/default_warehouse_db.launch" />
   
   
-  <node name="move_there_move_back" pkg="motoman_moveit" type="move_there_move_back" respawn="false" output="screen" launch-prefix="gdb -ex run --args"/>
+  <node name="convert_trajectory_test1" pkg="motoman_moveit" type="convert_trajectory_test1" respawn="false" output="screen"/>
 
 </launch>

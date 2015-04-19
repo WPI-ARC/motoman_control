@@ -40,6 +40,6 @@
   <include file="$(find motoman_sda10f_moveit_config)/launch/default_warehouse_db.launch" />
   
   
-  <node name="move_there_move_back" pkg="motoman_moveit" type="move_there_move_back" respawn="false" output="screen" launch-prefix="gdb -ex run --args"/>
+  <node name="move_tray_test1" pkg="motoman_moveit" type="move_tray_test1" respawn="false" output="screen"/>
 
 </launch>

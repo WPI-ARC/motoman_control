@@ -18,6 +18,14 @@ add_executable(left_pose src/left_pose.cpp)
 target_link_libraries(left_pose ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 install(TARGETS left_pose DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
+add_executable(convert_trajectory_server src/convert_trajectory_server.cpp)
+target_link_libraries(convert_trajectory_server ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+install(TARGETS convert_trajectory_server DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+add_executable(convert_trajectory_test1 src/convert_trajectory_test1.cpp)
+target_link_libraries(convert_trajectory_test1 ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+install(TARGETS convert_trajectory_test1 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
 # add_executable(move_there_move_back src/move_there_move_back.cpp)
 # target_link_libraries(move_there_move_back ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 # install(TARGETS move_there_move_back DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

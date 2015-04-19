@@ -370,7 +370,7 @@ void MotomanJointTrajectoryStreamer::streamingThread()
       tmpMsg = this->current_traj_[this->current_point_];
       msg.init(tmpMsg.getMessageType(), CommTypes::SERVICE_REQUEST,
                ReplyTypes::INVALID, tmpMsg.getData());  // set commType=REQUEST
-
+      ROS_INFO("msg type is %d", tmpMsg.getMessageType());
       if (!this->connection_->sendAndReceiveMsg(msg, reply, false))
         ROS_WARN("Failed sent joint point, will try again");
       else

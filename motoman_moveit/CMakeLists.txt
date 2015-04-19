@@ -11,12 +11,16 @@ find_package(Boost REQUIRED system filesystem date_time thread)
 add_service_files(
     FILES
     move_group_server.srv
+    convert_trajectory_server.srv
 )
 
 generate_messages(
     DEPENDENCIES
+    motoman_msgs
     std_msgs
     geometry_msgs
+    moveit_msgs
+    trajectory_msgs
 )
 
 catkin_package(

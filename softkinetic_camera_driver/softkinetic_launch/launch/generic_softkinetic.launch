@@ -9,6 +9,7 @@
   <!-- Camera-generic parameters -->
   <arg name="camera_name" default="softkinetic_camera" />
   <arg name="device_index" default="0" /> <!-- Selects between multiple cameras - uses the camera index provided by the SoftKinetic daemon -->
+  <arg name="device_serial_number" default="" /> <!-- Selects between multiple cameras - uses the camera serial number -->
   <!-- Color camera parameters -->
   <arg name="rgb_resolution" default="VGA" /> <!-- Options are QQVGA, QVGA, VGA, NHD, and WXGA_H -->
   <arg name="rgb_framerate" default="30" /> <!-- 0 means color camera is disabled -->
@@ -39,6 +40,7 @@
     <!-- Overall driver parameters -->
     <param name="camera_name" type="string" value="$(arg camera_name)" />
     <param name="device_index" type="int" value="$(arg device_index)" />
+    <param name="device_serial_number" type="string" value="$(arg device_serial_number)" />
     <!-- RGB camera parameters -->
     <param name="rgb_resolution" type="string" value="$(arg rgb_resolution)" />
     <param name="rgb_framerate" type="int" value="$(arg rgb_framerate)" />

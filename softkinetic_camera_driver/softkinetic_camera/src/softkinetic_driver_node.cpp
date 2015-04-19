@@ -1036,6 +1036,16 @@ int main(int argc, char** argv)
         ros::shutdown();
         exit(0);
     }
+    std::string device_serial_number;
+    nhp.param(std::string("device_serial_number"), device_serial_number, std::string(""));
+    if (device_serial_number == "")
+    {
+        ROS_INFO("Using device index to select camera");
+    }
+    else
+    {
+        ROS_INFO("Using device serial number [%s] to select camera", device_serial_number.c_str());
+    }
     ////////////////////////////////////////////////////////////////////////////////
     // Initialize publishers
     g_pointcloud_pub = nh.advertise<sensor_msgs::PointCloud2>(camera_name + "/points_xyz", 1);
@@ -1065,10 +1075,36 @@ int main(int argc, char** argv)
         ros::shutdown();
         exit(0);
     }
+    int32_t real_device_index = 0;
+    if (device_serial_number == "")
+    {
+        real_device_index = device_index;
+    }
+    else
+    {
+        real_device_index = -1;
+        for (int32_t idx = 0; idx < (int32_t)devices.size(); idx++)
+        {
+            DepthSense::Device& current_device = devices[idx];
+            if (current_device.getSerialNumber() == device_serial_number)
+            {
+                real_device_index = idx;
+                ROS_INFO("Found camera with serial number [%s] at index %d", device_serial_number.c_str(), real_device_index);
+                break;
+            }
+        }
+        if (real_device_index < 0)
+        {
+            ROS_FATAL("Could not find device matching serial number [%s]", device_serial_number.c_str());
+            ros::shutdown();
+            exit(0);
+        }
+    }
     ////////////////////////////////////////////////////////////////////////////////
     ROS_INFO("Configuring camera...");
     // Get the desired device
-    DepthSense::Device& device = devices[device_index];
+    DepthSense::Device& device = devices[real_device_index];
+    ROS_INFO("Setting up camera with index %d and serial number [%s]", real_device_index, device.getSerialNumber().c_str());
     // Configure the device
     device.nodeAddedEvent().connect(&OnNodeConnected);
     device.nodeRemovedEvent().connect(&OnNodeRemoved);

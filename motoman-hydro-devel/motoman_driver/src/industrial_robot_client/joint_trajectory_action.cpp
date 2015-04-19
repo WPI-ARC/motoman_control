@@ -52,6 +52,9 @@ JointTrajectoryAction::JointTrajectoryAction() :
                  boost::bind(&JointTrajectoryAction::goalCB, this, _1),
                  boost::bind(&JointTrajectoryAction::cancelCB, this, _1), false)
 {
+
+  ROS_INFO("JointTrajectoryAction Constructor");
+
   ros::NodeHandle pn("~");
 
   pn.param("constraints/goal_threshold", goal_threshold_, DEFAULT_GOAL_THRESHOLD_);
@@ -70,12 +73,16 @@ JointTrajectoryAction::JointTrajectoryAction() :
 
   std::vector<XmlRpc::XmlRpcValue> topics_list;
 
+  ROS_INFO("topics_list_rpc size is %d", topics_list_rpc.size());
+
   for (int i = 0; i < topics_list_rpc.size(); i++)
   {
     XmlRpc::XmlRpcValue state_value;
     state_value = topics_list_rpc[i];
     topics_list.push_back(state_value);
   }
+
+  ROS_INFO("topics_list size is %d", topics_list[0]["state"].size());
 
   std::vector<XmlRpc::XmlRpcValue> groups_list;
   // TODO(thiagodefreitas): check the consistency of the group numbers
@@ -86,6 +93,7 @@ JointTrajectoryAction::JointTrajectoryAction() :
     groups_list.push_back(group_value);
   }
 
+  ROS_INFO("groups_list size is %d", groups_list.size());
 
   for (int i = 0; i < groups_list.size(); i++)
   {
@@ -351,6 +359,7 @@ void JointTrajectoryAction::goalCB(JointTractoryActionServer::GoalHandle & gh)
       dpoint.groups.push_back(dyn_group);
     }
     dpoint.num_groups = dpoint.groups.size();
+    ROS_INFO("dpoint num_groups is %d", dpoint.num_groups);
     dyn_traj.points.push_back(dpoint);
   }
   dyn_traj.header = gh.getGoal()->trajectory.header;

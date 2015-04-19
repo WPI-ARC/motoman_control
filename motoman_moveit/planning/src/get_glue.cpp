@@ -14,7 +14,7 @@
 #include <moveit/planning_scene/planning_scene.h>
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "right_target_pose");
+    ros::init(argc, argv, "get_glue");
     ros::NodeHandle node_handle;  
     ros::AsyncSpinner spinner(4);
     spinner.start();
