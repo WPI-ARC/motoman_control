@@ -72,7 +72,7 @@ def genCommand(req):
         command.rACT = 1
         command.rGTO = 1
         command.rSPA = 255
-        command.rFRA = 150
+        command.rFRA = 255
 
     if req.command == 'reset':
         command = outputMsg.SModel_robot_output();
@@ -171,7 +171,7 @@ def publisher():
     command.rACT = 1
     command.rGTO = 1
     command.rSPA = 255
-    command.rFRA = 150
+    command.rFRA = 255
     pub.publish(command)
     rospy.sleep(0.1)
 

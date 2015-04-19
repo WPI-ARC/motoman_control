@@ -39,12 +39,12 @@ class SCOOP(smach.State):
         print "Executing scoop"
         poses = [self.arm.get_current_pose().pose]
         poses.append(deepcopy(poses[-1]))
-        poses[-1].position.x += 0.106
+        poses[-1].position.x += 0.206
         poses[-1].position.z += -0.048
         poses.append(deepcopy(poses[-1]))
         poses[-1].position.z += -0.162
         poses.append(deepcopy(poses[-1]))
-        poses[-1].position.x += 0.312
+        poses[-1].position.x += 0.212
         poses.append(deepcopy(poses[-1]))
         poses[-1].position.x += -0.019
         poses[-1].position.z += -0.057

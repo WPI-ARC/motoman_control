@@ -42,8 +42,9 @@ class MotomanController:
             self.safemode = SafeMode.SAFEMODE()
 
             #schedule = [("grab_empty", "B", "elmers_washable_no_run_school_glue")]
-            schedule = [("grab_empty", "B", "crayola_64_ct")]
-            #schedule = [("scoop", "B", "elmers_washable_no_run_school_glue")]
+            #schedule = [("grab_empty", "A", "crayola_64_ct"),
+            #            ("grab_empty", "B", "elmers_washable_no_run_school_glue")]
+            schedule = [("scoop", "C", "elmers_washable_no_run_school_glue")]
             smach.StateMachine.add(
                 'Scheduler', Scheduler.SIMPLESCHEDULER(schedule),
                 transitions={'Pick': 'PickAndPlaceItem', 'Scoop': 'ScoopAndPickItem', 'ToolChange': 'FAILED',

@@ -42,7 +42,7 @@ def follow_path(group, path, collision_checking=True):
     )
     if success < 1:
         rospy.logwarn("Cartesian trajectory could not be completed. Only solved for: '"+str(success)+"'...")
-        return False
+        #return False
     return group.execute(traj)
 
 
@@ -50,7 +50,7 @@ def add_shelf():
     pose = PoseStamped()
     pose.header.frame_id = "/base_link"
     pose.header.stamp = rospy.Time.now()
-    pose.pose.position.x = 1.28
+    pose.pose.position.x = 1.25
     pose.pose.position.y = 0
     pose.pose.position.z = 1.25
     pose.pose.orientation.x = 0.5

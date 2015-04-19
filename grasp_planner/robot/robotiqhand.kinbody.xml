@@ -3,27 +3,27 @@
   <Body name="handbase" type="dynamic">
     <Geom type="trimesh" modifiable="false">
       <Translation>0.0  0.0  0.0</Translation>
-      <data>../../apc_models/models/Robotiq/palm.iv 0.01</data>
-      <collision>../../apc_models/models/Robotiq/palm.iv 0.01</collision>
+      <data>../../apc_models_stl/models/Robotiq/palm.iv 0.01</data>
+      <collision>../../apc_models_stl/models/Robotiq/palm.iv 0.01</collision>
 	  <diffuseColor>0 1 0</diffuseColor>
     </Geom>
     <Geom type="trimesh" modifiable="false">
       <Translation>-0.040  0.044  0.0535</Translation>
       <RotationMat>1 0 0 0 1 0 0 0 1</RotationMat>
-      <data>../../apc_models/models/Robotiq/finger-base.iv 0.01</data>
-      <collision>../../apc_models/models/Robotiq/finger-base.iv 0.01</collision>
+      <data>../../apc_models_stl/models/Robotiq/finger-base.iv 0.01</data>
+      <collision>../../apc_models_stl/models/Robotiq/finger-base.iv 0.01</collision>
     </Geom>
 	<Geom type="trimesh" modifiable="false">
       <Translation>-0.040  0.044  -0.0055</Translation>
       <RotationMat>1 0 0 0 1 0 0 0 1</RotationMat>
-      <data>../../apc_models/models/Robotiq/finger-base.iv 0.01</data>
-      <collision>../../apc_models/models/Robotiq/finger-base.iv 0.01</collision>
+      <data>../../apc_models_stl/models/Robotiq/finger-base.iv 0.01</data>
+      <collision>../../apc_models_stl/models/Robotiq/finger-base.iv 0.01</collision>
     </Geom>
 	<Geom type="trimesh" modifiable="false">
       <Translation>0.155  0.044  0.0835</Translation>
       <RotationMat>-1 0 0 0 1 0 0 0 -1 </RotationMat>
-      <data>../../apc_models/models/Robotiq/finger-base.iv 0.01</data>
-      <collision>../../apc_models/models/Robotiq/finger-base.iv 0.01</collision>
+      <data>../../apc_models_stl/models/Robotiq/finger-base.iv 0.01</data>
+      <collision>../../apc_models_stl/models/Robotiq/finger-base.iv 0.01</collision>
     </Geom>
     <mass type="custom">
       <!-- cylinder -->
@@ -38,8 +38,8 @@
     <offsetfrom>handbase</offsetfrom>
     <Translation>-0.04 0.045 0.0538</Translation>	
     <Geom type="trimesh" modifiable="false">
-      <data>../../apc_models/models/Robotiq/finger-prox-1.iv 0.01</data>
-      <collision>../../apc_models/models/Robotiq/finger-prox-1.iv 0.01</collision>
+      <data>../../apc_models_stl/models/Robotiq/finger-prox-1.iv 0.01</data>
+      <collision>../../apc_models_stl/models/Robotiq/finger-prox-1.iv 0.01</collision>
 	  <diffuseColor>0 1 0</diffuseColor>
     </Geom>
     <mass type="custom">
@@ -57,8 +57,8 @@
 	<diffuseColor>0 0.5 0.05</diffuseColor>
     <Geom type="trimesh" modifiable="false">
       <Translation>0 0 0</Translation>
-      <data>../../apc_models/models/Robotiq/finger-med-1.iv 0.01</data>
-      <collision>../../apc_models/models/Robotiq/finger-med-1.iv 0.01</collision>
+      <data>../../apc_models_stl/models/Robotiq/finger-med-1.iv 0.01</data>
+      <collision>../../apc_models_stl/models/Robotiq/finger-med-1.iv 0.01</collision>
     </Geom>
     <mass type="custom">
       <!-- approximate as box -->
@@ -101,8 +101,8 @@
 	<diffuseColor>0 0.5 0.05</diffuseColor>
     <Geom type="trimesh" modifiable="false">
       <Translation>0 0 0</Translation>
-      <data>../../apc_models/models/Robotiq/finger-dist-1.iv 0.01</data>
-      <collision>../../apc_models/models/Robotiq/finger-dist-1.iv 0.01</collision>
+      <data>../../apc_models_stl/models/Robotiq/finger-dist-1.iv 0.01</data>
+      <collision>../../apc_models_stl/models/Robotiq/finger-dist-1.iv 0.01</collision>
 	  <diffuseColor>0 1 0</diffuseColor>
     </Geom>
     <mass type="custom">
@@ -131,8 +131,8 @@
     <offsetfrom>handbase</offsetfrom>
     <Translation>-0.04 0.045 -0.0055</Translation>	
     <Geom type="trimesh" modifiable="false">
-      <data>../../apc_models/models/Robotiq/finger-prox-1.iv 0.01</data>
-      <collision>../../apc_models/models/Robotiq/finger-prox-1.iv 0.01</collision>
+      <data>../../apc_models_stl/models/Robotiq/finger-prox-1.iv 0.01</data>
+      <collision>../../apc_models_stl/models/Robotiq/finger-prox-1.iv 0.01</collision>
 	  <diffuseColor>0 1 0</diffuseColor>
     </Geom>
     <mass type="custom">
@@ -150,8 +150,8 @@
 	<diffuseColor>0 0.5 0.05</diffuseColor>
     <Geom type="trimesh" modifiable="false">
       <Translation>0 0 0</Translation>
-      <data>../../apc_models/models/Robotiq/finger-med-1.iv 0.01</data>
-      <collision>../../apc_models/models/Robotiq/finger-med-1.iv 0.01</collision>
+      <data>../../apc_models_stl/models/Robotiq/finger-med-1.iv 0.01</data>
+      <collision>../../apc_models_stl/models/Robotiq/finger-med-1.iv 0.01</collision>
     </Geom>
     <mass type="custom">
       <!-- approximate as box -->
@@ -192,8 +192,8 @@
 	<diffuseColor>0 0.5 0.05</diffuseColor>
     <Geom type="trimesh" modifiable="false">
       <Translation>0 0 0</Translation>
-      <data>../../apc_models/models/Robotiq/finger-dist-1.iv 0.01</data>
-      <collision>../../apc_models/models/Robotiq/finger-dist-1.iv 0.01</collision>
+      <data>../../apc_models_stl/models/Robotiq/finger-dist-1.iv 0.01</data>
+      <collision>../../apc_models_stl/models/Robotiq/finger-dist-1.iv 0.01</collision>
 	  <diffuseColor>0 1 0</diffuseColor>
     </Geom>
     <mass type="custom">
@@ -224,8 +224,8 @@
     <Translation>0.16 0.045 0.084</Translation>
 	<RotationMat>-1 0 0 0 1 0 0 0 -1 </RotationMat>
     <Geom type="trimesh" modifiable="false">
-      <data>../../apc_models/models/Robotiq/finger-prox-1.iv 0.01</data>
-      <collision>../../apc_models/models/Robotiq/finger-prox-1.iv 0.01</collision>
+      <data>../../apc_models_stl/models/Robotiq/finger-prox-1.iv 0.01</data>
+      <collision>../../apc_models_stl/models/Robotiq/finger-prox-1.iv 0.01</collision>
 	  <diffuseColor>0 1 0</diffuseColor>
     </Geom>
     <mass type="custom">
@@ -244,8 +244,8 @@
 	<diffuseColor>0 0.5 0.05</diffuseColor>
     <Geom type="trimesh" modifiable="false">
       <Translation>0 0 0</Translation>
-      <data>../../apc_models/models/Robotiq/finger-med-1.iv 0.01</data>
-      <collision>../../apc_models/models/Robotiq/finger-med-1.iv 0.01</collision>
+      <data>../../apc_models_stl/models/Robotiq/finger-med-1.iv 0.01</data>
+      <collision>../../apc_models_stl/models/Robotiq/finger-med-1.iv 0.01</collision>
     </Geom>
     <mass type="custom">
       <!-- approximate as box -->
@@ -288,8 +288,8 @@
 	<diffuseColor>0 0.5 0.05</diffuseColor>
     <Geom type="trimesh" modifiable="false">
       <Translation>0 0 0</Translation>
-      <data>../../apc_models/models/Robotiq/finger-dist-1.iv 0.01</data>
-      <collision>../../apc_models/models/Robotiq/finger-dist-1.iv 0.01</collision>
+      <data>../../apc_models_stl/models/Robotiq/finger-dist-1.iv 0.01</data>
+      <collision>../../apc_models_stl/models/Robotiq/finger-dist-1.iv 0.01</collision>
 	  <diffuseColor>0 1 0</diffuseColor>
     </Geom>
     <mass type="custom">

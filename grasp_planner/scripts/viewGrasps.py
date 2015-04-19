@@ -28,8 +28,8 @@ if __name__ == "__main__":
 
     # Load Scene
 
-    cheezit = '../env/cheezit.env.xml',
-    colorballs = '../env/colorballs.env.xml',
+    cheezit = '../env/cheezit.env.xml'
+    colorballs = '../env/colorballs.env.xml'
     crayon = '../env/crayon.env.xml'
     dentaltreat = '../env/dentaltreat.env.xml'
     eraser = '../env/eraser.env.xml'
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     tennisball = '../env/tennisball.env.xml'
 
     try:
-        item = eraser #Set item to load grasps for
+        item = cheezit #Set item to load grasps for
         object = env.Load(item)
         print "loading object XML: "+ item
 
