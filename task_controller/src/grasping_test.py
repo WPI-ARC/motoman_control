@@ -22,7 +22,9 @@ from apc_vision.srv import *
 from util import goto_pose, follow_path, bin_pose, filterGrasps, execute_grasp, add_object, remove_object
 
 item = "crayola_64_ct"
-item = "cheezit_big_original"
+# item = "cheezit_big_original"
+# item = "feline_greenies_dental_treats"
+item = "mark_twain_huckleberry_finn"
 
 rospy.loginfo("Initializing...")
 robot = moveit_commander.RobotCommander()
@@ -75,6 +77,7 @@ print "Response:", response.status
 print response.apcGraspArray
 
 grasps = filterGrasps(arm, response.apcGraspArray.grasps)
+# grasps = response.apcGraspArray.grasps
 
 # for i in range(len(grasps)):
 # 	grasp = grasps[i].posegrasp
@@ -93,6 +96,15 @@ grasps = filterGrasps(arm, response.apcGraspArray.grasps)
 # 	t.transform.translation = approach.position
 # 	t.transform.rotation = approach.orientation
 # 	tfs.append(t)
+
+
+# br = tf2_ros.TransformBroadcaster()
+# rate = rospy.Rate(250.0)
+# while (not rospy.is_shutdown()):
+#     for t in tfs:
+#         t.header.stamp = rospy.Time.now()
+#         br.sendTransform(t)
+#     rate.sleep()
 
 i = 0
 print "Showing grasp %s of %s" %(i, len(grasps))
@@ -114,15 +126,6 @@ t.transform.rotation = approach.orientation
 tfs.append(t)
 
 
-# br = tf2_ros.TransformBroadcaster()
-# rate = rospy.Rate(250.0)
-# it = 0
-# while (not rospy.is_shutdown()) and (it < 7500):
-#     it += 1
-#     for t in tfs:
-#         t.header.stamp = rospy.Time.now()
-#         br.sendTransform(t)
-#     rate.sleep()
 
 if not rospy.is_shutdown():
 	raw_input("Continue? ")
