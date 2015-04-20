@@ -20,112 +20,13 @@ if not __openravepy_build_doc__:
     from openravepy import *
     from numpy import *
 
-"""@package docstring
-This service takes as input the item and transform from robot base frame
-to object frame seen by vision. It then searches the database for
-validgrasps and returns approach direction and pose for the gripper.
-Approach vector is an array: [x y z]. It is turned into a pose called poseapproach.
-Posegrasp is the pregrasp pose for hand. Pose is a split into position and quaternion
-Position is an array: [ ]. Quaternion is an array: [ ].
-
-camObjectPose = PoseStamped(
-        header=hdr,
-        pose=Pose(
-            position=Point(
-                x=rightInputX,
-                y=rightInputY,
-                z=rightInputZ,
-            ),
-            orientation=Quaternion(
-                x=rightInputXR,
-                y=rightInputYR,
-                z=rightInputZR,
-                w=rightInputWR,
-            ),
-        ),
-    )
-
-camObjectPose = Pose(
-        position=Point(
-            x=rightInputX,
-            y=rightInputY,
-            z=rightInputZ,
-        ),
-        orientation=Quaternion(
-            x=rightInputXR,
-            y=rightInputYR,
-            z=rightInputZR,
-            w=rightInputWR,
-        ),
-"""
-"""
-quat.position.x = matrix.item(0,3)
-quat.position.y = matrix.item(1,3)
-quat.position.z = matrix.item(2,3)
-quat.orientation.w = qw
-quat.orientation.x = qx
-quat.orientation.y = qy
-quat.orientation.z = qz
-"""
-"""
-grasp = apcGraspPose(
-    posegrasp = Pose(
-        position=Point(
-            x=matrix.item(0,3),
-            y=matrix.item(1,3),
-            z=matrix.item(2,3),
-        ),
-        orientation=Quaternion(
-            x=qx,
-            y=qy,
-            z=qz,
-            w=qw,
-        )
-    ),    
-    poseapproach = Vector3(
-        x=vector.item(0),
-        y=vector.item(1),
-        z=vector.item(2)
-        )
-    )
-"""
-
-
-"""
-br = tf2_ros.TransformBroadcaster()
-t.header.stamp = rospy.Time.now()
-t.header.frame_id = "base_link"
-t.child_frame_id = "grasp"
-t.transform.translation = grasp.position
-t.transform.rotation = grasp.orientation
-br.sendTransform(t)
-
-"""
-
-"""
-def graspOffset(apcPose):
-    offset = 0.1 #offset by 10 cm
-    x = apcPose.posegrasp.position.x
-    y = apcPose.posegrasp.position.y
-    z = apcPose.posegrasp.position.z
-    vecx = apcPose.poseapproach.x
-    vecy = apcPose.poseapproach.y
-    vecz = apcPose.poseapproach.z
-    vector = numpy.vector([vecx, vecy, vecz]) #approach vector
-    vectorMagnitude = numpy.sqrt(vecx,vecy,vecz) #magnitude of approach vector
-    unitVector = vector/vectorMagnitude
-    offsetVector = -unitVector*offset #new grasp point
-
-    print newPoint
-"""
-
 def genAPCGraspPose(grasp, object):    
     qw = numpy.sqrt(1 + grasp.item(0,0) + grasp.item(1,1) + grasp.item(2,2))/2
     qx = (grasp.item(2,1) - grasp.item(1,2)) / (4*qw)
     qy = (grasp.item(0,2) - grasp.item(2,0)) / (4*qw)
     qz = (grasp.item(1,0) - grasp.item(0,1)) / (4*qw)
 
-    offset = 0.1 #offset by 10 cm
+    offset = 0.2 #offset by 20 cm
     vecx = grasp.item(0,3) - object.item(0,3)
     vecy = grasp.item(1,3) - object.item(1,3)
     vecz = grasp.item(2,3) - object.item(2,3)
