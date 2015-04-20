@@ -1,8 +1,0 @@
-moveit_msgs/RobotTrajectory leftTraj
-moveit_msgs/RobotTrajectory rightTraj
-moveit_msgs/RobotTrajectory torsoTraj
-bool moveLeft
-bool moveRight
-bool moveTorso
----
-bool success
