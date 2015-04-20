@@ -5,6 +5,7 @@ import sys
 import traceback
 import time
 import openravepy
+import os
 from itertools import izip
 
 if not __openravepy_build_doc__:
@@ -60,8 +61,9 @@ if __name__ == "__main__":
     # Generate grasp database for objects in list
     for item in objectlist:
         try:
+            item = os.path.join(os.path.dirname(__file__), item)
+            print "Loading object XML: "+ item
             object = env.Load(item)
-            print "loading object XML: "+ item
 
             time.sleep(0.1)
             robot = env.GetRobots()[0]
