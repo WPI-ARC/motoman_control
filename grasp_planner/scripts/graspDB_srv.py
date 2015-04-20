@@ -9,6 +9,7 @@ import roslib
 import sys
 import traceback
 import time
+import os
 #from itertools import izip
 """OpenRave dependencies"""
 import openravepy
@@ -164,8 +165,9 @@ def CB_getGrasp(req):
         item = '../env/tennisball.env.xml'
     else:
         print "could not find scene xml for object: %s"%req.item
+    item = os.path.join(os.path.dirname(__file__), item)
+    print "Loading object XML: "+ item
     env.Load(item) # Load requested item
-    print "loading object XML: "+ item
 
     try:
         # Get robot from environment
