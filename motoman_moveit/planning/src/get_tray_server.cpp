@@ -42,7 +42,7 @@ bool move_callback(motoman_moveit::get_tray_server::Request &req,
     if(isLeft){
         // OPEN LEFT HAND
         gripperServer.request.command = "command: '70'";
-        ros::service::call("command_gripper", gripperServer);
+        ros::service::call("left/command_gripper", gripperServer);
 
         // GO TO INITIAL POSE
 //        targetPose.position.x = 0.735592;
@@ -65,7 +65,7 @@ bool move_callback(motoman_moveit::get_tray_server::Request &req,
     }else {
         // OPEN RIGHT HAND
         gripperServer.request.command = "command: '70'";
-        ros::service::call("command_gripper", gripperServer);
+        ros::service::call("right/command_gripper", gripperServer);
 
         // GO TO INITIAL POSE
         /*
@@ -175,11 +175,11 @@ bool move_callback(motoman_moveit::get_tray_server::Request &req,
     if(isLeft) {
         // CLOSE LEFT HAND
         gripperServer.request.command = "command: 'close'";
-        ros::service::call("command_gripper", gripperServer);
+        ros::service::call("left/command_gripper", gripperServer);
     }else {
         // CLOSE RIGHT HAND
         gripperServer.request.command = "command: 'close'";
-        ros::service::call("command_gripper", gripperServer);
+        ros::service::call("right/command_gripper", gripperServer);
     }
 
     // FOLLOW CARTESIAN PATH TO MOVE TRAY AWAY FROM OBSTACLES

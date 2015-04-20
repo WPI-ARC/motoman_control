@@ -10,7 +10,6 @@ find_package(Boost REQUIRED system filesystem date_time thread)
 
 add_service_files(
     FILES
-    move_group_server.srv
     convert_trajectory_server.srv
     get_tray_server.srv
     attach_tray_server.srv
