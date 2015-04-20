@@ -21,10 +21,11 @@ from grasp_planner.msg import apcGraspPose, apcGraspArray
 from apc_vision.srv import *
 from util import goto_pose, follow_path, bin_pose, filterGrasps, execute_grasp, add_object, remove_object
 
-item = "crayola_64_ct"
+#item = "crayola_64_ct"
 # item = "cheezit_big_original"
-# item = "feline_greenies_dental_treats"
-item = "mark_twain_huckleberry_finn"
+#item = "feline_greenies_dental_treats"
+#item = "mark_twain_huckleberry_finn"
+item = "mead_index_cards"
 
 rospy.loginfo("Initializing...")
 robot = moveit_commander.RobotCommander()

@@ -58,24 +58,24 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req,
 
 
 
-    std::map<std::string, double> joint_commands;
-    for (joint : joints)
-    {
-        joint_commands[joint_name] = joint_value;
-    }
-    // check
-    for (name : left_arm_names)
-    {
-        std::map<std::string, double>::const_iterator found = joint_commands.find(name);
-        if (found != joint_commands.end())
-        {
-            // joint is there
-        }
-        else
-        {
-            // not there
-        }
-    }
+//    std::map<std::string, double> joint_commands;
+//    for (joint : joints)
+//    {
+//        joint_commands[joint_name] = joint_value;
+//    }
+//    // check
+//    for (name : left_arm_names)
+//    {
+//        std::map<std::string, double>::const_iterator found = joint_commands.find(name);
+//        if (found != joint_commands.end())
+//        {
+//            // joint is there
+//        }
+//        else
+//        {
+//            // not there
+//        }
+//    }
 
     // if joint names for left/right/torso are contained in message joint_names,
     // set corresponding booleans to true
@@ -229,15 +229,15 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req,
         // for each point, num_groups must match array size
         num_groups = 0;
         groups.clear();
-        if(leftSize >= i) {
+        if(leftSize > i) {
             num_groups += 1;
             groups.push_back(leftGroupPoints[i]);
         }
-        if(rightSize >= i) {
+        if(rightSize > i) {
             num_groups += 1;
             groups.push_back(rightGroupPoints[i]);
         }
-        if(torsoSize >= i) {
+        if(torsoSize > i) {
             num_groups += 2;
             groups.push_back(torso1GroupPoints[i]);
             groups.push_back(torso2GroupPoints[i]);

@@ -12,10 +12,12 @@ int main(int argc, char **argv) {
 
     ros::service::waitForService("convert_trajectory_service");
     std::cout << "SERVICES STARTED!" << std::endl;
-    for (int i = 0; i < 10; i++) {
+
+    /*for (int i = 0; i < 10; i++) {
         sleep(1.0);
         std::cout << i+1 << " seconds" << std::endl;
-    }
+    }*/
+
     std::cout << "-------DONE SLEEPING----" << std::endl;
 
     // create trajectories
@@ -23,6 +25,7 @@ int main(int argc, char **argv) {
 
     std::vector<trajectory_msgs::JointTrajectoryPoint> trajPoints(2);
 
+    /*
     std::vector<std::string> jointNames(15);
     jointNames[0] = "arm_left_joint_1_s";
     jointNames[1] = "arm_left_joint_2_l";
@@ -94,6 +97,47 @@ int main(int argc, char **argv) {
     velVector[12] = 0.0;
     velVector[13] = 0.0;
     velVector[14] = 0.0;
+    */
+
+    std::vector<std::string> jointNames(7);
+    jointNames[0] = "arm_left_joint_1_s";
+    jointNames[1] = "arm_left_joint_2_l";
+    jointNames[2] = "arm_left_joint_3_e";
+    jointNames[3] = "arm_left_joint_4_u";
+    jointNames[4] = "arm_left_joint_5_r";
+    jointNames[5] = "arm_left_joint_6_b";
+    jointNames[6] = "arm_left_joint_7_t";
+
+
+    // POSITION[0] VECTOR
+    std::vector<double> posVector0(7);
+    posVector0[0] = 0.0;
+    posVector0[1] = 0.0;
+    posVector0[2] = 0.0;
+    posVector0[3] = 0.0;
+    posVector0[4] = 0.0;
+    posVector0[5] = 0.0;
+    posVector0[6] = 0.0;
+
+    // POSITION[1] VECTOR
+    std::vector<double> posVector1(7);
+    posVector1[0] = -1.0;
+    posVector1[1] = 1.0;
+    posVector1[2] = -1.0;
+    posVector1[3] = 1.0;
+    posVector1[4] = -1.0;
+    posVector1[5] = 1.0;
+    posVector1[6] = -1.0;
+
+    // VELOCITY VECTOR
+    std::vector<double> velVector(7);
+    velVector[0] = 0.0;
+    velVector[1] = 0.0;
+    velVector[2] = 0.0;
+    velVector[3] = 0.0;
+    velVector[4] = 0.0;
+    velVector[5] = 0.0;
+    velVector[6] = 0.0;
 
     trajPoints[0].positions = posVector0;
     trajPoints[0].velocities = velVector;
@@ -110,6 +154,7 @@ int main(int argc, char **argv) {
     motoman_moveit::convert_trajectory_server move1;
 
     move1.request.jointTraj = jointTraj;
+    std::cout << "REQUEST: " << move1.request << std::endl;
 
     ros::service::call("convert_trajectory_service", move1);
 

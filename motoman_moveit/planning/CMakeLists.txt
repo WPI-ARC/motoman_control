@@ -26,6 +26,19 @@ add_executable(convert_trajectory_test1 src/convert_trajectory_test1.cpp)
 target_link_libraries(convert_trajectory_test1 ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 install(TARGETS convert_trajectory_test1 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
+
+add_executable(get_tray_server src/get_tray_server.cpp)
+target_link_libraries(get_tray_server ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+install(TARGETS get_tray_server DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+#add_executable(attach_tray_server src/attach_tray_server.cpp)
+#target_link_libraries(attach_tray_server ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+#install(TARGETS attach_tray_server DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+add_executable(get_tray_test1 src/get_tray_test1.cpp)
+target_link_libraries(get_tray_test1 ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+install(TARGETS get_tray_test1 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
 # add_executable(move_there_move_back src/move_there_move_back.cpp)
 # target_link_libraries(move_there_move_back ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 # install(TARGETS move_there_move_back DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
