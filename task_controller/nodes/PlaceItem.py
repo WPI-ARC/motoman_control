@@ -13,7 +13,7 @@ class PLACEITEM(smach.State):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],
                              input_keys=['input'], output_keys=['output'])
         self.arm = robot.arm_left
-        self.gripper_control = rospy.ServiceProxy("command_gripper", gripper)
+        self.gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
 
     def execute(self, userdata):
         rospy.loginfo("Trying to place...")

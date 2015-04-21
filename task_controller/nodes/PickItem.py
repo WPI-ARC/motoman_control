@@ -30,8 +30,9 @@ class PICKITEM(smach.State):
 
         # TODO: Handle response error
         response = self.grasp_generator.call(item=userdata.item,
-                                             Trob_obj=userdata.pose)
+                                             Trob_obj=userdata.pose.pose)
         grasps = filterGrasps(self.arm, response.apcGraspArray.grasps)
+        grasps = response.apcGraspArray.grasps
         print "Grasp:", grasps[0]
 
         tfs = []
@@ -64,7 +65,7 @@ class PICKITEM(smach.State):
         self.arm.set_planner_id("RRTstarkConfigDefault")
         self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
 
-        if not execute_grasp(self.arm, grasps[0], userdata.pose):
+        if not execute_grasp(self.arm, grasps[0], userdata.pose.pose):
             return "Failure"
 
         return 'Success'
