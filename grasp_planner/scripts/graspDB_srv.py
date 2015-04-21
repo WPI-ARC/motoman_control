@@ -167,6 +167,7 @@ def initialize():
             env.Reset()
 
             #Load item
+            item = os.path.join(os.path.dirname(__file__), item)
             env.Load(item)
             print "loading object XML: "+ item
 
@@ -230,6 +231,7 @@ def initialize():
 
     print "Finish dictionary generation"
     print len(graspDict)
+    RaveDestroy() # destroys all environments and loaded plugins
 
     return graspDict
 
