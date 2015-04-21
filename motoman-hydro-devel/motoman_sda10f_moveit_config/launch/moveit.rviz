@@ -6,6 +6,8 @@ Panels:
       Expanded:
         - /Global Options1
         - /MotionPlanning1
+        - /MotionPlanning1/Scene Geometry1
+        - /MotionPlanning1/Scene Robot1
         - /MotionPlanning1/Planning Request1
         - /MotionPlanning1/Planned Path1
         - /TF1/Frames1
@@ -335,7 +337,7 @@ Visualization Manager:
       Planning Scene Topic: /move_group/monitored_planning_scene
       Robot Description: robot_description
       Scene Geometry:
-        Scene Alpha: 1
+        Scene Alpha: 0.5
         Scene Color: 50; 230; 50
         Scene Display Time: 0.2
         Show Scene Geometry: true
@@ -602,120 +604,19 @@ Visualization Manager:
         Show Robot Visual: true
       Value: true
     - Class: rviz/TF
-      Enabled: true
+      Enabled: false
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        arm_left_link_1_s:
-          Value: true
-        arm_left_link_2_l:
-          Value: true
-        arm_left_link_3_e:
-          Value: true
-        arm_left_link_4_u:
-          Value: true
-        arm_left_link_5_r:
-          Value: true
-        arm_left_link_6_b:
-          Value: true
-        arm_left_link_7_t:
-          Value: true
-        arm_left_link_tool0:
-          Value: true
-        arm_right_link_1_s:
-          Value: true
-        arm_right_link_2_l:
-          Value: true
-        arm_right_link_3_e:
-          Value: true
-        arm_right_link_4_u:
-          Value: true
-        arm_right_link_5_r:
-          Value: true
-        arm_right_link_6_b:
-          Value: true
-        arm_right_link_7_t:
-          Value: true
-        arm_right_link_tool0:
-          Value: true
-        base_link:
-          Value: true
-        camera_left:
-          Value: true
-        camera_left_depth_optical_frame:
-          Value: true
-        camera_right_depth_optical_frame:
-          Value: true
-        cylinder_hand_left:
-          Value: true
-        cylinder_hand_right:
-          Value: true
-        hand_left_finger_middle_link_0:
-          Value: true
-        hand_left_palm:
-          Value: true
-        hand_right_finger_middle_link_0:
-          Value: true
-        hand_right_palm:
-          Value: true
-        robotiq_force_wires_left:
-          Value: true
-        robotiq_hand_wires_left:
-          Value: true
-        shelf:
-          Value: true
-        torso_link_b1:
-          Value: true
-        torso_link_b2:
-          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: false
       Show Axes: true
       Show Names: false
       Tree:
-        base_link:
-          shelf:
-            {}
-          torso_link_b1:
-            arm_left_link_1_s:
-              arm_left_link_2_l:
-                arm_left_link_3_e:
-                  arm_left_link_4_u:
-                    arm_left_link_5_r:
-                      arm_left_link_6_b:
-                        arm_left_link_7_t:
-                          arm_left_link_tool0:
-                            cylinder_hand_left:
-                              hand_left_palm:
-                                camera_left:
-                                  {}
-                                hand_left_finger_middle_link_0:
-                                  {}
-                                robotiq_hand_wires_left:
-                                  {}
-                              robotiq_force_wires_left:
-                                {}
-                          camera_left_depth_optical_frame:
-                            {}
-            arm_right_link_1_s:
-              arm_right_link_2_l:
-                arm_right_link_3_e:
-                  arm_right_link_4_u:
-                    arm_right_link_5_r:
-                      arm_right_link_6_b:
-                        arm_right_link_7_t:
-                          arm_right_link_tool0:
-                            cylinder_hand_right:
-                              hand_right_palm:
-                                hand_right_finger_middle_link_0:
-                                  {}
-                          camera_right_depth_optical_frame:
-                            {}
-          torso_link_b2:
-            {}
+        {}
       Update Interval: 0
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:

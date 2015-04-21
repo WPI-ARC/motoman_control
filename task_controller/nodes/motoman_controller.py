@@ -14,6 +14,7 @@ import ctypes
 
 import PickAndPlaceItem
 import ScoopAndPickItem
+import PickScoop
 import Scheduler
 import FinishTask
 import SafeMode
@@ -45,9 +46,10 @@ class MotomanController:
             #schedule = [("grab_empty", "A", "crayola_64_ct"),
             #            ("grab_empty", "B", "elmers_washable_no_run_school_glue")]
             schedule = [("scoop", "C", "elmers_washable_no_run_school_glue")]
+            schedule = [("pick_scoop", "C", "elmers_washable_no_run_school_glue")]
             smach.StateMachine.add(
                 'Scheduler', Scheduler.SIMPLESCHEDULER(schedule),
-                transitions={'Pick': 'PickAndPlaceItem', 'Scoop': 'ScoopAndPickItem', 'ToolChange': 'FAILED',
+                transitions={'Pick': 'PickAndPlaceItem', 'Scoop': 'ScoopAndPickItem', 'ToolChange': 'PickScoop',
                              # 'Scoop': 'ScoopAndPlaceItem', 'ToolChange': 'ChangeScoop',
                              'Success': 'FinishTask', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
             )
@@ -62,6 +64,13 @@ class MotomanController:
             smach.StateMachine.add(
                 'ScoopAndPickItem',
                 ScoopAndPickItem.SCOOPANDPICKITEM(self.robot),
+                transitions={'Success': 'Scheduler', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
+                remapping={'input': 'sm_input', 'output': 'sm_data'}
+            )
+
+            smach.StateMachine.add(
+                'PickScoop',
+                PickScoop.PICKSCOOP(self.robot),
                 transitions={'Success': 'Scheduler', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
                 remapping={'input': 'sm_input', 'output': 'sm_data'}
             )
