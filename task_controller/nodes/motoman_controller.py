@@ -45,8 +45,9 @@ class MotomanController:
             #schedule = [("grab_empty", "B", "elmers_washable_no_run_school_glue")]
             #schedule = [("grab_empty", "A", "crayola_64_ct"),
             #            ("grab_empty", "B", "elmers_washable_no_run_school_glue")]
-            schedule = [("scoop", "C", "elmers_washable_no_run_school_glue")]
-            schedule = [("pick_scoop", "C", "elmers_washable_no_run_school_glue")]
+            #schedule = [("scoop", "C", "elmers_washable_no_run_school_glue")]
+            schedule = [("pick_scoop", "C", "elmers_washable_no_run_school_glue"),
+                        ("scoop", "C", "elmers_washable_no_run_school_glue")]
             smach.StateMachine.add(
                 'Scheduler', Scheduler.SIMPLESCHEDULER(schedule),
                 transitions={'Pick': 'PickAndPlaceItem', 'Scoop': 'ScoopAndPickItem', 'ToolChange': 'PickScoop',
