@@ -32,7 +32,7 @@ class PICKITEM(smach.State):
         response = self.grasp_generator.call(item=userdata.item,
                                              Trob_obj=userdata.pose.pose)
         grasps = filterGrasps(self.arm, response.apcGraspArray.grasps)
-        grasps = response.apcGraspArray.grasps
+        #grasps = response.apcGraspArray.grasps
         print "Grasp:", grasps[0]
 
         tfs = []

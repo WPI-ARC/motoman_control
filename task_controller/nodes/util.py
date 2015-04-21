@@ -53,14 +53,16 @@ def check_ik(group, pose, collision_checking=True):
     request.ik_request.group_name = group.get_name();
     request.ik_request.pose_stamped.pose = pose
     request.ik_request.avoid_collisions = True
+    request.ik_request.timeout.nsecs = 5000000 # 5ms
     response = position_ik.call(request)
-    print response
     return response.error_code.val == 1
 
 def filterGrasps(group, grasps):
     filtered = []
-    for grasp in grasps:
+    for i, grasp in enumerate(grasps):
+        print "%s/%s" % (i+1, len(grasps))
         if check_ik(group, grasp.posegrasp) and check_ik(group, grasp.poseapproach):
+            print "Success"
             filtered.append(grasp)
     return filtered
 
