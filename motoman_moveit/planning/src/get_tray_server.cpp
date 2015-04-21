@@ -30,8 +30,8 @@ bool move_callback(motoman_moveit::get_tray_server::Request &req,
 
     std::cout << "PLANNING..." << std::endl;
 
-//    moveit::planning_interface::MoveGroup move_group("arm_" + req.hand + "_torso");
-    moveit::planning_interface::MoveGroup move_group("arm_" + req.hand);
+    moveit::planning_interface::MoveGroup move_group("arm_" + req.hand + "_torso");
+//    moveit::planning_interface::MoveGroup move_group("arm_" + req.hand);
 
     move_group.setPlannerId("RRTstarkConfigDefault");
     move_group.setPlanningTime(5.0);
@@ -41,8 +41,8 @@ bool move_callback(motoman_moveit::get_tray_server::Request &req,
 
     if(isLeft){
         // OPEN LEFT HAND
-        gripperServer.request.command = "command: '70'";
-        ros::service::call("left/command_gripper", gripperServer);
+        gripperServer.request.command = "70";
+        ros::service::call("/left/command_gripper", gripperServer);
 
         // GO TO INITIAL POSE
 //        targetPose.position.x = 0.735592;
@@ -53,8 +53,8 @@ bool move_callback(motoman_moveit::get_tray_server::Request &req,
 //        targetPose.orientation.z = 0.693177;
 //        targetPose.orientation.w = 0.0790984;
 
-        targetPose.position.x = 0.429567;
-        targetPose.position.y = 0.859446;
+        targetPose.position.x = 0.509;
+        targetPose.position.y = 0.873;
         targetPose.position.z = 1.25832;
         targetPose.orientation.x = -0.673667;
         targetPose.orientation.y = 0.207501;
@@ -64,8 +64,8 @@ bool move_callback(motoman_moveit::get_tray_server::Request &req,
 
     }else {
         // OPEN RIGHT HAND
-        gripperServer.request.command = "command: '70'";
-        ros::service::call("right/command_gripper", gripperServer);
+        gripperServer.request.command = "70";
+        ros::service::call("/right/command_gripper", gripperServer);
 
         // GO TO INITIAL POSE
         /*
@@ -116,27 +116,9 @@ bool move_callback(motoman_moveit::get_tray_server::Request &req,
     zeroVector[5] = 0.0;
     zeroVector[6] = 0.0;
 
-
-    std::vector<trajectory_msgs::JointTrajectoryPoint> trajPoints;
-
-    int planSize = plan.trajectory_.joint_trajectory.points.size();
-    trajPoints.resize(planSize);
-
-    for(int i = 0; i< planSize; i++) {
-        trajPoints[i].positions = plan.trajectory_.joint_trajectory.points[i].positions;
-        trajPoints[i].velocities = plan.trajectory_.joint_trajectory.points[i].velocities;
-        trajPoints[i].time_from_start = plan.trajectory_.joint_trajectory.points[i].time_from_start;
-    }
-
     trajectory_msgs::JointTrajectory jointTraj;
-    jointTraj.header.frame_id = "/base_link";
 
-    if(isLeft)
-        jointTraj.joint_names = leftJointNames;
-    else
-        jointTraj.joint_names = rightJointNames;
-
-    jointTraj.points = trajPoints;
+    jointTraj = plan.trajectory_.joint_trajectory;
 
     motoman_moveit::convert_trajectory_server move0;
     move0.request.jointTraj = jointTraj;
@@ -145,14 +127,16 @@ bool move_callback(motoman_moveit::get_tray_server::Request &req,
 
     std::cout << "##########   SLEEPING   ##########" << std::endl;
 
-    sleep(trajPoints[trajPoints.size()-1].time_from_start.toSec() + 0.1); //0.1 add for buffer
+    sleep(jointTraj.points[jointTraj.points.size()-1].time_from_start.toSec() + 0.1);
+
+    std::cout << "##########   MOVED TO POSE #0   ##########" << std::endl;
 
     // FOLLOW CARTESIAN PATH TO PLACE ROBOTIQ FINGERS AROUND TRAY
     std::vector<geometry_msgs::Pose> cartesianPoses1(2);
     cartesianPoses1[0] = targetPose;
     cartesianPoses1[1] = targetPose;
     if(isLeft)
-        cartesianPoses1[1].position.y -= 0.16/*SOME NUMBER*/;
+        cartesianPoses1[1].position.x -= 0.02/*SOME NUMBER*/;
     else
         cartesianPoses1[1].position.y += 0.16/*SOME NUMBER*/;
 
@@ -161,25 +145,24 @@ bool move_callback(motoman_moveit::get_tray_server::Request &req,
 
     std::cout << "##########   COMPUTED CARTESIAN PATH 1   ##########" << std::endl;
 
-    trajectory_msgs::JointTrajectory cartesianTraj1;
-    cartesianTraj1 = cartesianRobotTraj1.joint_trajectory;
-
     motoman_moveit::convert_trajectory_server move1;
-    move1.request.jointTraj = cartesianTraj1;
+    std::cout << "CARTESIAN TRAJ: " << cartesianRobotTraj1.multi_dof_joint_trajectory << std::endl;
+    move1.request.jointTraj = cartesianRobotTraj1.joint_trajectory;
+    std::cout << "REQUEST: " << move1.request << std::endl;
     ros::service::call("convert_trajectory_service", move1);
 
-    sleep(cartesianTraj1.points[1].time_from_start.toSec() + 0.1); //0.1 add for buffer
+    sleep(move1.request.jointTraj.points[1].time_from_start.toSec() + 0.1); //0.1 add for buffer
 
-    std::cout << "##########   MOVED TO POSE #2   ##########" << std::endl;
+    std::cout << "##########   MOVED TO POSE #1   ##########" << std::endl;
 
     if(isLeft) {
         // CLOSE LEFT HAND
-        gripperServer.request.command = "command: 'close'";
-        ros::service::call("left/command_gripper", gripperServer);
+        gripperServer.request.command = "close";
+        ros::service::call("/left/command_gripper", gripperServer);
     }else {
         // CLOSE RIGHT HAND
-        gripperServer.request.command = "command: 'close'";
-        ros::service::call("right/command_gripper", gripperServer);
+        gripperServer.request.command = "close";
+        ros::service::call("/right/command_gripper", gripperServer);
     }
 
     // FOLLOW CARTESIAN PATH TO MOVE TRAY AWAY FROM OBSTACLES
@@ -199,9 +182,10 @@ bool move_callback(motoman_moveit::get_tray_server::Request &req,
 
     motoman_moveit::convert_trajectory_server move2;
     move2.request.jointTraj = cartesianTraj2;
+    std::cout << "REQUEST: " << move2.request << std::endl;
     ros::service::call("convert_trajectory_service", move2);
 
-    sleep(cartesianTraj2.points[1].time_from_start.toSec() + 0.1); //0.1 add for buffer
+    sleep(move2.request.jointTraj.points[1].time_from_start.toSec() + 0.1); //0.1 add for buffer
 
     std::cout << "##########   MOVED TO POSE #2   ##########" << std::endl;
     std::cout << "##########   DONE   ##########" << std::endl;
