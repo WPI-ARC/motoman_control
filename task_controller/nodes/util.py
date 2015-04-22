@@ -53,18 +53,19 @@ def check_ik(group, pose, collision_checking=True):
     request.ik_request.group_name = group.get_name();
     request.ik_request.pose_stamped.pose = pose
     request.ik_request.avoid_collisions = True
-    request.ik_request.timeout.nsecs = 5000000 # 5ms
+    #request.ik_request.robot_state.joint_state = group.get_current_joint_values()
+    # request.ik_request.timeout.secs = 0
+    # request.ik_request.timeout.nsecs = 500000 # 5ms
+    request.ik_request.timeout = rospy.Duration(0.005)
     response = position_ik.call(request)
     return response.error_code.val == 1
 
 def filterGrasps(group, grasps):
-    filtered = []
     for i, grasp in enumerate(grasps):
         print "%s/%s" % (i+1, len(grasps))
         if check_ik(group, grasp.posegrasp) and check_ik(group, grasp.poseapproach):
             print "Success"
-            filtered.append(grasp)
-    return filtered
+            yield grasp
 
 gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
 def execute_grasp(group, grasp, object_pose):

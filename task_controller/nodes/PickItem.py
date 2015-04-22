@@ -31,36 +31,38 @@ class PICKITEM(smach.State):
         # TODO: Handle response error
         response = self.grasp_generator.call(item=userdata.item,
                                              Trob_obj=userdata.pose.pose)
-        grasps = filterGrasps(self.arm, response.apcGraspArray.grasps)
+        grasps = list(filterGrasps(self.arm, response.apcGraspArray.grasps))
         #grasps = response.apcGraspArray.grasps
+        #grasp = grasps.next()
         print "Grasp:", grasps[0]
+        # grasps = [grasp]
 
-        tfs = []
-        for i in range(len(grasps)):
-            grasp = grasps[i].posegrasp
-            approach = grasps[i].poseapproach
-            t = TransformStamped()
-            t.header.stamp = rospy.Time.now()
-            t.header.frame_id = "base_link"
-            t.child_frame_id = "grasp "+str(i)
-            t.transform.translation = grasp.position
-            t.transform.rotation = grasp.orientation
-            tfs.append(t)
-            t = TransformStamped()
-            t.header.stamp = rospy.Time.now()
-            t.header.frame_id = "base_link"
-            t.child_frame_id = "approach "+str(i)
-            t.transform.translation = approach.position
-            t.transform.rotation = approach.orientation
-            tfs.append(t)
+        # tfs = []
+        # for i in range(len(grasps)):
+        #     grasp = grasps[i].posegrasp
+        #     approach = grasps[i].poseapproach
+        #     t = TransformStamped()
+        #     t.header.stamp = rospy.Time.now()
+        #     t.header.frame_id = "base_link"
+        #     t.child_frame_id = "grasp "+str(i)
+        #     t.transform.translation = grasp.position
+        #     t.transform.rotation = grasp.orientation
+        #     tfs.append(t)
+        #     t = TransformStamped()
+        #     t.header.stamp = rospy.Time.now()
+        #     t.header.frame_id = "base_link"
+        #     t.child_frame_id = "approach "+str(i)
+        #     t.transform.translation = approach.position
+        #     t.transform.rotation = approach.orientation
+        #     tfs.append(t)
 
-        br = tf2_ros.TransformBroadcaster()
-        rate = rospy.Rate(250.0)
-        while (not rospy.is_shutdown()):
-            for t in tfs:
-                t.header.stamp = rospy.Time.now()
-                br.sendTransform(t)
-            rate.sleep()
+        # br = tf2_ros.TransformBroadcaster()
+        # rate = rospy.Rate(250.0)
+        # while (not rospy.is_shutdown()):
+        #     for t in tfs:
+        #         t.header.stamp = rospy.Time.now()
+        #         br.sendTransform(t)
+        #     rate.sleep()
 
         self.arm.set_planner_id("RRTstarkConfigDefault")
         self.arm.set_workspace([-3, -3, -3, 3, 3, 3])

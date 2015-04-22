@@ -23,24 +23,21 @@ class SCANFORITEM(smach.State):
         output['error'] = "None"
         userdata.output = output
 
-        sample_request = SampleVisionRequest(
-            command=userdata.bin
-        )
-        process_request = ProcessVisionRequest(
-            bin=userdata.bin,
-            object=userdata.item
-        )
         for i in range(5):
-            response = self.sample.call(sample_request)
+            response = self.sample.call(command=userdata.bin)
             print "Sample:", response
-            response = self.process.call(process_request)
+            response = self.process.call(
+                bin=userdata.bin,
+                object1=userdata.item,
+                object2=userdata.item,
+            )
             print "Process:", response
             if True or response.found:
-                response.pose.pose.orientation.x = -0.484592
-                response.pose.pose.orientation.y = 0.384602
-                response.pose.pose.orientation.z = 0.615524
-                response.pose.pose.orientation.w = -0.488244
-                userdata.pose = response.pose
+                response.pose1.pose.orientation.x = -0.484592
+                response.pose1.pose.orientation.y = 0.384602
+                response.pose1.pose.orientation.z = 0.615524
+                response.pose1.pose.orientation.w = -0.488244
+                userdata.pose = response.pose1
                 userdata.output = userdata.input
                 return 'Success'
         rospy.logwarn("Can't find "+userdata.item+"...")

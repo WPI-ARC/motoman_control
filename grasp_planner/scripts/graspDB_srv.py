@@ -11,6 +11,7 @@ import traceback
 import time
 import os
 import csv
+import json
 #from itertools import izip
 """OpenRave dependencies"""
 import openravepy
@@ -123,6 +124,7 @@ def initialize():
                     '../env/stirsticks.env.xml',
                     '../env/strawcups.env.xml',
                     '../env/tennisball.env.xml']
+    objectlist = ['../env/dentaltreat.env.xml']
 
     # Program options that can be set
     showGUI = False # If set to true, will show openRave qtcoin GUI
@@ -213,18 +215,19 @@ def initialize():
     for key, val in graspDict.items():
         w.writerow([key,val])
     w.close()
+    # with open(os.path.join(os.path.dirname(__file__), "graspDict.json"), "w") as file:
+    #     json.dump(graspDict, file)
 
     return graspDict
 
 def CB_getGrasp(req):
+        global graspDict
         showOutput = False # If set to true, will show all print statments
         # Initilaztion stuff
         #global graspDict
         # Read graspDict from csv file
-        graspDict = {}
-        for key, val in csv.reader(open("graspDict.csv")):
-            graspDict[key] = val
-
+        # with open(os.path.join(os.path.dirname(__file__), "graspDict.json")) as file:
+        #     graspDict = json.dump(file)
 
 
         if showOutput:
@@ -294,6 +297,7 @@ def CB_getGrasp(req):
         else:
             print "could not find scene xml for object: %s"%req.item
         #env.Load(item) # Load requested item
+        item =os.path.basename(item)
         if showOutput:
             print "loading object XML: "+ item
 
@@ -364,6 +368,7 @@ def CB_getGrasp(req):
         return apcGraspDBResponse(status=True,apcGraspArray=grasps)
     
 def publisher():
+    global graspDict
     # Main loop which requests validgrasps from database and returns it
     # Valid grasps should be in object frame I think
     # global graspDict
@@ -371,6 +376,12 @@ def publisher():
     rate = rospy.Rate(10.0)
     #graspDict = initialize()
     #print graspDict
+    graspDict = {}
+    for key, val in csv.reader(open(os.path.join(os.path.dirname(__file__), "graspDict.csv"))):
+        key, val = os.path.basename(key), eval(val)
+        print key, type(val)
+        from numpy import matrix
+        graspDict[key] = val
     while not rospy.is_shutdown():
         #t.header.stamp = rospy.Time.now()
         #br.sendTransform(t)
