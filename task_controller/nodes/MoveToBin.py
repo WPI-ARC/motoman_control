@@ -3,13 +3,17 @@ import rospy
 import smach
 
 from util import goto_pose, bin_pose
+from motoman_moveit.srv import convert_trajectory_server
+from trajectory_srv.srv import task
 
 class MOVETOBIN(smach.State):
 
     def __init__(self, robot):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],
-                             input_keys=['input', 'bin'], output_keys=['output'])
+                             input_keys=['bin'], output_keys=[])
         self.arm = robot.arm_left
+        self.move = rospy.ServiceProxy("/convert_trajectory_service", convert_trajectory_server)
+        self.trajlib = rospy.ServiceProxy("/trajectory_servce", task)
 
     def execute(self, userdata):
         rospy.loginfo("Trying to move to bin '"+userdata.bin+"'...")
@@ -17,17 +21,8 @@ class MOVETOBIN(smach.State):
         pose = bin_pose(userdata.bin)
         print "Pose: ", pose
 
-        # TODO: Remove?
-        output = {}
-        output['data'] = userdata.input
-        output['error'] = "None"
-        userdata.output = output
-
-        self.arm.set_planner_id("RRTstarkConfigDefault")
-        self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
-        if goto_pose(self.arm, pose.pose, [1, 5, 30, 60]):
-            return 'Success'
-        else:
-            return 'Failure'
-
-
+        plan = self.trajlib(task="Forward", bin_num=userdata.bin)
+        # plan = self.trajlib(task="Drop", bin_num="A")
+        print plan
+        # print self.move(plan.joint_trajectory)
+        return 'Success'
