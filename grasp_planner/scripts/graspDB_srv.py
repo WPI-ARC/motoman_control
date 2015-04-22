@@ -10,6 +10,7 @@ import sys
 import traceback
 import time
 import os
+import csv
 #from itertools import izip
 """OpenRave dependencies"""
 import openravepy
@@ -207,12 +208,25 @@ def initialize():
     print len(graspDict)
     RaveDestroy() # destroys all environments and loaded plugins
 
+    # Write graspDict to a csv file
+    w = csv.writer(open("graspDict.csv", "w"))
+    for key, val in graspDict.items():
+        w.writerow([key,val])
+    w.close()
+
     return graspDict
 
 def CB_getGrasp(req):
         showOutput = False # If set to true, will show all print statments
         # Initilaztion stuff
-        global graspDict
+        #global graspDict
+        # Read graspDict from csv file
+        graspDict = {}
+        for key, val in csv.reader(open("graspDict.csv")):
+            graspDict[key] = val
+
+
+
         if showOutput:
             print graspDict
         graspList=[]
@@ -355,7 +369,7 @@ def publisher():
     # global graspDict
     rospy.init_node('graspDatabase_service')
     rate = rospy.Rate(10.0)
-    graspDict = initialize()
+    #graspDict = initialize()
     #print graspDict
     while not rospy.is_shutdown():
         #t.header.stamp = rospy.Time.now()
