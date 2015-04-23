@@ -4,7 +4,7 @@ import smach
 
 from util import goto_pose, bin_pose
 from motoman_moveit.srv import convert_trajectory_server
-from trajectory_srv.srv import task
+from trajlib.srv import task
 
 class MOVETOBIN(smach.State):
 
@@ -13,11 +13,10 @@ class MOVETOBIN(smach.State):
                              input_keys=['bin'], output_keys=[])
         self.arm = robot.arm_left
         self.move = rospy.ServiceProxy("/convert_trajectory_service", convert_trajectory_server)
-        self.trajlib = rospy.ServiceProxy("/trajectory_servce", task)
+        self.trajlib = rospy.ServiceProxy("/trajectory_execute", task)
 
     def execute(self, userdata):
         rospy.loginfo("Trying to move to bin '"+userdata.bin+"'...")
-        print "Input data: " + str(userdata.input)
         pose = bin_pose(userdata.bin)
         print "Pose: ", pose
 
