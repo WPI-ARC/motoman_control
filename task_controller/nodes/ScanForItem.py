@@ -1,6 +1,8 @@
 import roslib; roslib.load_manifest('task_controller')
 import rospy
 import smach
+import tf
+from tf import TransformListener
 
 from geometry_msgs.msg import PoseStamped
 
@@ -13,6 +15,8 @@ class SCANFORITEM(smach.State):
                              input_keys=['input', 'bin', 'item'], output_keys=['output', 'pose'])
         self.sample = rospy.ServiceProxy("sample_vision", SampleVision)
         self.process = rospy.ServiceProxy("process_vision", ProcessVision)
+        self.tf = TransformListener(True, rospy.Duration(10.0))
+        rospy.sleep(rospy.Duration(1.0)) # Wait for network timting
 
     def execute(self, userdata):
         rospy.loginfo("Trying to find "+userdata.item+"...")
@@ -33,11 +37,12 @@ class SCANFORITEM(smach.State):
             )
             print "Process:", response
             if True or response.found:
-                response.pose1.pose.orientation.x = -0.484592
-                response.pose1.pose.orientation.y = 0.384602
-                response.pose1.pose.orientation.z = 0.615524
-                response.pose1.pose.orientation.w = -0.488244
-                userdata.pose = response.pose1
+                # response.pose1.pose.orientation.x = -0.484592
+                # response.pose1.pose.orientation.y = 0.384602
+                # response.pose1.pose.orientation.z = 0.615524
+                # response.pose1.pose.orientation.w = -0.488244
+                userdata.pose = self.tf.transformPose("/base_link", response.pose1)
+                print "Pose:", self.tf.transformPose("/base_link", response.pose1)
                 userdata.output = userdata.input
                 return 'Success'
         rospy.logwarn("Can't find "+userdata.item+"...")

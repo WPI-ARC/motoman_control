@@ -2,6 +2,8 @@ import roslib; roslib.load_manifest('task_controller')
 import rospy
 import smach
 import tf2_ros
+import random
+from copy import deepcopy
 from geometry_msgs.msg import TransformStamped
 
 from gripper_srv.srv import gripper
@@ -31,12 +33,19 @@ class PICKITEM(smach.State):
         # TODO: Handle response error
         response = self.grasp_generator.call(item=userdata.item,
                                              Trob_obj=userdata.pose.pose)
-        grasps = list(filterGrasps(self.arm, response.apcGraspArray.grasps))
-        #grasps = response.apcGraspArray.grasps
-        #grasp = grasps.next()
+        for grasp in response.apcGraspArray.grasps:
+            grasp.poseapproach = deepcopy(grasp.posegrasp)
+            grasp.poseapproach.position.x -= 0.2
+        random.shuffle(response.apcGraspArray.grasps)
+        grasps = filterGrasps(self.arm, response.apcGraspArray.grasps)
+        # grasps = response.apcGraspArray.grasps
+        grasp = grasps.next()
+        grasps = [grasp]
         print "Grasp:", grasps[0]
-        # grasps = [grasp]
 
+        # grasps = list(filterGrasps(self.arm, response.apcGraspArray.grasps))
+        # # grasps = response.apcGraspArray.grasps
+        # print "Grasp:", grasps[0]
         # tfs = []
         # for i in range(len(grasps)):
         #     grasp = grasps[i].posegrasp
