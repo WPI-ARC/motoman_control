@@ -12,6 +12,7 @@ import time
 import os
 import csv
 import json
+import cPickle as pickle
 #from itertools import izip
 """OpenRave dependencies"""
 import openravepy
@@ -124,7 +125,7 @@ def initialize():
                     '../env/stirsticks.env.xml',
                     '../env/strawcups.env.xml',
                     '../env/tennisball.env.xml']
-    objectlist = ['../env/dentaltreat.env.xml']
+    objectlist = ['../env/crayon.env.xml']
 
     # Program options that can be set
     showGUI = False # If set to true, will show openRave qtcoin GUI
@@ -203,6 +204,7 @@ def initialize():
         # Dictionary of grasps for each object
         if showOutput:
             print "Adding grasps for " + item + " to dictionary"
+        item =os.path.basename(item)
         graspDict[item] = grasplist
         #print graspDict
 
@@ -211,10 +213,11 @@ def initialize():
     RaveDestroy() # destroys all environments and loaded plugins
 
     # Write graspDict to a csv file
-    w = csv.writer(open("graspDict.csv", "w"))
-    for key, val in graspDict.items():
-        w.writerow([key,val])
-    w.close()
+    with open(os.path.join(os.path.dirname(__file__), "graspDict.csv"), "w") as file:
+        # w = csv.writer(file)
+        # for key, val in graspDict.items():
+        #     w.writerow([key,val])
+        pickle.dump(graspDict, file)
     # with open(os.path.join(os.path.dirname(__file__), "graspDict.json"), "w") as file:
     #     json.dump(graspDict, file)
 
@@ -374,14 +377,16 @@ def publisher():
     # global graspDict
     rospy.init_node('graspDatabase_service')
     rate = rospy.Rate(10.0)
-    #graspDict = initialize()
+    graspDict = initialize()
     #print graspDict
-    graspDict = {}
-    for key, val in csv.reader(open(os.path.join(os.path.dirname(__file__), "graspDict.csv"))):
-        key, val = os.path.basename(key), eval(val)
-        print key, type(val)
-        from numpy import matrix
-        graspDict[key] = val
+    # graspDict = {}
+    # for key, val in csv.reader(open(os.path.join(os.path.dirname(__file__), "graspDict.csv"))):
+    #     key, val = os.path.basename(key), eval(val)
+    #     print key, type(val)
+    #     from numpy import matrix
+    #     graspDict[key] = val
+    with open(os.path.join(os.path.dirname(__file__), "graspDict.csv")) as file:
+        graspDict = pickle.load(file)
     while not rospy.is_shutdown():
         #t.header.stamp = rospy.Time.now()
         #br.sendTransform(t)
