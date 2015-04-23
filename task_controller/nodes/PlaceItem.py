@@ -5,7 +5,8 @@ import smach
 from geometry_msgs.msg import Pose
 from gripper_srv.srv import gripper, gripperRequest
 
-from util import goto_pose, bin_pose
+from util.moveit import goto_pose
+from util.shelf import bin_pose
 
 class PLACEITEM(smach.State):
 

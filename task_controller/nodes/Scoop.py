@@ -5,7 +5,8 @@ import smach
 from copy import deepcopy
 from geometry_msgs.msg import Pose, Point, Quaternion
 
-from util import follow_path, goto_pose, bin_pose
+from util.moveit import follow_path, goto_pose
+from util.shelf import bin_pose
 
 class SCOOP(smach.State):
 

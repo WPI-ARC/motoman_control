@@ -6,7 +6,8 @@ from copy import deepcopy
 from grasp_logic.srv import grasp, graspRequest
 from gripper_srv.srv import gripper, gripperRequest
 
-from util import follow_path, bin_pose
+from util.moveit import follow_path
+from util.shelf import bin_pose
 
 
 class PICKITEM(smach.State):
