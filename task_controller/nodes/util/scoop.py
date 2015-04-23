@@ -25,6 +25,7 @@ def allow_scoop_collision():
         acm.default_entry_values += [True]
     else:
         acm.default_entry_values[acm.default_entry_names.index(SCOOP)] = True
+    print acm.default_entry_names, acm.default_entry_values[acm.default_entry_names.index(SCOOP)], SCOOP in acm.entry_names
     planning_scene_diff = PlanningScene(
             is_diff=True,
             allowed_collision_matrix=acm)
@@ -42,6 +43,7 @@ def disallow_scoop_collision():
         acm.default_entry_values += [False]
     else:
         acm.default_entry_values[acm.default_entry_names.index(SCOOP)] = False
+    print acm.default_entry_names, acm.default_entry_values[acm.default_entry_names.index(SCOOP)], SCOOP in acm.entry_names
     planning_scene_diff = PlanningScene(
             is_diff=True,
             allowed_collision_matrix=acm)
