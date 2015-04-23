@@ -115,7 +115,7 @@ def quatToMatrix(quat):
     return Trobobj
 
         if True: # If true is here just so i can hide the list # if true is only used to hide the long list of if statements
-def requestOBBPoints(size):
+def getOBBPoints(size):
     # do a service call to get min max of object. Or maybe a subscribe to topic is fine too since all services start when
     # the robot launches. Alex code is requesting sample and process service so maybe when those are call just publish the min max values to
     # a topic. May be the easiest way
@@ -290,10 +290,6 @@ def CB_getGrasp(req):
     compute the different widths and if valid will compute the appraoch vectors. Then the height offset etc. 
     """
     #make an array with theta values that I get by discretizing a range from minus to plus like +-10 degrees. Then create list of of the theta values then use it to generate the extra frames for projection to get more approach vectors. Anothe way is to use a circle then a small segment of it Then find lines that are tangent to it. use the lines rotation, then use the points that reside on that line as the xyz transform for the 4x4 matrix. Now I project onto all of those points. Use TF to show all of the frames as part of presentation
-    
-    # Request for min max values for the axes from bounding box
-    # Request 8 bounding box points
-    OBBPoints = requestOBBPoints(size)
 
     # Request transform from shelf to object from TF
     if showOutput:
@@ -302,6 +298,10 @@ def CB_getGrasp(req):
         (Tshelfobj_trans,Tshelfobj_rot) = listener.lookupTransform('/shelf', '/target_object', rospy.Time(0))
     except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
         print "Failed to lookup TF transform shelf to target_object"
+    
+    # Request for min max values for the axes from bounding box
+    # Request 8 bounding box points
+    OBBPoints = getOBBPoints(size)
 
     # Construct the 4x4 Transformation Matrix
     Tshelfobj = numpy.matrix([[Tshelfobj_rot.item(0,0), Tshelfobj_rot.item(0,1), Tshelfobj_rot.item(0,2), Tshelfobj_trans.item(0,3)],
@@ -318,7 +318,7 @@ def CB_getGrasp(req):
     # Compute width of projection shadow. Width is the y axis because shelf frame is set that way with y axis as width
     width = computeWidth(min_y, max_y)
 
-    # Computel cost
+    # Compute cost
     if isSmaller(width) == True:
         cost = computeCost(width)
         
