@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 
-from tf import TransformListener
+import tf
+import tf2_ros
 import math
 import rospy
 import numpy
@@ -9,10 +10,11 @@ import roslib
 import sys
 import traceback
 import time
+import geometry_msgs.msg
 
 # Message and Service imports
 from std_msgs.msg import Header
-from geometry_msgs.msg import PoseArray, PoseStamped, Pose, Point, Quaternion
+from geometry_msgs.msg import PoseArray, PoseStamped, Pose, Point, Quaternion, TransformStamped
 from grasp_planner.msg import apcGraspPose, apcGraspArray
 from grasp_planner.srv import apcGraspDB, apcGraspDBResponse
 
@@ -50,17 +52,25 @@ class grasping:
         self.description = "Online grasp planning code"
         self.offset = 0.02 # safety buffer between object and gripper is 1cm on each side. Total of 2cm
         self.gripperwidth = 0.155 - self.offset # 0.155 is the gripper width in meters. 15.5cm
-        self.showOutput = True # Enable to show print statements
-        self.tf = TransformListener(True, rospy.Duration(10.0))
+        self.showOutput = False # Enable to show print statements
+        self.tf = tf.TransformListener(True, rospy.Duration(10.0))
+        self.br = tf2_ros.TransformBroadcaster()
+        self.rate = rospy.Rate(60.0)
+        self.tfList = []
+        self.thetaList = numpy.linspace(-0.174532925, 0.174532925, num=41) # 0.174532925 = 10deg. SO range is from -10deg to 10deg using num=41 spacing
+        if self.showOutput:
+            print "theta range list"
+            print self.thetaList
+
         rospy.sleep(rospy.Duration(1.0)) # Wait for network timing to load TFs
 
-    def getTF_transform(self, fromTF, toTF):
+    def getTF_transform(self, source, target):
         if self.showOutput:
-            print "Looking up TF transform from %s to %s" %(fromTF, toTF)
+            print "Looking up TF transform from %s to %s" %(source, target)
         try:
-            (trans, rot) = self.tf.lookupTransform(fromTF, toTF, rospy.Time(0))
-        except (self.tf.LookupException, self.tf.ConnectivityException, self.tf.ExtrapolationException):
-            print "Failed to lookup TF transform from %s to %s" %(fromTF, toTF)
+            (trans, rot) = self.tf.lookupTransform(source, target, rospy.Time(0))
+        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+            print "Failed to lookup TF transform from %s to %s" %(source, target)
         # print trans
         # print type(trans)
         # print rot
@@ -70,6 +80,22 @@ class grasping:
         # print trans
         transform = self.quatToMatrix(trans, rot)
         return transform
+
+    def BroadcastTF(self):        
+        for t in self.tfList:
+            print t
+            print "tf looping"
+            t.header.stamp = rospy.Time.now()
+            self.br.sendTransform(t)
+
+    def genTF(self, source, target, position, rotation):
+        t = geometry_msgs.msg.TransformStamped()
+        t.header.frame_id = source
+        t.child_frame_id = target
+        t.transform.translation = position #needs to be postion tuple
+        t.transform.rotation = rotation #needs to be quat tuple  
+        self.tfList.append(t)
+        return self.tfList
 
     def constructMatrix(self, trans, rot):
         transform = numpy.matrix([[rot.item(0,0), rot.item(0,1), rot.item(0,2), trans.item(0,3)],
@@ -226,11 +252,10 @@ class grasping:
             [2*qx*qy + 2*qz*qw, 1 - 2*qx*qx - 2*qz*qz, 2*qy*qz - 2*qx*qw, y],
             [2*qx*qz - 2*qy*qw, 2*qy*qz + 2*qx*qw, 1 - 2*qx*qx - 2*qy*qy, z],
             [0, 0, 0, 1]]) 
-
         return matrix
 
     def Trobobj(self, quat):
-        self.showOutput = False # If set to true, will show all print statments
+        #self.showOutput = False # If set to true, will show all print statments
         x = quat.position.x
         y = quat.position.y
         z = quat.position.z
@@ -309,32 +334,40 @@ class grasping:
             if point.item(2) < min_z: #if x point is smaller than current min x then replace with new one
                 min_z = point.item(2)
         min_max = numpy.array([min_x, max_x, min_y, max_y, min_z, max_z])
-        return min_max
+        return min_max                    
 
-    def genRotMatrix(self, theta): 
-        # Generate matrix to rotation about the z-axis of shelf frame to get bunch of new transforms to use for projection
-        transform = numpy.matrix([[numpy.cos(theta), -numpy.sin(theta), 0, 0],
-                                [numpy.sin(theta), numpy.cos(theta), 0, 0],
-                                [0, 0, 1, 0],
-                                [0, 0, 0, 1]])
-        return transform                        
+    def computeApproach(self):
+        self.approach = []
+        return self.approach
 
     def CB_getGrasp(self, req):        
-        pointsList = []        
+        pointsList = []
+        projectionList = []     
         item = req.item
         print "Requesting valid grasps for %s"%item
 
         """ current not using this transform"""
         Trob_obj = req.Trob_obj
 
+        # Test pose message used to test broadcasting TF. Works
+        pose = geometry_msgs.msg.Pose()
+        pose.position.x = 1;
+        pose.position.y = 1;
+        pose.position.z = 0;
+        pose.orientation.x = 0;
+        pose.orientation.y = 0;
+        pose.orientation.z = 0;
+        pose.orientation.w = 1;
 
+        # self.genTF('/base_link', 'test', position, rotation)
 
+        self.genTF('/shelf', 'test', pose.position, pose.orientation) #quat in format (x,y,z,w)
+
+        self.BroadcastTF()
+        
         #make an array with theta values that I get by discretizing a range from minus to plus like +-10 degrees. Then create list of of the theta values then use it to generate the extra frames for projection to get more approach vectors. Anothe way is to use a circle then a small segment of it Then find lines that are tangent to it. use the lines rotation, then use the points that reside on that line as the xyz transform for the 4x4 matrix. Now I project onto all of those points. Use TF to show all of the frames as part of presentation
 
-        # Request transform from shelf to object from TF
-
-
-        
+      
         # Request for min max values for the axes from bounding box. Request 8 bounding box points
         size = self.getItem(req)
         OBBPoints = self.getOBBPoints(size)
@@ -354,7 +387,8 @@ class grasping:
         # Loop through OBB points and transform them to be wrt to the target frame
         for OBBPoint in OBBPoints:
             if self.showOutput:
-                OBBPoint = numpy.array([[OBBPoint.item(0)], [OBBPoint.item(1)], [OBBPoint.item(2)], [1]])
+                print OBBPoint
+            OBBPoint = numpy.array([[OBBPoint.item(0)], [OBBPoint.item(1)], [OBBPoint.item(2)], [1]])
             pointsList.append(Tshelfobj*OBBPoint)
         if self.showOutput:
             print "pointList after transform to target frame"
@@ -378,16 +412,79 @@ class grasping:
         # Compute cost
         if isSmaller == True:
             cost = self.computeCost(width)
+            approach = self.computeApproach()
             if self.showOutput:
                 print "cost: " + str(cost)
         else:
-            print "Can't compute cost. Bad approach direction"
+            print "Can't compute cost. Bad approach direction. Gripper not wide enough"
             
             # should also compute the x,y,z or pose or approach vector? Then append to to some list
             # after implemnted loop of this for different frame projections, add else case so it prints somehting like failed or something for this frame
 
+        ##############################################################################################################################
+        # Start loop here for iterating through everything 
+        ##############################################################################################################################
+        """
+        if self.showOutput:
+            print "###############################################################################################"
+            print "this is when the looping through projections section"
+            print "###############################################################################################"
+        # Generate more transform frames to project to
+        for theta in self.thetaList:
+            projection = self.genRotMatrix(theta)
+            projectionList.append(Tprojshelf*projection) # List of new frames to probject OBB points to
+            if self.showOutput:
+                print "Generate list of projection transforms"
+                print projectionList
 
+        # Need to broadcast the TFs to I can get TFs in next loop
+        # IPMORTANT!!!!!!!!!!!11
 
+        for i in len(projectionList): 
+            pointsList = [] #Reset points list
+
+            # Construct the 4x4 Transformation Matrix
+            Tprojobj = self.getTF_transform('/projection'+str(i), '/object')
+            if self.showOutput:
+                print Tprojobj                   
+
+            # Loop through OBB points and transform them to be wrt to the target projection frame
+            for OBBPoint in OBBPoints:
+                if self.showOutput:
+                    print OBBPoint
+                OBBPoint = numpy.array([[OBBPoint.item(0)], [OBBPoint.item(1)], [OBBPoint.item(2)], [1]])
+                pointsList.append(Tprojobj*OBBPoint)
+            if self.showOutput:
+                print "pointList after transform to target frame: %s"%('/projection'+str(i))
+                print pointsList
+
+            # Get min max points. Pass in transformed OBBPoints list to get min max for target frame
+            min_max = self.computeMinMax(pointsList)
+
+            # Compute width of projection shadow. Width is the y axis because shelf frame is set that way with y axis as width
+            min_y = min_max.item(2)
+            max_y = min_max.item(3)
+            width = self.computeWidth(min_y, max_y)
+            if self.showOutput:
+                print "width: " + str(width)
+                print "min_y: " + str(min_y)
+                print "max_y: " + str(max_y)
+
+            # Check if width of shadow projection can fit inside gripper width
+            isSmaller = self.checkWidth(width)
+
+            # Compute cost
+            if isSmaller == True:
+                cost = self.computeCost(width)
+                approach = self.computeApproach() #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>need to implement this
+                if self.showOutput:
+                    print "cost: " + str(cost)
+            else:
+                print "Can't compute cost. Bad approach direction. Gripper not wide enough"
+        """
+        ##############################################################################################################################
+        # Start loop here for iterating through everything 
+        ##############################################################################################################################
 
         # Temp grasp messageto return
         poseList = []
@@ -398,21 +495,19 @@ class grasping:
 
         # From center of palm to edge of it is 6cm then lip is about 2cm up so need to offset robot z-axis to move hand approach vector to be 8cm
         # up from bottom of object.        
-
+        print "Request complete"
         return apcGraspDBResponse(status=True,apcGraspArray=grasps)
     
 def publisher():
     rospy.init_node('online_grasp_server')
-    rate = rospy.Rate(60.0)
-    grasp = grasping()
 
+    grasp = grasping()
     while not rospy.is_shutdown():
-        #t.header.stamp = rospy.Time.now()
-        #br.sendTransform(t)
         #rospy.Subscriber("/object_segmentation/pose", PoseStamped, )
         s = rospy.Service('getGrasps_online_server', apcGraspDB, grasp.CB_getGrasp)
+        # grasp.BroadcastTF()
         print "Online grasp planner ready"
-        rate.sleep()
+
         rospy.spin()
 
 if __name__ == '__main__':
