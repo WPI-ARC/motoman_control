@@ -12,7 +12,7 @@ import traceback
 import time
 import geometry_msgs.msg
 # Transformation helper file. quater is (x,y,z,w) format
-from transformation_helper import ExtractFromMatrix, BuildMatrix, PoseFromMatrix, InvertMatrix
+from transformation_helper import ExtractFromMatrix, BuildMatrix, PoseFromMatrix, PoseToMatrix, InvertMatrix
 # Message and Service imports
 from std_msgs.msg import Header
 from geometry_msgs.msg import PoseArray, PoseStamped, Pose, Point, Quaternion, TransformStamped
@@ -60,10 +60,10 @@ class grasping:
         self.tfList = []        
         self.thetaList = numpy.linspace(-0.34906585, 0.34906585, num=21) # 0.174532925 = 10deg. SO range is from -10deg to 10deg using num=41 spacing        
         self.thetaList = numpy.linspace(-0.698131701, 0.698131701, num=21)
-        self.thetaList = numpy.array([0])
-        self.thetaList = numpy.array([0.0174532925]) #1 deg
-        self.thetaList = numpy.array([1.57079633 ]) #90 deg
-        self.thetaList = numpy.array([0.785398163]) #45 deg
+        #self.thetaList = numpy.array([0])
+        #self.thetaList = numpy.array([0.0174532925]) #1 deg
+        #self.thetaList = numpy.array([1.57079633 ]) #90 deg
+        #self.thetaList = numpy.array([0.785398163]) #45 deg
         if self.showOutput:
             print "theta range list"
             print self.thetaList
@@ -129,6 +129,14 @@ class grasping:
                                 [0, 0, 1, 0],
                                 [0, 0, 0, 1]])
         return transform 
+
+    def genTransMatrix(self, point): 
+        # Generate matrix to rotation about the z-axis of shelf frame to get bunch of new transforms to use for projection
+        transform = numpy.array([[1, 0, 0, point.item(0)],
+                                [0, 1, 0, point.item(1)],
+                                [0, 0, 1, point.item(2)],
+                                [0, 0, 0, 1]])
+        return transform
 
     def getItem(self, req):
         # Select object
@@ -328,7 +336,7 @@ class grasping:
         return width
 
     def computeMidpoint(self, pt1, pt2, Tbaseproj):
-        x = (pt1.item(0) + pt2.item(0))/2 -0.15
+        x = (pt1.item(0) + pt2.item(0))/2
         y = (pt1.item(1) + pt2.item(1))/2
         z = (pt1.item(2) + pt2.item(2))/2
         midpt = numpy.matrix([[x], [y], [z], [1]])
@@ -416,6 +424,7 @@ class grasping:
         
         TprojobjList = []
         poseList = []
+        approachList = []
         midptList = []
         countbad = 0
         # Generate transform frames to project to
@@ -556,6 +565,45 @@ class grasping:
             pose.orientation.w = pose.orientation.w
             tf_shelfproj = self.genTF('/shelf', '/projection', pose.position, pose.orientation)
             self.BroadcastTFsingle(tf_shelfproj)
+
+            # Generate TF for projection to approach pose
+            # Extract Tshelfproj from pose then multiply by translation matrix to move the projection frame backwards
+            Tshelfproj = PoseToMatrix(pose)            
+            Tprojapproach = self.genTransMatrix(numpy.array([-0.5, 0 ,0]))
+            Tshelfapproach = numpy.matrix(Tprojapproach)*numpy.matrix(Tshelfproj)
+            #approachpose = 
+            #approachList.append(approachpose)
+            pose1 = geometry_msgs.msg.Pose()
+            [trans, quat] = ExtractFromMatrix(numpy.asarray(Tshelfapproach))
+            pose1.position.x = trans[0] 
+            pose1.position.y = trans[1]
+            pose1.position.z = 0            
+            pose1.orientation.x = quat.item(0)
+            pose1.orientation.y = quat.item(1)
+            pose1.orientation.z = quat.item(2)
+            pose1.orientation.w = quat.item(3)
+            approachList.append(pose1)
+            tf_shelfproj = self.genTF('/projection', '/approach', pose1.position, pose1.orientation)
+            self.BroadcastTFsingle(tf_shelfproj)
+        '''
+        for i in range(len(approachList)):
+            # Generate TF for projection to object
+            pose = approachList[i]
+            pose.position.x = pose.position.x #maybe I want to take this x. rotate it by the proj frame then move it backwards in x and return x value that is wrt to base here?
+            pose.position.y = midptList[i].item(1)
+            pose.position.z = pose.position.z #need to add on palm's z heigh offset            
+            pose.orientation.x = pose.orientation.x
+            pose.orientation.y = pose.orientation.y
+            pose.orientation.z = pose.orientation.z
+            pose.orientation.w = pose.orientation.w
+            # Extract Tshelfproj from pose then multiply by translation matrix to move the projection frame backwards
+            Tshelfproj = PoseToMatrix(pose)            
+            Tprojapproach = self.genTransMatrix(numpy.array([-0.5, 0 ,0]))
+            Tshelfapproach = numpy.matrix(Tshelfproj)*numpy.matrix(Tprojapproach)
+            approachList.append(Tshelfapproach)
+            tf_projapproach = self.genTF('/projection', '/approach', pose.position, pose.orientation)
+            self.BroadcastTFsingle(tf_projapproach)
+        '''
             # call func to calculate the posemsg thing now like in offline?
 
 
@@ -728,12 +776,6 @@ if __name__ == '__main__':
 
 
 """
-# Function to compute the width of shadow. populate component 1 and 2 depending on which two vectors lenghts I care about
-#component1 = delta.item(#)
-#component2 = delta.item(#)
-#theta = computeTheta()
-width = computeWidth(component1, component2, theta)
-
 
 
 # If width is smaller than compute the approach vector to grasp center of projection
