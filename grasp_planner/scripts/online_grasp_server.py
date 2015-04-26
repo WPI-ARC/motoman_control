@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-
 import tf
 import tf2_ros
 import math
@@ -44,7 +43,7 @@ class grasping:
 
         rospy.sleep(rospy.Duration(1.0)) # Wait for network timing to load TFs
 
-    def get_tf(self, parent, child): #target = parent
+    def get_tf(self, parent, child):
         if self.showOutput:
             print "Looking up TF transform from %s to %s" %(parent, child)
         try:
@@ -69,7 +68,7 @@ class grasping:
         try:
             (trans, quat) = self.tf.lookupTransform(parent, child, rospy.Time(0))
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-            print "Failed to lookup TF transform from source:%s to target:%s" %(parent, child)
+            print "Failed to lookup TF transform from %s to %s" %(parent, child)
         translation = numpy.asarray(trans)
         quaternion = numpy.asarray(quat)
         msg = geometry_msgs.msg.Pose()
@@ -92,7 +91,7 @@ class grasping:
 
     def broadcast_single_tf(self, t):
         rate = rospy.Rate(1000)        
-        for time in range(0,50):
+        for time in range(0,10):
             t.header.stamp = rospy.Time.now()
             self.br.sendTransform(t)                
             rate.sleep()
@@ -390,7 +389,7 @@ class grasping:
                 # Compute mid-y point using miny maxy 
                 mid_y = self.compute_y_mid(min_y, max_y, Tbaseproj)
                 if self.showOutput:
-                    print "midpt: "+str(mid_y), mid_y[1]
+                    print "mid-y: "+str(mid_y), mid_y[1]
 
                 # Update projection TF with new y value set to be middle of the projection wrt to the projection frame
                 proj = deepcopy(proj)
@@ -413,10 +412,11 @@ class grasping:
                 self.broadcast_single_tf(tf_projapproach)
 
                 # Get projection and approach TF wrt to the base frame and append to list
-                # self.get_tf('/base_link',"/projection")
-                # self.get_tf('/base_link',"/approach")
-                proj_msg = self.get_tf_msg('/base_link', "/projection")
-                approach_msg = self.get_tf_msg('/base_link', "/approach")
+                # proj_msg = self.get_tf_msg('/base_link', "/projection")
+                # approach_msg = self.get_tf_msg('/base_link', '/approach')
+
+                Tbaseproj = Tbaseshelf*Tshelfproj
+
                 projectionList.append(proj_msg)
                 approachList.append(approach_msg)
                 if self.showOutput:
