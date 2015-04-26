@@ -5,6 +5,7 @@ import tf2_ros
 import math
 import rospy
 import numpy
+from numpy.linalg import inv
 import roslib
 import sys
 import traceback
@@ -31,9 +32,9 @@ class grasping:
         self.rate = rospy.Rate(60.0)
         self.tfList = []        
         self.thetaList = numpy.linspace(-0.34906585, 0.34906585, num=41) # 0.174532925 = 10deg. SO range is from -10deg to 10deg using num=41 spacing        
-        self.thetaList = numpy.linspace(-0.698131701, 0.698131701, num=21)
+        #self.thetaList = numpy.linspace(-0.698131701, 0.698131701, num=21)
         #self.thetaList = numpy.linspace(0, 0.34906585, num=21) # 0.174532925 = 10deg. SO range is from -10deg to 10deg using num=41 spacing        
-        self.thetaList = numpy.array([0])
+        #self.thetaList = numpy.array([0])
         #self.thetaList = numpy.array([0.0174532925]) #1 deg
         #self.thetaList = numpy.array([1.57079633 ]) #90 deg
         #self.thetaList = numpy.array([0.785398163]) #45 deg
@@ -106,11 +107,11 @@ class grasping:
         self.tfList.append(t)
         return t
 
-    #def construct_matrix(self, trans, rot):
-        transform = numpy.matrix([[rot.item(0,0), rot.item(0,1), rot.item(0,2), trans.item(0,3)],
-                            [rot.item(1,0), rot.item(1,1), rot.item(1,2), trans.item(1,3)],
-                            [rot.item(2,0), rot.item(2,1), rot.item(2,2), trans.item(2,3)],
-                            [0, 0, 0, 1]])
+    def construct_4Dmatrix(self, trans, rot):
+        transform = numpy.zeros([4,4])
+        transform[0:3,0:3] = rot
+        transform[0:3,3] = trans
+        transform[3,3] = 1
         return transform
 
     def generate_rotation_matrix(self, theta): 
@@ -257,7 +258,7 @@ class grasping:
         width = abs(max_y-min_y)
         return width
 
-    def compute_y_mid(self, miny, maxy, Tbaseproj):     
+    def compute_y_mid(self, miny, maxy, Tbaseproj): 
         y = (miny+maxy)/2
         ymid = numpy.matrix([[0],[y],[0],[1]])
         Tmidpt = Tbaseproj*ymid #y mid wrt to proj frame is now wrt to base
@@ -326,7 +327,15 @@ class grasping:
             print Tshelfobj                 
 
         # Generate TFs to project onto
-        for theta in self.thetaList:            
+        for theta in self.thetaList:
+            # Get TFs
+            Tbaseshelf = self.get_tf('/base_link', '/shelf')
+            Tshelfobj = self.get_tf('/shelf', '/object')
+            if self.showOutput:
+                print OBBPoints
+                print Tbaseshelf
+                print Tshelfobj
+
             Tshelfproj = self.generate_rotation_matrix(theta)
             Tbaseproj = Tbaseshelf*Tshelfproj
             if theta == 0:
@@ -338,6 +347,12 @@ class grasping:
                 print "Transform from base to proj"
                 print Tbaseproj, type(Tbaseproj)
 
+            # Extract Translation component of Tshelfobj
+            Trans_shelfobj = Tshelfobj[0:3,3]
+            Rot_shelfproj = Tshelfproj[0:3,0:3]
+            Tshelfproj_new = self.construct_4Dmatrix(Trans_shelfobj, Rot_shelfproj)
+
+            """
             # Generate TF for shelf to projection
             proj = geometry_msgs.msg.Pose()
             [transobj, quatobj] = ExtractFromMatrix(Tshelfobj)
@@ -352,18 +367,24 @@ class grasping:
             poseList.append(proj)
             tf_shelfproj = self.generate_tf('/shelf', '/projection', proj.position, proj.orientation)
             self.broadcast_single_tf(tf_shelfproj)
+            """
 
             # Get TF for projection to object
-            tf_projobj = self.get_tf('/projection', "/object")
+            Tprojshelf = inv(Tshelfproj_new)
+            Tprojobj = Tprojshelf * Tshelfobj
+
+            """
+            tf_projobj = self.get_tf('1/projection', "/object")
             if self.showOutput:
                 print "Transform from projection to object"
                 print tf_projobj
+            """
 
             # Loop through OBB points and transform them to be wrt to the target projection frame
             for OBBPoint in OBBPoints:
                 OBBPointsList = []
                 OBBPoint = numpy.matrix([[OBBPoint[0]], [OBBPoint[1]], [OBBPoint[2]], [1]])
-                projected_OBBPoint = tf_projobj*OBBPoint
+                projected_OBBPoint = Tprojobj*OBBPoint
                 OBBPointsList.append(projected_OBBPoint) #Pass in Tbaseproj
             if self.showOutput:
                 print "List of transformed OBB points after projection to target projection frame"
@@ -385,6 +406,9 @@ class grasping:
             # Compute cost
             if isSmaller == True:
                 score = self.compute_score(width)
+
+                # Transform base to projection
+                Tbaseproj = Tbaseshelf*Tshelfproj_new
                 
                 # Compute mid-y point using miny maxy 
                 mid_y = self.compute_y_mid(min_y, max_y, Tbaseproj)
@@ -392,33 +416,55 @@ class grasping:
                     print "mid-y: "+str(mid_y), mid_y[1]
 
                 # Update projection TF with new y value set to be middle of the projection wrt to the projection frame
-                proj = deepcopy(proj)
-                proj.position.y = mid_y[1]
-                
+                Trans_shelfproj = numpy.array([Tshelfproj_new[0,3], mid_y[1], Tshelfproj_new[2,3]])
+                Rot_shelfproj = Tshelfproj_new[0:3,0:3]
+                Tshelfproj_update = self.construct_4Dmatrix(Trans_shelfproj, Rot_shelfproj)
+
+                # Generate TF shelf to projection
+                proj = geometry_msgs.msg.Pose()
+                [trans, quat] = ExtractFromMatrix(Tshelfproj_update)
+                proj.position.x = trans[0]
+                proj.position.y = trans[1]
+                proj.position.z = trans[2]            
+                proj.orientation.x = quat[0]
+                proj.orientation.y = quat[1]
+                proj.orientation.z = quat[2]
+                proj.orientation.w = quat[3]
                 tf_shelfproj = self.generate_tf('/shelf', '/projection', proj.position, proj.orientation)
                 self.broadcast_single_tf(tf_shelfproj)
 
+                """
+                proj = deepcopy(proj)
+                proj.position.y = mid_y[1]                               
+                tf_shelfproj = self.generate_tf('/shelf', '/projection', proj.position, proj.orientation)
+                self.broadcast_single_tf(tf_shelfproj)
+                """
+                ""
+                # Construct approach TF as projection but further back
+                Trans_projapproach = numpy.array([-0.5, 0, 0])
+                Rot_projapproach = numpy.eye(3,3)
+                Tprojapproach = self.construct_4Dmatrix(Trans_projapproach, Rot_projapproach)
+                
                 # Generate TF for projection to approach pose
                 approach = geometry_msgs.msg.Pose()
-                approach.position.x = -0.2 #20 cm
-                approach.position.y = 0
-                approach.position.z = 0            
-                approach.orientation.x = 0
-                approach.orientation.y = 0
-                approach.orientation.z = 0
-                approach.orientation.w = 1
-                
+                [trans, quat] = ExtractFromMatrix(Tprojapproach)
+                approach.position.x = trans[0]
+                approach.position.y = trans[1]
+                approach.position.z = trans[2]            
+                approach.orientation.x = quat[0]
+                approach.orientation.y = quat[1]
+                approach.orientation.z = quat[2]
+                approach.orientation.w = quat[3]
                 tf_projapproach = self.generate_tf('/projection', '/approach', approach.position, approach.orientation)
-                self.broadcast_single_tf(tf_projapproach)
+                self.broadcast_single_tf(tf_projapproach)                
 
                 # Get projection and approach TF wrt to the base frame and append to list
                 # proj_msg = self.get_tf_msg('/base_link', "/projection")
                 # approach_msg = self.get_tf_msg('/base_link', '/approach')
+                # Tbaseproj = Tbaseshelf*Tshelfproj
 
-                Tbaseproj = Tbaseshelf*Tshelfproj
-
-                projectionList.append(proj_msg)
-                approachList.append(approach_msg)
+                # projectionList.append(proj_msg)
+                # approachList.append(approach_msg)
                 if self.showOutput:
                     print "score is %i. Good approach direction. Gripper is wide enough" %score
             else:
