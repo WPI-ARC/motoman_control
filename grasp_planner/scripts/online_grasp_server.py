@@ -223,6 +223,37 @@ class grasping:
           
         return grasps
 
+    def genAPCGraspPose(grasp, object):
+
+        grasp = apcGraspPose(
+            posegrasp = Pose(
+                position=Point(
+                    x=grasp.item(0,3),
+                    y=grasp.item(1,3),
+                    z=grasp.item(2,3),
+                ),
+                orientation=Quaternion(
+                    x=qx,
+                    y=qy,
+                    z=qz,
+                    w=qw,
+                )
+            ),    
+            poseapproach = Pose(
+                position=Point(
+                    x=newApproachVector.item(0),
+                    y=newApproachVector.item(1),
+                    z=newApproachVector.item(2),
+                ),
+                orientation=Quaternion(
+                    x=qx,
+                    y=qy,
+                    z=qz,
+                    w=qw,
+                )
+            )
+        )
+
     def get_quaternion(self, matrix):
         qw = numpy.sqrt(1 + matrix.item(0,0) + matrix.item(1,1) + matrix.item(2,2))/2
         qx = (matrix.item(2,1) - matrix.item(1,2)) / (4*qw)
@@ -321,6 +352,7 @@ class grasping:
         # Get TFs
         Tbaseshelf = self.get_tf('/base_link', '/shelf')
         Tshelfobj = self.get_tf('/shelf', '/object')
+        Tbaseobj = Tbaseshelf*Tshelfobj
         if self.showOutput:
             print OBBPoints
             print Tbaseshelf
@@ -458,13 +490,37 @@ class grasping:
                 tf_projapproach = self.generate_tf('/projection', '/approach', approach.position, approach.orientation)
                 self.broadcast_single_tf(tf_projapproach)                
 
-                # Get projection and approach TF wrt to the base frame and append to list
+                # Transform from 
+                TgraspIK = numpy.array([[1, 0, 0, 0],
+                                        [0, 0, -1, -0.17],
+                                        [0, 1, 0, 0],
+                                        [0, 0, 0, 1]])
+
+                # Transform for grasp to pregrasp pose for object just like in offline planner
+                Tapproachproj = inv(Tprojapproach)
+                Tprojobj = numpy.dot(Tprojshelf,Tshelfobj)
+                Tobjpregrasp = inv(Tprojobj)
+                Tbasepregrasp = numpy.dot(Tbaseobj,Tobjpregrasp) #Transform obj to pregrasp wrt to base
+                TbaseIK_pregrasp = numpy.dot(Tbasepregrasp,TgraspIK)
+
+                # Transform for grasp to approach for object just like in offline planner
+                Tapproachproj = inv(Tprojapproach)
+                Tapproachobj = numpy.dot(numpy.dot(Tapproachproj,Tprojshelf),Tshelfobj)
+                Tobjgrasp = inv(Tapproachobj)
+                Tbasegrasp = numpy.dot(Tbaseobj,Tobjgrasp) #Transform obj to grasp wrt to base
+                TbaseIK_approach = numpy.dot(Tbasegrasp,TgraspIK)
+
+                # Construct msg
+                proj_msg = PoseFromMatrix(TbaseIK_pregrasp)
+                approach_msg = PoseFromMatrix(TbaseIK_approach)
+
+                # Convert Tbase
                 # proj_msg = self.get_tf_msg('/base_link', "/projection")
-                # approach_msg = self.get_tf_msg('/base_link', '/approach')
+                #approach_msg = self.get_tf_msg('/base_link', '/approach')
                 # Tbaseproj = Tbaseshelf*Tshelfproj
 
-                # projectionList.append(proj_msg)
-                # approachList.append(approach_msg)
+                projectionList.append(proj_msg)
+                approachList.append(approach_msg)
                 if self.showOutput:
                     print "score is %i. Good approach direction. Gripper is wide enough" %score
             else:
@@ -473,8 +529,7 @@ class grasping:
                 if self.showOutput:
                     print "score is %i. Bad approach direction. Gripper not wide enough" %score
                 countbad += countbad
-        if self.showOutput:
-            print "number of bad approach directions: " + str(countbad)
+        print "number of bad approach directions: " + str(countbad)
 
         """
         # Generate TF for projection to approach pose
