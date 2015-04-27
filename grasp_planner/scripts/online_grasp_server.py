@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import Queue as Q
 import tf
 import tf2_ros
 import math
@@ -31,7 +32,7 @@ class grasping:
         self.br = tf2_ros.TransformBroadcaster()
         self.rate = rospy.Rate(60.0)
         self.tfList = []        
-        self.thetaList = numpy.linspace(-0.34906585, 0.34906585, num=10) # 0.174532925 = 10deg. SO range is from -10deg to 10deg using num=41 spacing        
+        self.thetaList = numpy.linspace(-0.34906585, 0.34906585, num=41) # 0.174532925 = 10deg. SO range is from -10deg to 10deg using num=41 spacing        
         # self.thetaList = numpy.linspace(-0.698131701, 0.698131701, num=41)
         #self.thetaList = numpy.linspace(0, 0.34906585, num=21) # 0.174532925 = 10deg. SO range is from -10deg to 10deg using num=41 spacing        
         # self.thetaList = numpy.array([0, 1.57079632679])
@@ -52,15 +53,10 @@ class grasping:
             (trans, quat) = self.tf.lookupTransform(parent, child, rospy.Time(0))
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
             print "Failed to lookup TF transform from source:%s to target:%s" %(parent, child)
-        # print trans
-        # print type(trans)
-        # print rot
         trans = numpy.asarray(trans)
         quat = numpy.asarray(quat)
         translation = [trans.item(0), trans.item(1), trans.item(2)]
         quaternion = [quat.item(0), quat.item(1), quat.item(2), quat.item(3)]
-        # print type(trans)
-        # print trans
         transform = BuildMatrix(translation, quaternion)
         return transform
 
@@ -225,7 +221,7 @@ class grasping:
           
         return grasps
 
-    def genAPCGraspPose(grasp, object):
+    #def genAPCGraspPose(grasp, object):
 
         grasp = apcGraspPose(
             posegrasp = Pose(
@@ -256,7 +252,7 @@ class grasping:
             )
         )
 
-    def get_quaternion(self, matrix):
+    #def get_quaternion(self, matrix):
         qw = numpy.sqrt(1 + matrix.item(0,0) + matrix.item(1,1) + matrix.item(2,2))/2
         qx = (matrix.item(2,1) - matrix.item(1,2)) / (4*qw)
         qy = (matrix.item(0,2) - matrix.item(2,0)) / (4*qw)
@@ -265,13 +261,9 @@ class grasping:
         return quatVector
         
     def get_obb_points(self, size):
-        # do a service call to get min max of object. Or maybe a subscribe to topic is fine too since all services start when
-        # the robot launches. Alex code is requesting sample and process service so maybe when those are call just publish the min max values to
-        # a topic. May be the easiest way
         x = size[0]
         y = size[1]
         z = size[2]
-        # print "extents: ", x,y,z
 
         point1 = (x/2, y/2, z/2)
         point2 = (x/2, -y/2, z/2)
@@ -282,17 +274,13 @@ class grasping:
         point7 = (-x/2, y/2, -z/2)
         point8 = (-x/2, -y/2, -z/2)
         points = numpy.array([point1, point2, point3, point4, point5, point6, point7, point8])
-        """
-
-        delta = numpy.array([maxx-minx maxy-miny maxz-minz]) #return array vector that contains the delta for x, y, and z axis of bounding box.
-        """
         return points
 
     def compute_width(self, min_y, max_y):
         width = abs(max_y-min_y)
         return width
 
-    def compute_y_mid(self, miny, maxy): #miny maxy already given wrt to base
+    def compute_y_mid(self, miny, maxy): 
         y = (miny+maxy)/2
         ymid = numpy.array([[0],[y],[0],[1]])
         return ymid
@@ -341,10 +329,10 @@ class grasping:
 
     def get_grasp_cb(self, req):
 
-        # poseList = []
+        q_proj_msg = Q.PriorityQueue()
+        q_approach_msg = Q.PriorityQueue()
         approachList = []
         projectionList = []
-        tfs = []
         countbad = 0
 
         print "================================================== Request start =================================================="
@@ -352,16 +340,7 @@ class grasping:
     
         # Request the 8 Oriented bounding box points wrt to the object's frame.
         size = self.get_object_extents(req)
-        OBBPoints = self.get_obb_points(size)
-
-        # # Get TFs
-        # Tbaseshelf = self.get_tf('/base_link', '/shelf')
-        # Tshelfobj = self.get_tf('/shelf', '/object')
-        # Tbaseobj = Tbaseshelf*Tshelfobj
-        # if self.showOutput:
-        #     print OBBPoints
-        #     print Tbaseshelf
-        #     print Tshelfobj                 
+        OBBPoints = self.get_obb_points(size)            
 
         # Generate TFs to project onto
         for theta in self.thetaList:
@@ -392,6 +371,7 @@ class grasping:
 
 
             """
+            # One calder suggested transforming pts to base frame. Not sure why it didn't work.
             # Transform from base to shelf then shelf to projection 
             Tbaseproj = numpy.dot(Tbaseshelf,Tshelfproj_new)
 
@@ -434,9 +414,7 @@ class grasping:
                 print OBBPointsList
 
 
-            # Get min max points. Pass in transformed OBBPoints list to get min max for target frame
-            # Compute width of projection shadow. Width is the y axis because shelf frame is set that way with y axis as width
-            # Check if width of shadow projection can fit inside gripper width
+            # Get min max points. Pass in transformed OBBPoints list to get min max for target frame. Compute width of projection shadow. Width is the y axis because shelf frame is set that way with y axis as width. Check if width of shadow projection can fit inside gripper width
 
             min_max = self.compute_minmax(OBBPointsList)
             min_x, max_x, min_y, max_y, min_z, max_z = min_max         
@@ -459,7 +437,8 @@ class grasping:
 
                 """ Compute midpt is probably not necessary. Seems it should alsways be centered I believe."""
                 # Update projection TF with new y value set to be middle of the projection wrt to the projection frame
-                Trans_shelfproj = numpy.array([Tshelfproj_new[0,3], mid_y[1], Tshelfproj_new[2,3]])
+                zoffset = 0.015 # move gripper up 1.5 cm to avoid lip when going straigh in
+                Trans_shelfproj = numpy.array([Tshelfproj_new[0,3], mid_y[1], Tshelfproj_new[2,3]+zoffset])
                 Rot_shelfproj = Tshelfproj_new[0:3,0:3]
                 Tshelfproj_update = self.construct_4Dmatrix(Trans_shelfproj, Rot_shelfproj)
 
@@ -501,7 +480,7 @@ class grasping:
                                         [0, 0, 0, 1]])
 
                 # Transform for grasp to pregrasp pose for object just like in offline planner
-                Tprojshelf = inv(Tshelfproj_new)
+                Tprojshelf = inv(Tshelfproj_update)
                 Tprojobj = numpy.dot(Tprojshelf,Tshelfobj)
                 Tobjpregrasp = inv(Tprojobj)
                 Tbasepregrasp = numpy.dot(Tbaseobj,Tobjpregrasp) #Transform obj to pregrasp wrt to base
@@ -514,18 +493,11 @@ class grasping:
                 Tbasegrasp = numpy.dot(Tbaseobj,Tobjgrasp) #Transform obj to grasp wrt to base
                 TbaseIK_approach = numpy.dot(Tbasegrasp,TgraspIK)
 
-                # Construct msg
+                # Construct msg. Then appened to queue with score as the priority in queue. This will put lowest score msg first in list.
                 proj_msg = PoseFromMatrix(TbaseIK_pregrasp)
                 approach_msg = PoseFromMatrix(TbaseIK_approach)
-
-                # Convert Tbase
-                # proj_msg = self.get_tf_msg('/base_link', "/projection")
-                #approach_msg = self.get_tf_msg('/base_link', '/approach')
-                # Tbaseproj = Tbaseshelf*Tshelfproj
-
-
-                projectionList.append(proj_msg)
-                approachList.append(approach_msg)
+                q_proj_msg.put((score,proj_msg))
+                q_approach_msg.put((score,approach_msg))
                 if self.showOutput:
                     print "score is %f. Good approach direction. Gripper is wide enough" %score
             else:
@@ -538,26 +510,18 @@ class grasping:
         print "number of bad approach directions: " + str(countbad)
         print " ================================================== end loop =================================================="
 
-        """
-        # Generate TF for projection to approach pose
-        for i in range(len(approachList)):
-            position = approachList[i].position
-            orientation = approachList[i].orientation
-            t = self.generate_tf('/projection', 'approach', position, orientation)
-            tfs.append(t)
-        print tfs
-        self.broadcast_tf(tfs)
-        """
+        while not q_proj_msg.empty():
+            projectionList.append(q_proj_msg.get()[1])
+        while not q_approach_msg.empty():
+            approachList.append(q_approach_msg.get()[1])
 
-        # Temp grasp messageto return
+        # APC grasp message to return
         graspList = self.generate_apc_grasp_poses(projectionList, approachList)
         grasps = apcGraspArray(
                 grasps = graspList
             )
 
-
-        # From center of palm to edge of it is 6cm then lip is about 2cm up so need to offset robot z-axis to move hand approach vector to be 8cm
-        # up from bottom of object.        
+        # From center of palm to edge of it is 6cm then lip is about 2cm up so need to offset robot z-axis to move hand approach vector to be 8cm up from bottom of object.        
         print "================================================== Request end =================================================="
         return apcGraspDBResponse(status=True,apcGraspArray=grasps)
     
@@ -575,170 +539,3 @@ def publisher():
 
 if __name__ == '__main__':
     publisher()
-
-
-
-"""
-def graspOffset(apcPose):
-    offset = 0.1 #offset by 10 cm
-    x = apcPose.posegrasp.position.x
-    y = apcPose.posegrasp.position.y
-    z = apcPose.posegrasp.position.z
-    vecx = apcPose.poseapproach.x
-    vecy = apcPose.poseapproach.y
-    vecz = apcPose.poseapproach.z
-    vector = numpy.vector([vecx, vecy, vecz]) #approach vector
-    vectorMagnitude = numpy.sqrt(vecx,vecy,vecz) #magnitude of approach vector
-    unitVector = vector/vectorMagnitude
-    offsetVector = -unitVector*offset #new grasp point
-
-    print newPoint
-"""
-
-"""
-
-
-# If width is smaller than compute the approach vector to grasp center of projection
-if isSmaller == True:
-    approach = compute_approach_tf()
-else:
-    fail = True
-    print "Unable to grasp object"
-
-# Construct the poseApproach msg and return just like in offline planner
-"""
-
-"""
-
-####################################################
-# Start loop for iterating through everything 
-####################################################
-failedTFList = []
-newprojList = []
-approachList = []  
-if self.showOutput:
-    print "#######################################################"
-    print "this is when the looping through projections section"
-    print "#######################################################"
-# Generate more transform frames to project to
-for theta in self.thetaList:
-    Tshelfproj = self.generate_rotation_matrix(theta)
-    Tbaseproj = Tbaseshelf*Tshelfproj
-    if theta == 0:
-        Tbaseproj = Tbaseshelf
-    newprojList.append(Tbaseproj)
-     
-    if self.showOutput:
-        print "Transform from shelf to proj"
-        print Tshelfproj
-        print "Generate list of projection transforms"
-        print newprojList
-
-# Generate and publish TF for each of the projection planes
-print "Generating TF for projection frames"
-for i in range(len(newprojList)):
-    Tproj = newprojList[i]
-    pose = geometry_msgs.msg.Pose()
-    posex = pose.position.x = Tproj.item(0,3)
-    posey = pose.position.y = Tproj.item(1,3)
-    posez = pose.position.z = Tproj.item(2,3)
-    quat = self.get_quaternion(Tproj)
-    quatx = pose.orientation.x = quat.item(0)
-    quaty = pose.orientation.y = quat.item(1)
-    quatz = pose.orientation.z = quat.item(2)
-    quatw = pose.orientation.w = quat.item(3)
-    print "angle: " + str(quatw)
-    if math.isnan(float(quatw)) == False and math.isnan(float(quatx)) == False and math.isnan(float(quaty)) == False and math.isnan(float(quatz)) == False and math.isnan(float(posex)) == False and math.isnan(float(posey)) == False and math.isnan(float(posez)) == False:
-            projectionList.append(Tproj) # List of new frames to probject OBB points to.
-    else:
-        print "Nan/inf value detected. Not appending projction TF to list"
-        failedTFList.append(i)
-    Tbaseproj = self.generate_tf('/base_link', "/projection"+str(i), pose.position, pose.orientation) # Transform from base to proj frame
-self.broadcast_tf()
-
-if self.showOutput:
-    print "--------------------------------------------------failedTFList"
-    print failedTFList
-
-for i in range(0,len(projectionList)-len(failedTFList)): 
-    pointsList = [] #Reset points list
-    print len(failedTFList)
-    
-    # Get transform from 
-    print '/projectionList'+str(i)
-    # Construct the 4x4 Transformation Matrix
-    if i not in failedTFList: #if i is not index ins failed list then make transforms, else skip it cause of nan
-        # Tprojobj = self.get_tf('/projection'+str(i), '/object')
-        Tprojobj = self.get_tf('/projection'+str(i), '/object')
-        Tbaseproj = self.get_tf('/base_link', '/projection'+str(i))
-        Tbaseobj = self.get_tf('/base_link', '/object')
-        if self.showOutput:
-            print Tprojobj        
-    else:
-        print "skipped /projectionList"+str(i)           
-
-    # Loop through OBB points and transform them to be wrt to the target projection frame
-    for OBBPoint in OBBPoints:
-        if self.showOutput:
-            print OBBPoint
-        OBBPoint = numpy.array([[OBBPoint.item(0)], [OBBPoint.item(1)], [OBBPoint.item(2)], [1]])
-        pointsList.append(Tprojobj*OBBPoint)
-    if self.showOutput:
-        print "pointList after transform to target frame: %s"%('/projection'+str(i))
-        print pointsList
-
-    # Get min max points. Pass in transformed OBBPoints list to get min max for target frame
-    min_max = self.compute_minmax(pointsList)
-
-    # Compute width of projection shadow. Width is the y axis because shelf frame is set that way with y axis as width
-    min_y = min_max.item(2)
-    max_y = min_max.item(3)
-    width = self.compute_width(min_y, max_y)
-    if self.showOutput:
-        print "width: " + str(width)
-        print "min_y: " + str(min_y)
-        print "max_y: " + str(max_y)
-
-    # Compute midpt using miny maxy points. Midpoint wrt to current projection frame
-    minpt = numpy.array([min_max.item(0), min_max.item(2), min_max.item(4)])
-    maxpt = numpy.array([min_max.item(1), min_max.item(3), min_max.item(5)]) 
-    midpt = self.compute_y_mid(minpt, maxpt)
-
-    # Transform midpt to be wrt to the object frame
-
-
-    # Check if width of shadow projection can fit inside gripper width
-    isSmaller = self.check_width(width)
-
-    # Generate and publish TF for each of the projection planes            
-    
-    pose = geometry_msgs.msg.Pose()
-    posex = pose.position.x = Tproj.item(0,3)+midpt.item(0)
-    posey = pose.position.y = midpt.item(1)
-    posez = pose.position.z = Tproj.item(2,3)+midpt.item(2)
-    quat = self.get_quaternion(Tbaseproj)
-    quatx = pose.orientation.x = quat.item(0)
-    quaty = pose.orientation.y = quat.item(1)
-    quatz = pose.orientation.z = quat.item(2)
-    quatw = pose.orientation.w = quat.item(3)
-    self.generate_tf('/base_link', "/projection"+str(i), pose.position, pose.orientation) # Transform from base to proj frame
-    
-    # Compute cost
-    if isSmaller == True:
-        cost = self.compute_cost(width)
-        approach = self.compute_approach_tf(Tbaseobj*Tprojobj) # Pass in Transform_baseobj x-vector of it is the approach I want to use 
-        approachList.append(approach)
-
-        if self.showOutput:
-            print "approach vector"
-            print approach
-            print "valid approach cost: " + str(cost)
-    else:
-        cost = self.compute_cost(width)
-        print "Cost is %i. Bad approach direction. Gripper not wide enough" %cost
-self.broadcast_tf()
-"""
-
-###################################################
-# end of loop of iterating everythig
-###################################################
