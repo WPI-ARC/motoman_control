@@ -88,7 +88,7 @@ def main():
         #         br.sendTransform(t)
         #     rate.sleep()
 
-        i = 1
+        i = 0
         grasp = grasps[i].posegrasp
         approach = grasps[i].poseapproach
         t = geometry_msgs.msg.TransformStamped()

@@ -371,32 +371,6 @@ class grasping:
             Tshelfproj_new = self.construct_4Dmatrix(Trans_shelfobj, Rot_shelfproj)
             print Tshelfproj_new
 
-
-            """
-            # One calder suggested transforming pts to base frame. Not sure why it didn't work.
-            # Transform from base to shelf then shelf to projection 
-            Tbaseproj = numpy.dot(Tbaseshelf,Tshelfproj_new)
-
-            # Get TF for projection to object
-            Tprojbase = inv(Tbaseproj)
-            Tprojobj = numpy.dot(Tprojbase,Tbaseobj) 
-            Tbaseobj = numpy.dot(Tbaseproj,Tprojobj) # Transforms to get OBBPts wrt to the projection frame which is then wrt to the world frame
-
-            # Loop through OBB points and transform them to be wrt to the target projection frame which then is wrt to base
-            OBBPointsList = []
-            for OBBPoint in OBBPoints:
-                oldpt = numpy.array([[OBBPoint[0]], [OBBPoint[1]], [OBBPoint[2]], [1]])
-                print "<<<<<<<<<<<<<<"
-                print oldpt
-                projected_OBBPoint = numpy.dot(Tbaseobj,oldpt)
-                print Tbaseobj
-                print projected_OBBPoint
-                OBBPointsList.append(projected_OBBPoint) 
-            if self.showOutput:
-                print "List of transformed OBB points after projection to target projection frame"
-                print OBBPointsList
-            """
-
             # Get TF for projection to object
             Tprojshelf = inv(Tshelfproj_new)
             Tprojobj = numpy.dot(Tprojshelf,Tshelfobj) 
@@ -414,7 +388,6 @@ class grasping:
             if self.showOutput:
                 print "List of transformed OBB points after projection to target projection frame"
                 print OBBPointsList
-
 
             # Get min max points. Pass in transformed OBBPoints list to get min max for target frame. Compute width of projection shadow. Width is the y axis because shelf frame is set that way with y axis as width. Check if width of shadow projection can fit inside gripper width
 
@@ -475,39 +448,17 @@ class grasping:
                 tf_projapproach = self.generate_tf('/projection', '/approach', approach.position, approach.orientation)
                 self.broadcast_single_tf(tf_projapproach)                
 
-                # Transform from 
-                TgraspIK = numpy.array([[1, 0, 0, 0],
-                                        [0, 0, -1, -0.17],
-                                        [0, 1, 0, 0],
+                TgraspIK = numpy.array([[0, 1, 0, 0],
+                                        [0, 0, 1, 0],
+                                        [-1, 0, 0, 0],
                                         [0, 0, 0, 1]])
-                TgraspIK = numpy.array([[0, 0, 1, -0.17],
-                                              [0, 1, 0, 0],
-                                              [-1, 0, 0, 0],
-                                              [0, 0, 0, 1]])
-                #TgraspIK_new = numpy.dot(TgraspIK,TgraspIK_offset)
 
-                # Transform for projection (pregrasp) to be wrt to object frame
                 Tbasepregrasp = numpy.dot(Tbaseshelf,Tshelfproj_update)
                 TbaseIK_pregrasp = numpy.dot(Tbasepregrasp,TgraspIK)
 
                 Tshelfapproach = numpy.dot(Tshelfproj_update,Tprojapproach)
                 Tbaseapproach = numpy.dot(Tbaseshelf,Tshelfapproach)
                 TbaseIK_approach = numpy.dot(Tbaseapproach,TgraspIK)
-                """
-                # Transform for projection (pregrasp) to be wrt to object frame
-                Tobjshelf = inv(Tshelfobj)
-                Tobjproj = numpy.dot(Tobjshelf,Tshelfproj_update)
-                Tbaseproj = numpy.dot(Tbaseobj,Tobjproj)
-                Tbasegrasp = Tbaseproj
-                TbaseIK_pregrasp = numpy.dot(Tbasegrasp,TgraspIK)
-
-                # Transform for projection (pregrasp) to be wrt to object frame
-                Tshelfapproach = numpy.dot(Tshelfproj_update,Tprojapproach)
-                Tobjapproach = numpy.dot(Tobjshelf,Tshelfapproach) # Approach pose wrt to the object frame
-                Tbaseapproach = numpy.dot(Tbaseobj,Tobjapproach)
-                Tbasegrasp = Tbaseapproach
-                TbaseIK_approach = numpy.dot(Tbasegrasp,TgraspIK)
-                """
 
                 # Construct msg. Then appened to queue with score as the priority in queue. This will put lowest score msg first in list.
                 proj_msg = PoseFromMatrix(TbaseIK_pregrasp)
