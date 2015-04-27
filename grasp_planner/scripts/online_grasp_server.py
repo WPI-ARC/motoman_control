@@ -32,8 +32,9 @@ class grasping:
         self.br = tf2_ros.TransformBroadcaster()
         self.rate = rospy.Rate(60.0)
         self.tfList = []        
-        self.thetaList = numpy.linspace(-0.34906585, 0.34906585, num=41) # 0.174532925 = 10deg. SO range is from -10deg to 10deg using num=41 spacing        
+        self.thetaList = numpy.linspace(-0.34906585, 0.34906585, num=3) # 0.174532925 = 10deg. SO range is from -10deg to 10deg using num=41 spacing        
         # self.thetaList = numpy.linspace(-0.698131701, 0.698131701, num=41)
+        #self.thetaList = numpy.linspace(0, 6.28, num=360) # 360 degrees. Use for tray?
         #self.thetaList = numpy.linspace(0, 0.34906585, num=21) # 0.174532925 = 10deg. SO range is from -10deg to 10deg using num=41 spacing        
         # self.thetaList = numpy.array([0, 1.57079632679])
         # self.thetaList = numpy.array([0])
@@ -344,6 +345,7 @@ class grasping:
 
         # Generate TFs to project onto
         for theta in self.thetaList:
+            #raw_input("Press Enter to continue...")
             print " ================================================== Start loop =================================================="
             # Get TFs
             Tbaseshelf = self.get_tf('/base_link', '/shelf')
@@ -478,20 +480,34 @@ class grasping:
                                         [0, 0, -1, -0.17],
                                         [0, 1, 0, 0],
                                         [0, 0, 0, 1]])
+                TgraspIK = numpy.array([[0, 0, 1, -0.17],
+                                              [0, 1, 0, 0],
+                                              [-1, 0, 0, 0],
+                                              [0, 0, 0, 1]])
+                #TgraspIK_new = numpy.dot(TgraspIK,TgraspIK_offset)
 
-                # Transform for grasp to pregrasp pose for object just like in offline planner
-                Tprojshelf = inv(Tshelfproj_update)
-                Tprojobj = numpy.dot(Tprojshelf,Tshelfobj)
-                Tobjpregrasp = inv(Tprojobj)
-                Tbasepregrasp = numpy.dot(Tbaseobj,Tobjpregrasp) #Transform obj to pregrasp wrt to base
+                # Transform for projection (pregrasp) to be wrt to object frame
+                Tbasepregrasp = numpy.dot(Tbaseshelf,Tshelfproj_update)
                 TbaseIK_pregrasp = numpy.dot(Tbasepregrasp,TgraspIK)
 
-                # Transform for grasp to approach for object just like in offline planner
-                Tapproachproj = inv(Tprojapproach)
-                Tapproachobj = numpy.dot(numpy.dot(Tapproachproj,Tprojshelf),Tshelfobj)
-                Tobjgrasp = inv(Tapproachobj)
-                Tbasegrasp = numpy.dot(Tbaseobj,Tobjgrasp) #Transform obj to grasp wrt to base
+                Tshelfapproach = numpy.dot(Tshelfproj_update,Tprojapproach)
+                Tbaseapproach = numpy.dot(Tbaseshelf,Tshelfapproach)
+                TbaseIK_approach = numpy.dot(Tbaseapproach,TgraspIK)
+                """
+                # Transform for projection (pregrasp) to be wrt to object frame
+                Tobjshelf = inv(Tshelfobj)
+                Tobjproj = numpy.dot(Tobjshelf,Tshelfproj_update)
+                Tbaseproj = numpy.dot(Tbaseobj,Tobjproj)
+                Tbasegrasp = Tbaseproj
+                TbaseIK_pregrasp = numpy.dot(Tbasegrasp,TgraspIK)
+
+                # Transform for projection (pregrasp) to be wrt to object frame
+                Tshelfapproach = numpy.dot(Tshelfproj_update,Tprojapproach)
+                Tobjapproach = numpy.dot(Tobjshelf,Tshelfapproach) # Approach pose wrt to the object frame
+                Tbaseapproach = numpy.dot(Tbaseobj,Tobjapproach)
+                Tbasegrasp = Tbaseapproach
                 TbaseIK_approach = numpy.dot(Tbasegrasp,TgraspIK)
+                """
 
                 # Construct msg. Then appened to queue with score as the priority in queue. This will put lowest score msg first in list.
                 proj_msg = PoseFromMatrix(TbaseIK_pregrasp)
