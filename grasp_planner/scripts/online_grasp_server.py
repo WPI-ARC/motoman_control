@@ -26,7 +26,11 @@ class grasping:
     def __init__(self):
         self.description = "Online grasp planning code"
         self.offset = 0.01 # safety buffer between object and gripper is 1cm on each side. Total of 2cm
-        self.gripperwidth = 0.155 - self.offset # 0.155 is the gripper width in meters. 15.5cm
+        self.z_lowerboundoffset = 0.015 # move gripper up 1.5 cm to avoid lip when going straigh in
+        self.z_upperboundoffset = 0.04
+        self.gripperwidth = 0.155 - self.offset # 0.155 is the gripper width in meters. 15.5cm        
+        self.x_upperboundoffset = 0.04 # fingertip is allowed move at most 4cm beyond the lower bound value
+        self.x_lowerboundoffset = 0.1 # fingertip goes past nearest point cloud's x value by at least 4 cm 
         self.showOutput = True # Enable to show print statements
         self.tf = tf.TransformListener(True, rospy.Duration(10.0))
         self.br = tf2_ros.TransformBroadcaster()
@@ -281,6 +285,19 @@ class grasping:
         width = abs(max_y-min_y)
         return width
 
+    def compute_depth(self, min_x, max_x, pointList):
+        x_lowerbound = min_x + self.x_lowerboundoffset
+        x_upperbound = max_x + self.x_upperboundoffset
+        depth = x_lowerbound #depth currently simply set as the lowerbound later may want to make it as a function of if collision check fail, we can reselect the depth to use to be within the bound. current we don't have this function
+        return depth
+
+    def compute_height(self, min_z, max_z):
+        z_lowerbound = min_z + self.z_lowerboundoffset
+        z_upperbound = max_z + self.z_upperboundoffset
+        height = z_lowerbound #height currently set so gripper won't collide into the shelf lip. later we may want this as a function simliar to the function we may use for the depth calculation with collision check. 
+        print "height: " + str(height)
+        return height
+
     def compute_y_mid(self, miny, maxy): 
         y = (miny+maxy)/2
         ymid = numpy.array([[0],[y],[0],[1]])
@@ -407,13 +424,18 @@ class grasping:
 
                 # Compute mid-y point using miny maxy 
                 mid_y = self.compute_y_mid(min_y, max_y)
+                depth = self.compute_depth(min_x, max_x, OBBPointsList) #select depth to be with a min and max bound
+                height = self.compute_height(min_z, max_z) #select the height so bottom  of object and also hand won't collide wit shelf lip. may need to take into acount the max_z and objects height to see if object will hit top of shelf.
                 if self.showOutput:
                     print "mid-y: "+str(mid_y)
+                    print "x depth value "+str(depth)
+                    print "x height value "+str(height)
 
                 """ Compute midpt is probably not necessary. Seems it should alsways be centered I believe."""
                 # Update projection TF with new y value set to be middle of the projection wrt to the projection frame
-                zoffset = 0.015 # move gripper up 1.5 cm to avoid lip when going straigh in
-                Trans_shelfproj = numpy.array([Tshelfproj_new[0,3], mid_y[1], Tshelfproj_new[2,3]+zoffset])
+                
+                # Trans_shelfproj = numpy.array([Tshelfproj_new[0,3], mid_y[1], Tshelfproj_new[2,3]+zoffset])
+                Trans_shelfproj = numpy.array([Tshelfproj_new[0,3]+depth, mid_y[1], Tshelfproj_new[2,3]]+height)
                 Rot_shelfproj = Tshelfproj_new[0:3,0:3]
                 Tshelfproj_update = self.construct_4Dmatrix(Trans_shelfproj, Rot_shelfproj)
 
