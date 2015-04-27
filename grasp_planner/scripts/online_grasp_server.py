@@ -24,17 +24,18 @@ class grasping:
 
     def __init__(self):
         self.description = "Online grasp planning code"
-        self.offset = 0.02 # safety buffer between object and gripper is 1cm on each side. Total of 2cm
+        self.offset = 0.01 # safety buffer between object and gripper is 1cm on each side. Total of 2cm
         self.gripperwidth = 0.155 - self.offset # 0.155 is the gripper width in meters. 15.5cm
-        self.showOutput = False # Enable to show print statements
+        self.showOutput = True # Enable to show print statements
         self.tf = tf.TransformListener(True, rospy.Duration(10.0))
         self.br = tf2_ros.TransformBroadcaster()
         self.rate = rospy.Rate(60.0)
         self.tfList = []        
-        self.thetaList = numpy.linspace(-0.34906585, 0.34906585, num=41) # 0.174532925 = 10deg. SO range is from -10deg to 10deg using num=41 spacing        
-        #self.thetaList = numpy.linspace(-0.698131701, 0.698131701, num=21)
+        self.thetaList = numpy.linspace(-0.34906585, 0.34906585, num=10) # 0.174532925 = 10deg. SO range is from -10deg to 10deg using num=41 spacing        
+        # self.thetaList = numpy.linspace(-0.698131701, 0.698131701, num=41)
         #self.thetaList = numpy.linspace(0, 0.34906585, num=21) # 0.174532925 = 10deg. SO range is from -10deg to 10deg using num=41 spacing        
-        #self.thetaList = numpy.array([0])
+        # self.thetaList = numpy.array([0, 1.57079632679])
+        # self.thetaList = numpy.array([0])
         #self.thetaList = numpy.array([0.0174532925]) #1 deg
         #self.thetaList = numpy.array([1.57079633 ]) #90 deg
         #self.thetaList = numpy.array([0.785398163]) #45 deg
@@ -108,6 +109,7 @@ class grasping:
         return t
 
     def construct_4Dmatrix(self, trans, rot):
+        print trans, rot
         transform = numpy.zeros([4,4])
         transform[0:3,0:3] = rot
         transform[0:3,3] = trans
@@ -266,9 +268,10 @@ class grasping:
         # do a service call to get min max of object. Or maybe a subscribe to topic is fine too since all services start when
         # the robot launches. Alex code is requesting sample and process service so maybe when those are call just publish the min max values to
         # a topic. May be the easiest way
-        x = size.item(0)
-        y = size.item(1)
-        z = size.item(2)
+        x = size[0]
+        y = size[1]
+        z = size[2]
+        # print "extents: ", x,y,z
 
         point1 = (x/2, y/2, z/2)
         point2 = (x/2, -y/2, z/2)
@@ -289,12 +292,10 @@ class grasping:
         width = abs(max_y-min_y)
         return width
 
-    def compute_y_mid(self, miny, maxy, Tbaseproj): 
+    def compute_y_mid(self, miny, maxy): #miny maxy already given wrt to base
         y = (miny+maxy)/2
-        ymid = numpy.matrix([[0],[y],[0],[1]])
-        Tmidpt = Tbaseproj*ymid #y mid wrt to proj frame is now wrt to base
-        mid_y = numpy.array([Tmidpt.item(0,0), Tmidpt.item(1,0), Tmidpt.item(2,0)])
-        return mid_y
+        ymid = numpy.array([[0],[y],[0],[1]])
+        return ymid
 
     def check_width(self, width):        
         if width <= self.gripperwidth: 
@@ -304,18 +305,20 @@ class grasping:
         return isSmaller
 
     def compute_score(self, width):
-        score = width/self.gripperwidth
+        score =numpy.true_divide(width,self.gripperwidth)
         return score
 
     def compute_minmax(self, pointList):
         #Loop through pointList to find the min & max for the x, y, and z
-        min_x = 0
-        min_y = 0
-        min_z = 0
-        max_x = 0
-        max_y = 0
-        max_z = 0
-        for point in pointList:
+        min_x = 999999999999999
+        min_y = 999999999999999
+        min_z = 999999999999999
+        max_x = -99999999999999
+        max_y = -99999999999999
+        max_z = -99999999999999
+        
+        for point in pointList:            
+            
             if point[0] > max_x: #if x point is larger than current max x then replace with new one
                 max_x = point[0]
             if point[0] < min_x: #if x point is smaller than current min x then replace with new one
@@ -338,93 +341,103 @@ class grasping:
 
     def get_grasp_cb(self, req):
 
-        poseList = []
+        # poseList = []
         approachList = []
         projectionList = []
         tfs = []
         countbad = 0
+
+        print "================================================== Request start =================================================="
         print "Requesting valid grasps for %s" %req.item
     
         # Request the 8 Oriented bounding box points wrt to the object's frame.
         size = self.get_object_extents(req)
         OBBPoints = self.get_obb_points(size)
 
-        # Get TFs
-        Tbaseshelf = self.get_tf('/base_link', '/shelf')
-        Tshelfobj = self.get_tf('/shelf', '/object')
-        Tbaseobj = Tbaseshelf*Tshelfobj
-        if self.showOutput:
-            print OBBPoints
-            print Tbaseshelf
-            print Tshelfobj                 
+        # # Get TFs
+        # Tbaseshelf = self.get_tf('/base_link', '/shelf')
+        # Tshelfobj = self.get_tf('/shelf', '/object')
+        # Tbaseobj = Tbaseshelf*Tshelfobj
+        # if self.showOutput:
+        #     print OBBPoints
+        #     print Tbaseshelf
+        #     print Tshelfobj                 
 
         # Generate TFs to project onto
         for theta in self.thetaList:
+            print " ================================================== Start loop =================================================="
             # Get TFs
             Tbaseshelf = self.get_tf('/base_link', '/shelf')
             Tshelfobj = self.get_tf('/shelf', '/object')
+            Tbaseobj = Tbaseshelf*Tshelfobj
             if self.showOutput:
-                print OBBPoints
-                print Tbaseshelf
-                print Tshelfobj
+                print "OBBPoints: ", OBBPoints
+                print "Transform from base to shelf: ", Tbaseshelf
+                print "Transform from shelf to obj: ", Tshelfobj
 
             Tshelfproj = self.generate_rotation_matrix(theta)
-            Tbaseproj = Tbaseshelf*Tshelfproj
+            Tbaseproj = numpy.dot(Tbaseshelf,Tshelfproj)
             if theta == 0:
                 print "projecting to shelf frame"
              
             if self.showOutput:
-                print "Transform from shelf to proj"
-                print Tshelfproj, type(Tshelfproj)
-                print "Transform from base to proj"
-                print Tbaseproj, type(Tbaseproj)
+                print "Transform from shelf to proj: ", Tshelfproj, type(Tshelfproj)
+                # print "Transform from base to proj", Tbaseproj, type(Tbaseproj)
 
             # Extract Translation component of Tshelfobj
             Trans_shelfobj = Tshelfobj[0:3,3]
             Rot_shelfproj = Tshelfproj[0:3,0:3]
             Tshelfproj_new = self.construct_4Dmatrix(Trans_shelfobj, Rot_shelfproj)
+            print Tshelfproj_new
+
 
             """
-            # Generate TF for shelf to projection
-            proj = geometry_msgs.msg.Pose()
-            [transobj, quatobj] = ExtractFromMatrix(Tshelfobj)
-            [transproj, quatproj] = ExtractFromMatrix(Tshelfproj)
-            proj.position.x = transobj[0]
-            proj.position.y = transobj[1]
-            proj.position.z = transobj[2]            
-            proj.orientation.x = quatproj[0]
-            proj.orientation.y = quatproj[1]
-            proj.orientation.z = quatproj[2]
-            proj.orientation.w = quatproj[3]
-            poseList.append(proj)
-            tf_shelfproj = self.generate_tf('/shelf', '/projection', proj.position, proj.orientation)
-            self.broadcast_single_tf(tf_shelfproj)
+            # Transform from base to shelf then shelf to projection 
+            Tbaseproj = numpy.dot(Tbaseshelf,Tshelfproj_new)
+
+            # Get TF for projection to object
+            Tprojbase = inv(Tbaseproj)
+            Tprojobj = numpy.dot(Tprojbase,Tbaseobj) 
+            Tbaseobj = numpy.dot(Tbaseproj,Tprojobj) # Transforms to get OBBPts wrt to the projection frame which is then wrt to the world frame
+
+            # Loop through OBB points and transform them to be wrt to the target projection frame which then is wrt to base
+            OBBPointsList = []
+            for OBBPoint in OBBPoints:
+                oldpt = numpy.array([[OBBPoint[0]], [OBBPoint[1]], [OBBPoint[2]], [1]])
+                print "<<<<<<<<<<<<<<"
+                print oldpt
+                projected_OBBPoint = numpy.dot(Tbaseobj,oldpt)
+                print Tbaseobj
+                print projected_OBBPoint
+                OBBPointsList.append(projected_OBBPoint) 
+            if self.showOutput:
+                print "List of transformed OBB points after projection to target projection frame"
+                print OBBPointsList
             """
 
             # Get TF for projection to object
             Tprojshelf = inv(Tshelfproj_new)
-            Tprojobj = Tprojshelf * Tshelfobj
+            Tprojobj = numpy.dot(Tprojshelf,Tshelfobj) 
 
-            """
-            tf_projobj = self.get_tf('1/projection', "/object")
-            if self.showOutput:
-                print "Transform from projection to object"
-                print tf_projobj
-            """
-
-            # Loop through OBB points and transform them to be wrt to the target projection frame
+            # Loop through OBB points and transform them to be wrt to the target projection frame which then is wrt to base
+            OBBPointsList = []
             for OBBPoint in OBBPoints:
-                OBBPointsList = []
-                OBBPoint = numpy.matrix([[OBBPoint[0]], [OBBPoint[1]], [OBBPoint[2]], [1]])
-                projected_OBBPoint = Tprojobj*OBBPoint
-                OBBPointsList.append(projected_OBBPoint) #Pass in Tbaseproj
+                oldpt = numpy.array([[OBBPoint[0]], [OBBPoint[1]], [OBBPoint[2]], [1]])
+                # print "<<<<<<<<<<<<<<"
+                # print oldpt
+                projected_OBBPoint = numpy.dot(Tprojobj,oldpt)
+                # print Tprojobj
+                # print projected_OBBPoint
+                OBBPointsList.append(projected_OBBPoint) 
             if self.showOutput:
                 print "List of transformed OBB points after projection to target projection frame"
                 print OBBPointsList
 
+
             # Get min max points. Pass in transformed OBBPoints list to get min max for target frame
             # Compute width of projection shadow. Width is the y axis because shelf frame is set that way with y axis as width
             # Check if width of shadow projection can fit inside gripper width
+
             min_max = self.compute_minmax(OBBPointsList)
             min_x, max_x, min_y, max_y, min_z, max_z = min_max         
             width = self.compute_width(min_y, max_y)
@@ -439,14 +452,12 @@ class grasping:
             if isSmaller == True:
                 score = self.compute_score(width)
 
-                # Transform base to projection
-                Tbaseproj = Tbaseshelf*Tshelfproj_new
-                
                 # Compute mid-y point using miny maxy 
-                mid_y = self.compute_y_mid(min_y, max_y, Tbaseproj)
+                mid_y = self.compute_y_mid(min_y, max_y)
                 if self.showOutput:
-                    print "mid-y: "+str(mid_y), mid_y[1]
+                    print "mid-y: "+str(mid_y)#, mid_y[1]
 
+                """ Compute midpt is probably not necessary. Seems it should alsways be centered I believe."""
                 # Update projection TF with new y value set to be middle of the projection wrt to the projection frame
                 Trans_shelfproj = numpy.array([Tshelfproj_new[0,3], mid_y[1], Tshelfproj_new[2,3]])
                 Rot_shelfproj = Tshelfproj_new[0:3,0:3]
@@ -465,13 +476,6 @@ class grasping:
                 tf_shelfproj = self.generate_tf('/shelf', '/projection', proj.position, proj.orientation)
                 self.broadcast_single_tf(tf_shelfproj)
 
-                """
-                proj = deepcopy(proj)
-                proj.position.y = mid_y[1]                               
-                tf_shelfproj = self.generate_tf('/shelf', '/projection', proj.position, proj.orientation)
-                self.broadcast_single_tf(tf_shelfproj)
-                """
-                ""
                 # Construct approach TF as projection but further back
                 Trans_projapproach = numpy.array([-0.5, 0, 0])
                 Rot_projapproach = numpy.eye(3,3)
@@ -497,7 +501,7 @@ class grasping:
                                         [0, 0, 0, 1]])
 
                 # Transform for grasp to pregrasp pose for object just like in offline planner
-                Tapproachproj = inv(Tprojapproach)
+                Tprojshelf = inv(Tshelfproj_new)
                 Tprojobj = numpy.dot(Tprojshelf,Tshelfobj)
                 Tobjpregrasp = inv(Tprojobj)
                 Tbasepregrasp = numpy.dot(Tbaseobj,Tobjpregrasp) #Transform obj to pregrasp wrt to base
@@ -519,17 +523,20 @@ class grasping:
                 #approach_msg = self.get_tf_msg('/base_link', '/approach')
                 # Tbaseproj = Tbaseshelf*Tshelfproj
 
+
                 projectionList.append(proj_msg)
                 approachList.append(approach_msg)
                 if self.showOutput:
-                    print "score is %i. Good approach direction. Gripper is wide enough" %score
+                    print "score is %f. Good approach direction. Gripper is wide enough" %score
             else:
-                poseList.pop() #Removed the pose that has bad cost. projection width doesn't fit in gripper
-                cost = self.compute_cost(width)
+                # poseList.pop() #Removed the pose that has bad cost. projection width doesn't fit in gripper
+                score = self.compute_score(width)
                 if self.showOutput:
-                    print "score is %i. Bad approach direction. Gripper not wide enough" %score
-                countbad += countbad
+                    print "score is %f. Bad approach direction. Gripper not wide enough" %score
+                countbad += 1
+
         print "number of bad approach directions: " + str(countbad)
+        print " ================================================== end loop =================================================="
 
         """
         # Generate TF for projection to approach pose
@@ -551,7 +558,7 @@ class grasping:
 
         # From center of palm to edge of it is 6cm then lip is about 2cm up so need to offset robot z-axis to move hand approach vector to be 8cm
         # up from bottom of object.        
-        print "Request complete-----------------------------------------------------------------------------------------------------"
+        print "================================================== Request end =================================================="
         return apcGraspDBResponse(status=True,apcGraspArray=grasps)
     
 def publisher():
@@ -559,10 +566,12 @@ def publisher():
 
     grasp = grasping()
     while not rospy.is_shutdown():
-        s = rospy.Service('getGrasps_online_server', apcGraspDB, grasp.get_grasp_cb)
-        print "Request start--------------------------------------------------------------------------------------------------------"
-        print "Online grasp planner ready"
-        rospy.spin()
+        try:
+            s = rospy.Service('getGrasps_online_server', apcGraspDB, grasp.get_grasp_cb)
+            print "Online grasp planner ready"
+            rospy.spin()
+        except:
+            print traceback.format_exc()
 
 if __name__ == '__main__':
     publisher()
