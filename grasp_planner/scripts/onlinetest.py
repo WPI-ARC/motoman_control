@@ -36,6 +36,21 @@ def goto_pose(group, pose, times=[5, 20, 40, 60], with_shelf=False):
         remove_shelf()
     return False
 
+def follow_path(group, path, collision_checking=False):
+    """Follows a cartesian path using a linear interpolation of the given
+    `path`. The `collision_checking` parameter controls whether or not
+    to check the path for collisions with the environment."""
+    traj, success = group.compute_cartesian_path(
+        path,
+        0.01,  # 1cm interpolation resolution
+        0.0,  # jump_threshold disabled
+        avoid_collisions=collision_checking,
+    )
+    if success < 1:
+        rospy.logwarn("Cartesian trajectory could not be completed. Only solved for: '"+str(success)+"'...")
+        #return False
+    return group.execute(traj)
+
 def main():
     try:
         rospy.loginfo("Initializing...")
@@ -44,7 +59,7 @@ def main():
         rospy.init_node("online_planner_test")
         client = rospy.ServiceProxy('getGrasps_online_server', apcGraspDB)
         item = 'expo_dry_erase_board_eraser' # Set response item
-        item = 'cheezit_big_original'
+        #item = 'cheezit_big_original'
         tfs = []
 
         msg = geometry_msgs.msg.Pose()
@@ -89,33 +104,41 @@ def main():
         #     rate.sleep()
 
         i = 0
-        grasp = grasps[i].posegrasp
+        grasp = grasps[i].posegrasp        
+        t = geometry_msgs.msg.TransformStamped()
+        t.header.stamp = rospy.Time.now()
+        t.header.frame_id = "base_link"
+        t.child_frame_id = "grasp"+str(i)
+        t.transform.translation = grasp.position
+        t.transform.rotation = grasp.orientation
+        tfs.append(t)
         approach = grasps[i].poseapproach
         t = geometry_msgs.msg.TransformStamped()
         t.header.stamp = rospy.Time.now()
         t.header.frame_id = "base_link"
-        t.child_frame_id = "grasp "+str(i)
-        t.transform.translation = grasp.position
-        t.transform.rotation = grasp.orientation
+        t.child_frame_id = "approach"+str(i)
+        t.transform.translation = approach.position
+        t.transform.rotation = approach.orientation
+        tfs.append(t)
 
         br = tf2_ros.TransformBroadcaster()
         rate = rospy.Rate(1000)        
         for time in range(0,10000):
-            t.header.stamp = rospy.Time.now()
-            br.sendTransform(t)                
+            for tf in tfs:
+                tf.header.stamp = rospy.Time.now()
+                br.sendTransform(tf)                
             rate.sleep()
 
         rospy.loginfo("Trying to move to initial pose...")
-        grasp = grasps[i].poseapproach
-        pose = geometry_msgs.msg.Pose()
-        pose.position = grasp.position
-        pose.orientation = grasp.orientation
-        print "Pose: ", pose
-
+        approachpose = grasps[i].poseapproach
+        pregrasppose = grasps[i].posegrasp
         
         arm.set_planner_id("RRTstarkConfigDefault")
         arm.set_workspace([-3, -3, -3, 3, 3, 3])
-        if not goto_pose(arm, pose, [1, 5, 30, 60]):
+        if not goto_pose(arm, approachpose, [1, 5, 30, 60]): #move to approach
+            sys.exit(1)
+
+        if not goto_pose(arm, pregrasppose, [1, 5, 30, 60]): #move to pregrasp
             sys.exit(1)
         
 

@@ -32,13 +32,13 @@ class grasping:
         self.br = tf2_ros.TransformBroadcaster()
         self.rate = rospy.Rate(60.0)
         self.tfList = []        
-        self.thetaList = numpy.linspace(-0.34906585, 0.34906585, num=3) # 0.174532925 = 10deg. SO range is from -10deg to 10deg using num=41 spacing        
+        self.thetaList = numpy.linspace(-0.34906585, 0.34906585, num=11) # 0.174532925 = 10deg. SO range is from -10deg to 10deg using num=41 spacing        
         # self.thetaList = numpy.linspace(-0.698131701, 0.698131701, num=41)
         #self.thetaList = numpy.linspace(0, 6.28, num=360) # 360 degrees. Use for tray?
         #self.thetaList = numpy.linspace(0, 0.34906585, num=21) # 0.174532925 = 10deg. SO range is from -10deg to 10deg using num=41 spacing        
         # self.thetaList = numpy.array([0, 1.57079632679])
         # self.thetaList = numpy.array([0])
-        #self.thetaList = numpy.array([0.0174532925]) #1 deg
+        # self.thetaList = numpy.array([0.0174532925]) #1 deg
         #self.thetaList = numpy.array([1.57079633 ]) #90 deg
         #self.thetaList = numpy.array([0.785398163]) #45 deg
         if self.showOutput:
@@ -408,7 +408,7 @@ class grasping:
                 # Compute mid-y point using miny maxy 
                 mid_y = self.compute_y_mid(min_y, max_y)
                 if self.showOutput:
-                    print "mid-y: "+str(mid_y)#, mid_y[1]
+                    print "mid-y: "+str(mid_y)
 
                 """ Compute midpt is probably not necessary. Seems it should alsways be centered I believe."""
                 # Update projection TF with new y value set to be middle of the projection wrt to the projection frame
@@ -448,7 +448,8 @@ class grasping:
                 tf_projapproach = self.generate_tf('/projection', '/approach', approach.position, approach.orientation)
                 self.broadcast_single_tf(tf_projapproach)                
 
-                TgraspIK = numpy.array([[0, 1, 0, 0],
+                # Transform to orient hand to use x as approach direction
+                TgraspIK = numpy.array([[0, 1, 0, -0.17],
                                         [0, 0, 1, 0],
                                         [-1, 0, 0, 0],
                                         [0, 0, 0, 1]])
