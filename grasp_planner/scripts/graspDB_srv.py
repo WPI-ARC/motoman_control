@@ -319,12 +319,16 @@ def CB_getGrasp(req):
                 if showOutput:
                     print Tobjgrasp
                 TgraspIK = numpy.matrix([[1, 0, 0, 0],
-                            [0, 0, -1, -0.17],
-                            [0, 1, 0, 0],
-                            [0, 0, 0, 1]])
+                                        [0, 0, -1, -0.17],
+                                        [0, 1, 0, 0],
+                                        [0, 0, 0, 1]])
+                TgraspIK = numpy.matrix([[1, 0, 0, 0],
+                                        [0, 0, 1, -0.17],
+                                        [0, -1, 0, 0],
+                                        [0, 0, 0, 1]])
                 Trobobj = quatToMatrix(Trob_obj)
                 Trobgrasp = Trobobj * Tobjgrasp
-                TrobIK = Trobgrasp * TgraspIK
+                TrobIK = Trobgrasp * TgraspIK 
 
                 #print "Concatenated Transform Trobgrasp:"
                 #print Trobgrasp

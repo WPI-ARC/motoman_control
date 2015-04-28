@@ -358,7 +358,8 @@ class grasping:
     
         # Request the 8 Oriented bounding box points wrt to the object's frame.
         size = self.get_object_extents(req)
-        OBBPoints = self.get_obb_points(size)            
+        OBBPoints = self.get_obb_points(size)
+                    
 
         # Generate TFs to project onto
         for theta in self.thetaList:
@@ -367,7 +368,8 @@ class grasping:
             # Get TFs
             Tbaseshelf = self.get_tf('/base_link', '/shelf')
             Tshelfobj = self.get_tf('/shelf', '/object')
-            Tbaseobj = Tbaseshelf*Tshelfobj
+            #Tbaseobj = Tbaseshelf*Tshelfobj
+            Tbaseobj = req.Trob_obj #same Trob_obj request from offline planner
             if self.showOutput:
                 print "OBBPoints: ", OBBPoints
                 print "Transform from base to shelf: ", Tbaseshelf

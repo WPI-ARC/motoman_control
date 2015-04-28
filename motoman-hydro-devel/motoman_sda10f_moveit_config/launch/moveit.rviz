@@ -7,6 +7,7 @@ Panels:
         - /Global Options1
         - /MotionPlanning1/Planning Request1
         - /MotionPlanning1/Planned Path1
+        - /TF1
         - /TF1/Frames1
         - /Pose1
         - /PointCloud22
@@ -606,67 +607,109 @@ Visualization Manager:
       Frames:
         All Enabled: false
         arm_left_link_1_s:
-          Value: true
+          Value: false
         arm_left_link_2_l:
-          Value: true
+          Value: false
         arm_left_link_3_e:
-          Value: true
+          Value: false
         arm_left_link_4_u:
-          Value: true
+          Value: false
         arm_left_link_5_r:
-          Value: true
+          Value: false
         arm_left_link_6_b:
-          Value: true
+          Value: false
         arm_left_link_7_t:
           Value: true
         arm_left_link_tool0:
-          Value: true
+          Value: false
         arm_right_link_1_s:
-          Value: true
+          Value: false
         arm_right_link_2_l:
-          Value: true
+          Value: false
         arm_right_link_3_e:
-          Value: true
+          Value: false
         arm_right_link_4_u:
-          Value: true
+          Value: false
         arm_right_link_5_r:
-          Value: true
+          Value: false
         arm_right_link_6_b:
-          Value: true
+          Value: false
         arm_right_link_7_t:
-          Value: true
+          Value: false
         arm_right_link_tool0:
-          Value: true
+          Value: false
         base_link:
-          Value: true
+          Value: false
         camera_left:
-          Value: true
-        camera_left_depth_optical_frame:
-          Value: true
-        camera_right_depth_optical_frame:
-          Value: true
+          Value: false
         cylinder_hand_left:
-          Value: true
+          Value: false
         cylinder_hand_right:
-          Value: true
+          Value: false
+        hand_left_finger_1_link_0:
+          Value: false
+        hand_left_finger_1_link_1:
+          Value: false
+        hand_left_finger_1_link_2:
+          Value: false
+        hand_left_finger_1_link_3:
+          Value: false
+        hand_left_finger_2_link_0:
+          Value: false
+        hand_left_finger_2_link_1:
+          Value: false
+        hand_left_finger_2_link_2:
+          Value: false
+        hand_left_finger_2_link_3:
+          Value: false
         hand_left_finger_middle_link_0:
-          Value: true
+          Value: false
+        hand_left_finger_middle_link_1:
+          Value: false
+        hand_left_finger_middle_link_2:
+          Value: false
+        hand_left_finger_middle_link_3:
+          Value: false
         hand_left_palm:
-          Value: true
+          Value: false
+        hand_right_finger_1_link_0:
+          Value: false
+        hand_right_finger_1_link_1:
+          Value: false
+        hand_right_finger_1_link_2:
+          Value: false
+        hand_right_finger_1_link_3:
+          Value: false
+        hand_right_finger_2_link_0:
+          Value: false
+        hand_right_finger_2_link_1:
+          Value: false
+        hand_right_finger_2_link_2:
+          Value: false
+        hand_right_finger_2_link_3:
+          Value: false
         hand_right_finger_middle_link_0:
-          Value: true
+          Value: false
+        hand_right_finger_middle_link_1:
+          Value: false
+        hand_right_finger_middle_link_2:
+          Value: false
+        hand_right_finger_middle_link_3:
+          Value: false
         hand_right_palm:
+          Value: false
+        object:
           Value: true
         robotiq_force_wires_left:
-          Value: true
+          Value: false
         robotiq_hand_wires_left:
-          Value: true
+          Value: false
         shelf:
           Value: true
         torso_link_b1:
-          Value: true
+          Value: false
         torso_link_b2:
-          Value: true
+          Value: false
       Marker Scale: 1
       Name: TF
       Show Arrows: false
@@ -675,7 +718,8 @@ Visualization Manager:
       Tree:
         base_link:
           shelf:
-            {}
+            object:
+              {}
           torso_link_b1:
             arm_left_link_1_s:
               arm_left_link_2_l:
@@ -689,14 +733,25 @@ Visualization Manager:
                               hand_left_palm:
                                 camera_left:
                                   {}
+                                hand_left_finger_1_link_0:
+                                  hand_left_finger_1_link_1:
+                                    hand_left_finger_1_link_2:
+                                      hand_left_finger_1_link_3:
+                                        {}
+                                hand_left_finger_2_link_0:
+                                  hand_left_finger_2_link_1:
+                                    hand_left_finger_2_link_2:
+                                      hand_left_finger_2_link_3:
+                                        {}
                                 hand_left_finger_middle_link_0:
-                                  {}
+                                  hand_left_finger_middle_link_1:
+                                    hand_left_finger_middle_link_2:
+                                      hand_left_finger_middle_link_3:
+                                        {}
                                 robotiq_hand_wires_left:
                                   {}
                               robotiq_force_wires_left:
                                 {}
-                          camera_left_depth_optical_frame:
-                            {}
             arm_right_link_1_s:
               arm_right_link_2_l:
                 arm_right_link_3_e:
@@ -707,10 +762,21 @@ Visualization Manager:
                           arm_right_link_tool0:
                             cylinder_hand_right:
                               hand_right_palm:
+                                hand_right_finger_1_link_0:
+                                  hand_right_finger_1_link_1:
+                                    hand_right_finger_1_link_2:
+                                      hand_right_finger_1_link_3:
+                                        {}
+                                hand_right_finger_2_link_0:
+                                  hand_right_finger_2_link_1:
+                                    hand_right_finger_2_link_2:
+                                      hand_right_finger_2_link_3:
+                                        {}
                                 hand_right_finger_middle_link_0:
-                                  {}
-                          camera_right_depth_optical_frame:
-                            {}
+                                  hand_right_finger_middle_link_1:
+                                    hand_right_finger_middle_link_2:
+                                      hand_right_finger_middle_link_3:
+                                        {}
           torso_link_b2:
             {}
       Update Interval: 0
@@ -828,22 +894,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.15477
+      Distance: 5.33513
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.31595
-        Y: 0.194506
-        Z: 1.2588
+        X: 0.157044
+        Y: -0.157882
+        Z: 0.537639
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.7102
+      Pitch: 0.7952
       Target Frame: base_link
       Value: Orbit (rviz)
-      Yaw: 2.97044
+      Yaw: 2.07044
     Saved: ~
 Window Geometry:
   Displays:
