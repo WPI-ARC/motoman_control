@@ -26,18 +26,14 @@ class SCANFORITEM(smach.State):
         output['error'] = "None"
         userdata.output = output
 
-        sample_request = SampleVisionRequest(
-            command=userdata.bin
-        )
-        process_request = ProcessVisionRequest(
-            bin=userdata.bin,
-            object1=userdata.item,
-            object2=userdata.item,
-        )
         for i in range(5):
-            response = self.sample.call(sample_request)
+            response = self.sample.call(command=userdata.bin)
             print "Sample:", response
-            response = self.process.call(process_request)
+            response = self.process.call(
+                bin=userdata.bin,
+                object1=userdata.item,
+                object2=userdata.item,
+            )
             print "Process:", response
             userdata.pose = self.tf.transformPose("/base_link", response.pose1)
             print "Pose:", self.tf.transformPose("/base_link", response.pose1)

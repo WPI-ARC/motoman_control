@@ -5,6 +5,7 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /MotionPlanning1
         - /MotionPlanning1/Planning Request1
         - /MotionPlanning1/Planned Path1
         - /TF1/Frames1
@@ -305,7 +306,7 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-        Loop Animation: false
+        Loop Animation: true
         Robot Alpha: 0.5
         Show Robot Collision: false
         Show Robot Visual: true
@@ -828,22 +829,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.15477
+      Distance: 5.52731
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.31595
-        Y: 0.194506
-        Z: 1.2588
+        X: 0.138078
+        Y: 0.43177
+        Z: 0.918939
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.7102
+      Pitch: 0.4502
       Target Frame: base_link
       Value: Orbit (rviz)
-      Yaw: 2.97044
+      Yaw: 1.57544
     Saved: ~
 Window Geometry:
   Displays:

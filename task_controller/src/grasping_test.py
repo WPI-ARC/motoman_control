@@ -10,26 +10,28 @@ import moveit_commander
 import tf
 import tf2_ros
 import geometry_msgs.msg
-from moveit_msgs.srv import GetPositionIK, GetPositionIKRequest
 
 sys.path.append("/home/wpi-apc/catkin_ws/src/task_controller/nodes")
 from copy import deepcopy
 from grasp_logic.srv import grasp, graspRequest
-from gripper_srv.srv import gripper, gripperRequest
 from grasp_planner.srv import apcGraspDB, apcGraspDBResponse
 from geometry_msgs.msg import Pose, Point, Quaternion
 from grasp_planner.msg import apcGraspPose, apcGraspArray
 
 from apc_vision.srv import *
-from util import goto_pose, follow_path, bin_pose
+from util import goto_pose, follow_path, bin_pose, filterGrasps, execute_grasp, add_object, remove_object
 
-item = "crayola_64_ct"
-item = "cheezit_big_original"
+#item = "crayola_64_ct"
+# item = "cheezit_big_original"
+#item = "feline_greenies_dental_treats"
+#item = "mark_twain_huckleberry_finn"
+item = "mead_index_cards"
 
 rospy.loginfo("Initializing...")
 robot = moveit_commander.RobotCommander()
 arm = robot.arm_left
 rospy.init_node("motoman_apc_controller")
+remove_object()
 
 tfs = []
 
@@ -60,51 +62,23 @@ print "Sample:", response
 response = process.call(process_request)
 print "Process:", response
 
-
-print response.pose.pose
+object_pose = response.pose.pose
+print object_pose
 t = geometry_msgs.msg.TransformStamped()
 t.header.stamp = rospy.Time.now()
 t.header.frame_id = "base_link"
 t.child_frame_id = "object"
-t.transform.translation = response.pose.pose.position
-t.transform.rotation = response.pose.pose.orientation
+t.transform.translation = object_pose.position
+t.transform.rotation = object_pose.orientation
 tfs.append(t)
 
 client = rospy.ServiceProxy('getGrasps', apcGraspDB)
-response = client.call(item=item, Trob_obj=response.pose.pose)
+response = client.call(item=item, Trob_obj=object_pose)
 print "Response:", response.status
 print response.apcGraspArray
 
-position_ik = rospy.ServiceProxy("compute_ik", GetPositionIK)
-def check_ik(pose, collision_checking=True):
-    request = GetPositionIKRequest()
-    request.ik_request.group_name = arm.get_name();
-    request.ik_request.pose_stamped.pose = pose
-    request.ik_request.avoid_collisions = True
-    response = position_ik.call(request)
-    print response
-    return response.error_code.val == 1
-
-def filterGrasps(grasps):
-    filtered = []
-    for grasp in grasps:
-        if check_ik(grasp.posegrasp) and check_ik(grasp.poseapproach):
-            filtered.append(grasp)
-    return filtered
-
-gripper_control = rospy.ServiceProxy("command_gripper", gripper)
-def execute_grasp(grasp):
-    if not goto_pose(arm, grasp.poseapproach, [1, 5, 30, 60]):
-        return False
-    if not follow_path(arm, [arm.get_current_pose().pose, grasp.posegrasp]):
-        return False
-    request = gripperRequest(command="close")
-    response = gripper_control.call(request)
-    if not follow_path(arm, [arm.get_current_pose().pose, grasp.poseapproach]):
-        return False
-    return True
-
-grasps = filterGrasps(response.apcGraspArray.grasps)
+grasps = filterGrasps(arm, response.apcGraspArray.grasps)
+# grasps = response.apcGraspArray.grasps
 
 # for i in range(len(grasps)):
 # 	grasp = grasps[i].posegrasp
@@ -124,7 +98,16 @@ grasps = filterGrasps(response.apcGraspArray.grasps)
 # 	t.transform.rotation = approach.orientation
 # 	tfs.append(t)
 
-i = 8
+
+# br = tf2_ros.TransformBroadcaster()
+# rate = rospy.Rate(250.0)
+# while (not rospy.is_shutdown()):
+#     for t in tfs:
+#         t.header.stamp = rospy.Time.now()
+#         br.sendTransform(t)
+#     rate.sleep()
+
+i = 0
 print "Showing grasp %s of %s" %(i, len(grasps))
 grasp = grasps[i].posegrasp
 approach = grasps[i].poseapproach
@@ -144,16 +127,7 @@ t.transform.rotation = approach.orientation
 tfs.append(t)
 
 
-br = tf2_ros.TransformBroadcaster()
-rate = rospy.Rate(250.0)
-it = 0
-while (not rospy.is_shutdown()) and (it < 7500):
-    it += 1
-    for t in tfs:
-        t.header.stamp = rospy.Time.now()
-        br.sendTransform(t)
-    rate.sleep()
 
 if not rospy.is_shutdown():
 	raw_input("Continue? ")
-	print "Success:", execute_grasp(grasps[i])
+	print "Success:", execute_grasp(arm, grasps[i], object_pose)

@@ -9,6 +9,10 @@ import roslib
 import sys
 import traceback
 import time
+import os
+import csv
+import json
+import cPickle as pickle
 #from itertools import izip
 """OpenRave dependencies"""
 import openravepy
@@ -20,33 +24,6 @@ if not __openravepy_build_doc__:
     from openravepy import *
     from numpy import *
 
-"""
-br = tf2_ros.TransformBroadcaster()
-t.header.stamp = rospy.Time.now()
-t.header.frame_id = "base_link"
-t.child_frame_id = "grasp"
-t.transform.translation = grasp.position
-t.transform.rotation = grasp.orientation
-br.sendTransform(t)
-
-"""
-
-"""
-def graspOffset(apcPose):
-    offset = 0.1 #offset by 10 cm
-    x = apcPose.posegrasp.position.x
-    y = apcPose.posegrasp.position.y
-    z = apcPose.posegrasp.position.z
-    vecx = apcPose.poseapproach.x
-    vecy = apcPose.poseapproach.y
-    vecz = apcPose.poseapproach.z
-    vector = numpy.vector([vecx, vecy, vecz]) #approach vector
-    vectorMagnitude = numpy.sqrt(vecx,vecy,vecz) #magnitude of approach vector
-    unitVector = vector/vectorMagnitude
-    offsetVector = -unitVector*offset #new grasp point
-
-    print newPoint
-"""
 
 def genAPCGraspPose(grasp, object):    
     showOutput = False # If set to true, will show all print statments
@@ -55,7 +32,7 @@ def genAPCGraspPose(grasp, object):
     qy = (grasp.item(0,2) - grasp.item(2,0)) / (4*qw)
     qz = (grasp.item(1,0) - grasp.item(0,1)) / (4*qw)
 
-    offset = 0.1 #offset by 10 cm
+    offset = 0.2 #offset by 20 cm
     vecx = grasp.item(0,3) - object.item(0,3)
     vecy = grasp.item(1,3) - object.item(1,3)
     vecz = grasp.item(2,3) - object.item(2,3)
@@ -148,6 +125,7 @@ def initialize():
                     '../env/stirsticks.env.xml',
                     '../env/strawcups.env.xml',
                     '../env/tennisball.env.xml']
+    objectlist = ['../env/crayon.env.xml']
 
     # Program options that can be set
     showGUI = False # If set to true, will show openRave qtcoin GUI
@@ -226,6 +204,7 @@ def initialize():
         # Dictionary of grasps for each object
         if showOutput:
             print "Adding grasps for " + item + " to dictionary"
+        item =os.path.basename(item)
         graspDict[item] = grasplist
         #print graspDict
 
@@ -233,12 +212,27 @@ def initialize():
     print len(graspDict)
     RaveDestroy() # destroys all environments and loaded plugins
 
+    # Write graspDict to a csv file
+    with open(os.path.join(os.path.dirname(__file__), "graspDict.csv"), "w") as file:
+        # w = csv.writer(file)
+        # for key, val in graspDict.items():
+        #     w.writerow([key,val])
+        pickle.dump(graspDict, file)
+    # with open(os.path.join(os.path.dirname(__file__), "graspDict.json"), "w") as file:
+    #     json.dump(graspDict, file)
+
     return graspDict
 
 def CB_getGrasp(req):
+        global graspDict
         showOutput = False # If set to true, will show all print statments
         # Initilaztion stuff
-        global graspDict
+        #global graspDict
+        # Read graspDict from csv file
+        # with open(os.path.join(os.path.dirname(__file__), "graspDict.json")) as file:
+        #     graspDict = json.dump(file)
+
+
         if showOutput:
             print graspDict
         graspList=[]
@@ -306,6 +300,7 @@ def CB_getGrasp(req):
         else:
             print "could not find scene xml for object: %s"%req.item
         #env.Load(item) # Load requested item
+        item =os.path.basename(item)
         if showOutput:
             print "loading object XML: "+ item
 
@@ -376,6 +371,7 @@ def CB_getGrasp(req):
         return apcGraspDBResponse(status=True,apcGraspArray=grasps)
     
 def publisher():
+    global graspDict
     # Main loop which requests validgrasps from database and returns it
     # Valid grasps should be in object frame I think
     # global graspDict
@@ -383,6 +379,14 @@ def publisher():
     rate = rospy.Rate(10.0)
     graspDict = initialize()
     #print graspDict
+    # graspDict = {}
+    # for key, val in csv.reader(open(os.path.join(os.path.dirname(__file__), "graspDict.csv"))):
+    #     key, val = os.path.basename(key), eval(val)
+    #     print key, type(val)
+    #     from numpy import matrix
+    #     graspDict[key] = val
+    with open(os.path.join(os.path.dirname(__file__), "graspDict.csv")) as file:
+        graspDict = pickle.load(file)
     while not rospy.is_shutdown():
         #t.header.stamp = rospy.Time.now()
         #br.sendTransform(t)

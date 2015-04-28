@@ -5,6 +5,7 @@ import sys
 import traceback
 import time
 import openravepy
+import os
 from itertools import izip
 
 if not __openravepy_build_doc__:
@@ -20,7 +21,7 @@ if __name__ == "__main__":
     env = Environment()
     env.SetViewer('qtcoin')
     env.Reset()
-    RaveSetDebugLevel(DebugLevel.Verbose)
+    #RaveSetDebugLevel(DebugLevel.Verbose)
 
     # Set program options
     showgoodgrasp = False # Use to show or not show good grasp. False will skip showing good grasps
@@ -54,14 +55,22 @@ if __name__ == "__main__":
                   '../env/stirsticks.env.xml',
                   '../env/strawcups.env.xml',
                   '../env/tennisball.env.xml']
+    objectlist = [#'../env/screwdrivers.env.xml',
+                  '../env/sparkplug.env.xml',
+                  '../env/stickynotes.env.xml',
+                  '../env/stirsticks.env.xml',
+                  '../env/strawcups.env.xml',
+                  '../env/tennisball.env.xml']
+
 
     print objectlist
 
     # Generate grasp database for objects in list
     for item in objectlist:
         try:
+            item = os.path.join(os.path.dirname(__file__), item)
+            print "Loading object XML: "+ item
             object = env.Load(item)
-            print "loading object XML: "+ item
 
             time.sleep(0.1)
             robot = env.GetRobots()[0]
@@ -81,11 +90,12 @@ if __name__ == "__main__":
             # need to do some transrom between object frame and robot camera frame?? Maybe one of the parameters to set saves the object
             # frame transform??
             gmodel = openravepy.databases.grasping.GraspingModel(robot,target)
-            if not gmodel.load():
+            if True or not gmodel.load():
                 print 'generating grasp database'
                 #gmodel.autogenerate()
                 gmodel.init(friction=0.4,avoidlinks=[])
-                gmodel.generate(approachrays=gmodel.computeBoxApproachRays(delta=0.04,normalanglerange=0))
+                gmodel.generate(approachrays=gmodel.computeBoxApproachRays(delta=0.01,normalanglerange=0))
+                #gmodel.generate(approachrays=gmodel.computeSphereApproachRays(delta=0.2,normalanglerange=0))
                 gmodel.save()
 
             if showgoodgrasp:

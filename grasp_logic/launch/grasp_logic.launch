@@ -1,6 +1,0 @@
-<launch>
-
-  <node name="grasp_logic" pkg="grasp_logic" type="grasp_logic" respawn="false" output="screen">
-  </node>
-
-</launch>

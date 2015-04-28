@@ -53,7 +53,7 @@ if __name__ == "__main__":
     tennisball = '../env/tennisball.env.xml'
 
     try:
-        item = cheezit #Set item to load grasps for
+        item = dentaltreat #Set item to load grasps for
         object = env.Load(item)
         print "loading object XML: "+ item
 

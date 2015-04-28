@@ -12,6 +12,8 @@ add_service_files(
     FILES
     move_group_server.srv
     convert_trajectory_server.srv
+    get_tray_server.srv
+    attach_tray_server.srv
 )
 
 generate_messages(
@@ -26,7 +28,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES motoman_moveit
-  CATKIN_DEPENDS 
+  CATKIN_DEPENDS
     moveit_core
     moveit_ros_planning_interface
     interactive_markers
@@ -40,6 +42,7 @@ find_package(Eigen REQUIRED)
 ## Build ##
 ###########
 
+set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS} -g")
 
 include_directories(SYSTEM ${Boost_INCLUDE_DIR} ${EIGEN_INCLUDE_DIRS})
 include_directories(${catkin_INCLUDE_DIRS})
