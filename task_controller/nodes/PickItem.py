@@ -3,7 +3,7 @@ import rospy
 import smach
 
 from copy import deepcopy
-from grasp_logic.srv import grasp, graspRequest
+from grasp_planner.srv import grasp, graspRequest
 from gripper_srv.srv import gripper, gripperRequest
 
 from util import follow_path, bin_pose
@@ -16,7 +16,8 @@ class PICKITEM(smach.State):
                              input_keys=['input', 'item', 'pose', 'bin'],
                              output_keys=['output'])
         self.arm = robot.arm_left
-        self.grasp_generator = rospy.ServiceProxy("grasp_logic", grasp)
+        # self.grasp_generator = rospy.ServiceProxy("grasp_logic", grasp)
+        self.grasp_generator = rospy.ServiceProxy("getGrasps_onlineplanner", grasp)
         self.gripper_control = rospy.ServiceProxy("command_gripper", gripper)
 
         #request = gripperRequest(command="activate")
@@ -28,12 +29,11 @@ class PICKITEM(smach.State):
         rospy.loginfo("Trying to pick '"+userdata.item+"'...")
         userdata.output = userdata.input
 
-        request = graspRequest(
+        # TODO: Handle response error
+        response = self.grasp_generator.call(
             object=userdata.item,
             obj_pose=userdata.pose
         )
-        # TODO: Handle response error
-        response = self.grasp_generator.call(request)
         pose = response.arm_pose.pose
         #pose.orientation = self.arm.get_current_pose().pose.orientation
         print "Grasp Pose:", response
