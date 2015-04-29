@@ -69,11 +69,11 @@ def filterGrasps(group, grasps):
 
 gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
 def execute_grasp(group, grasp, object_pose):
-    add_object(object_pose)
-    if not goto_pose(group, grasp.poseapproach, [1, 5, 30, 60]):
-        remove_object()
+    # add_object(object_pose)
+    if not goto_pose(group, grasp.poseapproach, [1, 5, 30, 60], with_shelf=False):
+        # remove_object()
         return False
-    remove_object()
+    # remove_object()
     if not follow_path(group, [group.get_current_pose().pose, grasp.posegrasp]):
         return False
     request = gripperRequest(command="close")

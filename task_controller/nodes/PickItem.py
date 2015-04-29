@@ -20,7 +20,7 @@ class PICKITEM(smach.State):
                              output_keys=['output'])
         self.arm = robot.arm_left
         # self.grasp_generator = rospy.ServiceProxy('getGrasps" apcGraspDB)
-        self.grasp_generator = rospy.ServiceProxy('getGrasps_onlineplanner', apcGraspDB)
+        self.grasp_generator = rospy.ServiceProxy('getGrasps_online_server', apcGraspDB)
         self.gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
 
         # TODO: Handle response error
