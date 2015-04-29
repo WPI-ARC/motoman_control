@@ -36,18 +36,19 @@ class PICKITEM(smach.State):
             item=userdata.item,
             Trob_obj=userdata.pose.pose
         )
-        for grasp in response.apcGraspArray.grasps:
-            grasp.poseapproach = deepcopy(grasp.posegrasp)
-            grasp.poseapproach.position.x -= 0.2
-        random.shuffle(response.apcGraspArray.grasps)
-        grasps = filterGrasps(self.arm, response.apcGraspArray.grasps)
-        # grasps = response.apcGraspArray.grasps
-        grasp = grasps.next()
-        grasps = [grasp]
-        print "Grasp:", grasps[0]
+        # for grasp in response.apcGraspArray.grasps:
+        #     grasp.poseapproach = deepcopy(grasp.posegrasp)
+        #     grasp.poseapproach.position.x -= 0.2
+        # random.shuffle(response.apcGraspArray.grasps)
+        
+        # grasps = filterGrasps(self.arm, response.apcGraspArray.grasps)
+        # grasp = grasps.next()
+        # grasps = [grasp]
+        # print "Grasp:", grasps[0]
 
+        grasps = response.apcGraspArray.grasps
         # grasps = list(filterGrasps(self.arm, response.apcGraspArray.grasps))
-        # # grasps = response.apcGraspArray.grasps
+        # grasps = response.apcGraspArray.grasps
         # print "Grasp:", grasps[0]
         # tfs = []
         # for i in range(len(grasps)):

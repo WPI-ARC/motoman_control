@@ -26,8 +26,8 @@ class grasping:
     def __init__(self):
         self.description = "Online grasp planning code"
         self.offset = 0.01 # safety buffer between object and gripper is 1cm on each side. Total of 2cm
-        self.z_lowerboundoffset = 0.015 # move gripper up 1.5 cm to avoid lip when going straigh in
-        self.z_upperboundoffset = 0.04
+        self.z_lowerboundoffset = 0.08 # move gripper up 1.5 cm to avoid lip when going straigh in
+        self.z_upperboundoffset = 0.18
         self.gripperwidth = 0.155 - self.offset # 0.155 is the gripper width in meters. 15.5cm        
         self.x_upperboundoffset = 0.04 # fingertip is allowed move at most 4cm beyond the lower bound value
         self.x_lowerboundoffset = 0.1 # fingertip goes past nearest point cloud's x value by at least 4 cm 
@@ -36,7 +36,7 @@ class grasping:
         self.br = tf2_ros.TransformBroadcaster()
         self.rate = rospy.Rate(60.0)
         self.tfList = []        
-        self.thetaList = numpy.linspace(-0.34906585, 0.34906585, num=11) # 0.174532925 = 10deg. SO range is from -10deg to 10deg using num=41 spacing        
+        # self.thetaList = numpy.linspace(-0.34906585, 0.34906585, num=11) # 0.174532925 = 10deg. SO range is from -10deg to 10deg using num=41 spacing        
         # self.thetaList = numpy.linspace(-0.698131701, 0.698131701, num=41)
         #self.thetaList = numpy.linspace(0, 6.28, num=360) # 360 degrees. Use for tray?
         #self.thetaList = numpy.linspace(0, 0.34906585, num=21) # 0.174532925 = 10deg. SO range is from -10deg to 10deg using num=41 spacing        
@@ -45,6 +45,7 @@ class grasping:
         # self.thetaList = numpy.array([0.0174532925]) #1 deg
         #self.thetaList = numpy.array([1.57079633 ]) #90 deg
         #self.thetaList = numpy.array([0.785398163]) #45 deg
+        self.thetaList = numpy.linspace(-1.57079633, 1.57079633, num=51)
         if self.showOutput:
             print "theta range list"
             print self.thetaList
@@ -475,7 +476,7 @@ class grasping:
                 self.broadcast_single_tf(tf_shelfproj)
 
                 # Construct approach TF as projection but further back
-                Trans_projapproach = numpy.array([-0.5, 0, 0])
+                Trans_projapproach = numpy.array([-0.3, 0, 0])
                 Rot_projapproach = numpy.eye(3,3)
                 Tprojapproach = self.construct_4Dmatrix(Trans_projapproach, Rot_projapproach)
 
@@ -496,28 +497,8 @@ class grasping:
 
                 # Transform to orient hand to use x as approach direction
 
-                # TgraspIK = numpy.array([[0, -1, 0, -0.17],
-                #                         [0, 0, -1, 0],
-                #                         [1, 0, 0, 0],
-                #                         [0, 0, 0, 1]])
-                # TgraspIK = numpy.array([[0, 1, 0, -0.17],
-                #                         [0, 0, 1, 0],
-                #                         [1, 0, 0, 0],
-                #                         [0, 0, 0, 1]])
-                # TgraspIK = numpy.array([[1, 0, 0, -0.17],
-                #                         [0, -1, 0, 0],
-                #                         [0, 0, -1, 0],
-                #                         [0, 0, 0, 1]])
-                # TgraspIK = numpy.array([[1, 0, 0, 0],
-                #                         [0, 0, 1, -0.17],
-                #                         [0, -1, 0, 0],
-                #                         [0, 0, 0, 1]])
-                TgraspIK = numpy.array([[0, 0, -1, 0],
-                                        [0, 1, 0, -0.17],
-                                        [1, 0, 0, 0],
-                                        [0, 0, 0, 1]])
-                TgraspIK = numpy.array([[0, 0, -1, 0],
-                                        [-1, 0, 0, -0.17],
+                TgraspIK = numpy.array([[0, 0, -1, -0.17],
+                                        [-1, 0, 0, 0],
                                         [0, 1, 0, 0],
                                         [0, 0, 0, 1]])
                 self.checkquaternion(TgraspIK, "TgraspIK")

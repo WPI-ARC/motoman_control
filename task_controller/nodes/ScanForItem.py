@@ -6,6 +6,7 @@ from tf import TransformListener
 from geometry_msgs.msg import PoseStamped
 
 from apc_vision.srv import *
+from apc_vision.msg import *
 
 class SCANFORITEM(smach.State):
 
@@ -31,12 +32,12 @@ class SCANFORITEM(smach.State):
             print "Sample:", response
             response = self.process.call(
                 bin=userdata.bin,
-                object1=userdata.item,
-                object2=userdata.item,
+                target=APCObject(name=userdata.item, number=1),
+                objects=[APCObject(name=userdata.item, number=1)],
             )
             print "Process:", response
-            userdata.pose = self.tf.transformPose("/base_link", response.pose1)
-            print "Pose:", self.tf.transformPose("/base_link", response.pose1)
+            userdata.pose = self.tf.transformPose("/base_link", response.pose)
+            print "Pose:", self.tf.transformPose("/base_link", response.pose)
             userdata.output = userdata.input
             return 'Success'
         rospy.logwarn("Can't find "+userdata.item+"...")
