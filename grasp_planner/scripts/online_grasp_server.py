@@ -39,7 +39,7 @@ class grasping:
         self.tfList = []
         # self.thetaList = numpy.linspace(-0.698131701, 0.698131701, num=41)
         self.thetaList = numpy.linspace(-pi/2, pi/2, num=51)
-        self.thetaList = numpy.linspace(-pi, pi, num=51)
+        # self.thetaList = numpy.linspace(-pi, pi, num=51)
 
         if self.showOutput:
             print "theta range list"
@@ -344,6 +344,15 @@ class grasping:
             # Extract Translation component of Tshelfobj
             Trans_shelfobj = Tshelfobj[0:3, 3]
             Rot_shelfproj = Tshelfproj[0:3, 0:3]
+            print self.tf.transformPose("/shelf", PoseStamped(Header(stamp=rospy.Time.now(), frame_id='/base_link'), req.Trob_obj)).pose
+            print req.Trob_obj
+            print Tshelfobj
+            print "--------"
+            print Tshelfobj
+            print Trans_shelfobj
+            print "--------"
+            print Tshelfproj
+            print Rot_shelfproj
             Tshelfproj_new = self.construct_4Dmatrix(Trans_shelfobj, Rot_shelfproj)
             if self.showOutput:
                 print Tshelfproj_new
@@ -392,7 +401,8 @@ class grasping:
                 # Update projection TF with new y value set to be middle of the projection wrt to the projection frame
 
                 # Trans_shelfproj = numpy.array([Tshelfproj_new[0,3], mid_y[1], Tshelfproj_new[2,3]+zoffset])
-                Trans_shelfproj = numpy.array([Tshelfproj_new[0, 3]+depth, mid_y[1], Tshelfproj_new[2,3]]+height)
+                # Trans_shelfproj = numpy.array([Tshelfproj_new[0, 3]+depth, mid_y[1], Tshelfproj_new[2,3]]+height)
+                Trans_shelfproj = numpy.array([Tshelfproj_new[0,3] + depth, Tshelfproj_new[1,3], Tshelfproj_new[2,3] + height])
                 Rot_shelfproj = Tshelfproj_new[0:3, 0:3]
                 Tshelfproj_update = self.construct_4Dmatrix(Trans_shelfproj, Rot_shelfproj)
 

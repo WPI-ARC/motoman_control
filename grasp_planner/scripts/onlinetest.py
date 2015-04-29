@@ -16,7 +16,7 @@ from std_msgs.msg import Header
 from geometry_msgs.msg import PoseArray, PoseStamped, Pose, Point, Quaternion
 from grasp_planner.msg import apcGraspPose, apcGraspArray
 
-def goto_pose(group, pose, times=[5, 20, 40, 60], with_shelf=False):
+def goto_pose(group, pose, times=[5, 20, 30], with_shelf=False):
     """Moves the hand to a given `pose`, using the configured `group`. The
     planning time is modified based on the passed in `times` to try to
     plan quickly if possible, but fall back on longer plans if
@@ -63,8 +63,8 @@ def main():
         tfs = []
 
         msg = geometry_msgs.msg.Pose()
-        msg.position.x = 0.885315
-        msg.position.y = 0.413907
+        msg.position.x = 0.885315-0.2
+        msg.position.y = 0.413907-0.2
         msg.position.z = 0.787417+0.8
         msg.orientation.x = 0
         msg.orientation.y = 0
@@ -77,57 +77,56 @@ def main():
         print response.apcGraspArray
 
         grasps = response.apcGraspArray.grasps
-        # for i in range(len(grasps)):
-        #     grasp = grasps[i].posegrasp
-        #     approach = grasps[i].poseapproach
-        #     t = geometry_msgs.msg.TransformStamped()
-        #     t.header.stamp = rospy.Time.now()
-        #     t.header.frame_id = "base_link"
-        #     t.child_frame_id = "grasp "+str(i)
-        #     t.transform.translation = grasp.position
-        #     t.transform.rotation = grasp.orientation
-        #     tfs.append(t)
-        #     t = geometry_msgs.msg.TransformStamped()
-        #     t.header.stamp = rospy.Time.now()
-        #     t.header.frame_id = "base_link"
-        #     t.child_frame_id = "approach "+str(i)
-        #     t.transform.translation = approach.position
-        #     t.transform.rotation = approach.orientation
-        #     tfs.append(t)
-
-        # br = tf2_ros.TransformBroadcaster()
-        # rate = rospy.Rate(250.0)
-        # while (not rospy.is_shutdown()):
-        #     for t in tfs:
-        #         t.header.stamp = rospy.Time.now()
-        #         br.sendTransform(t)
-        #     rate.sleep()
-
-        i = 0
-        grasp = grasps[i].posegrasp        
-        t = geometry_msgs.msg.TransformStamped()
-        t.header.stamp = rospy.Time.now()
-        t.header.frame_id = "base_link"
-        t.child_frame_id = "grasp"+str(i)
-        t.transform.translation = grasp.position
-        t.transform.rotation = grasp.orientation
-        tfs.append(t)
-        approach = grasps[i].poseapproach
-        t = geometry_msgs.msg.TransformStamped()
-        t.header.stamp = rospy.Time.now()
-        t.header.frame_id = "base_link"
-        t.child_frame_id = "approach"+str(i)
-        t.transform.translation = approach.position
-        t.transform.rotation = approach.orientation
-        tfs.append(t)
+        for i in range(len(grasps)):
+            grasp = grasps[i].posegrasp        
+            t = geometry_msgs.msg.TransformStamped()
+            t.header.stamp = rospy.Time.now()
+            t.header.frame_id = "base_link"
+            t.child_frame_id = "grasp"+str(i)
+            t.transform.translation = grasp.position
+            t.transform.rotation = grasp.orientation
+            tfs.append(t)
+            approach = grasps[i].poseapproach
+            t = geometry_msgs.msg.TransformStamped()
+            t.header.stamp = rospy.Time.now()
+            t.header.frame_id = "base_link"
+            t.child_frame_id = "approach"+str(i)
+            t.transform.translation = approach.position
+            t.transform.rotation = approach.orientation
+            tfs.append(t)
 
         br = tf2_ros.TransformBroadcaster()
-        rate = rospy.Rate(1000)        
-        for time in range(0,1000):
-            for tf in tfs:
-                tf.header.stamp = rospy.Time.now()
-                br.sendTransform(tf)                
+        rate = rospy.Rate(250.0)
+        while (not rospy.is_shutdown()):
+            for t in tfs:
+                t.header.stamp = rospy.Time.now()
+                br.sendTransform(t)
             rate.sleep()
+
+        # i = 0
+        # grasp = grasps[i].posegrasp        
+        # t = geometry_msgs.msg.TransformStamped()
+        # t.header.stamp = rospy.Time.now()
+        # t.header.frame_id = "base_link"
+        # t.child_frame_id = "grasp"+str(i)
+        # t.transform.translation = grasp.position
+        # t.transform.rotation = grasp.orientation
+        # tfs.append(t)
+        # approach = grasps[i].poseapproach
+        # t = geometry_msgs.msg.TransformStamped()
+        # t.header.stamp = rospy.Time.now()
+        # t.header.frame_id = "base_link"
+        # t.child_frame_id = "approach"+str(i)
+        # t.transform.translation = approach.position
+        # t.transform.rotation = approach.orientation
+        # tfs.append(t)
+        # br = tf2_ros.TransformBroadcaster()
+        # rate = rospy.Rate(1000)        
+        # for time in range(0,1000):
+        #     for tf in tfs:
+        #         tf.header.stamp = rospy.Time.now()
+        #         br.sendTransform(tf)                
+        #     rate.sleep()
 
         rospy.loginfo("Trying to move to initial pose...")
         approachpose = grasps[i].poseapproach
@@ -135,11 +134,11 @@ def main():
         
         arm.set_planner_id("RRTstarkConfigDefault")
         arm.set_workspace([-3, -3, -3, 3, 3, 3])
-        if not goto_pose(arm, approachpose, [1, 5, 30, 60]): #move to approach
-            sys.exit(1)
+        # if not goto_pose(arm, approachpose, [1, 5, 30]): #move to approach
+        #     sys.exit(1)
 
-        if not goto_pose(arm, pregrasppose, [1, 5, 30, 60]): #move to pregrasp
-            sys.exit(1)
+        # if not goto_pose(arm, pregrasppose, [1, 5, 30]): #move to pregrasp
+        #     sys.exit(1)
         
 
     except rospy.ServiceException, e:
