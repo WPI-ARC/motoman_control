@@ -42,4 +42,3 @@ class SCANFORITEM(smach.State):
             return 'Success'
         rospy.logwarn("Can't find "+userdata.item+"...")
         return 'Failure'
-

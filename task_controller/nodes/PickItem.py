@@ -40,7 +40,7 @@ class PICKITEM(smach.State):
         #     grasp.poseapproach = deepcopy(grasp.posegrasp)
         #     grasp.poseapproach.position.x -= 0.2
         # random.shuffle(response.apcGraspArray.grasps)
-        
+
         # grasps = filterGrasps(self.arm, response.apcGraspArray.grasps)
         # grasp = grasps.next()
         # grasps = [grasp]
@@ -49,33 +49,33 @@ class PICKITEM(smach.State):
         grasps = response.apcGraspArray.grasps
         # grasps = list(filterGrasps(self.arm, response.apcGraspArray.grasps))
         # grasps = response.apcGraspArray.grasps
-        # print "Grasp:", grasps[0]
-        # tfs = []
-        # for i in range(len(grasps)):
-        #     grasp = grasps[i].posegrasp
-        #     approach = grasps[i].poseapproach
-        #     t = TransformStamped()
-        #     t.header.stamp = rospy.Time.now()
-        #     t.header.frame_id = "base_link"
-        #     t.child_frame_id = "grasp "+str(i)
-        #     t.transform.translation = grasp.position
-        #     t.transform.rotation = grasp.orientation
-        #     tfs.append(t)
-        #     t = TransformStamped()
-        #     t.header.stamp = rospy.Time.now()
-        #     t.header.frame_id = "base_link"
-        #     t.child_frame_id = "approach "+str(i)
-        #     t.transform.translation = approach.position
-        #     t.transform.rotation = approach.orientation
-        #     tfs.append(t)
+        print "Grasp:", grasps[0]
+        tfs = []
+        for i in range(len(grasps)):
+            grasp = grasps[i].posegrasp
+            approach = grasps[i].poseapproach
+            t = TransformStamped()
+            t.header.stamp = rospy.Time.now()
+            t.header.frame_id = "base_link"
+            t.child_frame_id = "grasp "+str(i)
+            t.transform.translation = grasp.position
+            t.transform.rotation = grasp.orientation
+            tfs.append(t)
+            t = TransformStamped()
+            t.header.stamp = rospy.Time.now()
+            t.header.frame_id = "base_link"
+            t.child_frame_id = "approach "+str(i)
+            t.transform.translation = approach.position
+            t.transform.rotation = approach.orientation
+            tfs.append(t)
 
-        # br = tf2_ros.TransformBroadcaster()
-        # rate = rospy.Rate(250.0)
-        # while (not rospy.is_shutdown()):
-        #     for t in tfs:
-        #         t.header.stamp = rospy.Time.now()
-        #         br.sendTransform(t)
-        #     rate.sleep()
+        br = tf2_ros.TransformBroadcaster()
+        rate = rospy.Rate(250.0)
+        while (not rospy.is_shutdown()):
+            for t in tfs:
+                t.header.stamp = rospy.Time.now()
+                br.sendTransform(t)
+            rate.sleep()
 
         self.arm.set_planner_id("RRTstarkConfigDefault")
         self.arm.set_workspace([-3, -3, -3, 3, 3, 3])

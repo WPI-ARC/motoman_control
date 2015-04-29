@@ -1,57 +1,59 @@
 #!/usr/bin/env python
 
+import roslib
 import Queue as Q
 import tf
 import tf2_ros
-import math
 import rospy
 import numpy
 from numpy.linalg import inv
-import roslib
-import sys
 import traceback
-import time
 import geometry_msgs.msg
-from copy import deepcopy
+from math import pi
+
 # Transformation helper file. quater is (x,y,z,w) format
 from transformation_helper import ExtractFromMatrix, BuildMatrix, PoseFromMatrix, PoseToMatrix, InvertMatrix
+
 # Message and Service imports
 from std_msgs.msg import Header
-from geometry_msgs.msg import PoseArray, PoseStamped, Pose, Point, Quaternion, TransformStamped
+from geometry_msgs.msg import PoseStamped
 from grasp_planner.msg import apcGraspPose, apcGraspArray
 from grasp_planner.srv import apcGraspDB, apcGraspDBResponse
+
 
 class grasping:
 
     def __init__(self):
         self.description = "Online grasp planning code"
-        self.offset = 0.01 # safety buffer between object and gripper is 1cm on each side. Total of 2cm
-        self.z_lowerboundoffset = 0.08 # move gripper up 1.5 cm to avoid lip when going straigh in
+        self.offset = 0.01  # safety buffer between object and gripper is 1cm on each side. Total of 2cm
+        self.fingerlength = 0.11  # palm to finger tip offset is 11cm
+        self.z_lowerboundoffset = 0.08  # move gripper up 1.5 cm to avoid lip when going straigh in
         self.z_upperboundoffset = 0.18
-        self.gripperwidth = 0.155 - self.offset # 0.155 is the gripper width in meters. 15.5cm        
-        self.x_upperboundoffset = 0.04 # fingertip is allowed move at most 4cm beyond the lower bound value
-        self.x_lowerboundoffset = 0.1 # fingertip goes past nearest point cloud's x value by at least 4 cm 
-        self.showOutput = False # Enable to show print statements
+        self.gripperwidth = 0.155 - self.offset  # 0.155 is the gripper width in meters. 15.5cm        
+        self.x_upperboundoffset = 0.04  # fingertip is allowed move at most 4cm beyond the lower bound value
+        self.x_lowerboundoffset = 0.1  # fingertip goes past nearest point cloud's x value by at least 4 cm 
+        self.showOutput = False  # Enable to show print statements
         self.tf = tf.TransformListener(True, rospy.Duration(10.0))
         self.br = tf2_ros.TransformBroadcaster()
         self.rate = rospy.Rate(60.0)
-        self.tfList = []        
-        # self.thetaList = numpy.linspace(-0.34906585, 0.34906585, num=11) # 0.174532925 = 10deg. SO range is from -10deg to 10deg using num=41 spacing        
+        self.tfList = []
         # self.thetaList = numpy.linspace(-0.698131701, 0.698131701, num=41)
-        self.thetaList = numpy.linspace(-1.57079633, 1.57079633, num=51)
+        self.thetaList = numpy.linspace(-pi/2, pi/2, num=51)
+        self.thetaList = numpy.linspace(-pi, pi, num=51)
+
         if self.showOutput:
             print "theta range list"
             print self.thetaList
 
-        rospy.sleep(rospy.Duration(1.0)) # Wait for network timing to load TFs
+        rospy.sleep(rospy.Duration(1.0))  # Wait for network timing to load TFs
 
     def get_tf(self, parent, child):
         if self.showOutput:
-            print "Looking up TF transform from %s to %s" %(parent, child)
+            print "Looking up TF transform from %s to %s" % (parent, child)
         try:
             (trans, quat) = self.tf.lookupTransform(parent, child, rospy.Time(0))
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-            print "Failed to lookup TF transform from source:%s to target:%s" %(parent, child)
+            print "Failed to lookup TF transform from source:%s to target:%s" % (parent, child)
         trans = numpy.asarray(trans)
         quat = numpy.asarray(quat)
         translation = [trans.item(0), trans.item(1), trans.item(2)]
@@ -61,17 +63,17 @@ class grasping:
 
     def get_tf_msg(self, parent, child):
         if self.showOutput:
-            print "Looking up TF transform from %s to %s" %(parent, child)
+            print "Looking up TF transform from %s to %s" % (parent, child)
         try:
             (trans, quat) = self.tf.lookupTransform(parent, child, rospy.Time(0))
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-            print "Failed to lookup TF transform from %s to %s" %(parent, child)
+            print "Failed to lookup TF transform from %s to %s" % (parent, child)
         translation = numpy.asarray(trans)
         quaternion = numpy.asarray(quat)
         msg = geometry_msgs.msg.Pose()
         msg.position.x = translation[0]
         msg.position.y = translation[1]
-        msg.position.z = translation[2]     
+        msg.position.z = translation[2]
         msg.orientation.x = quaternion[0]
         msg.orientation.y = quaternion[1]
         msg.orientation.z = quaternion[2]
@@ -79,18 +81,18 @@ class grasping:
         return msg
 
     def broadcast_tf(self, tfList):
-        rate = rospy.Rate(1000)        
-        for time in range(0,1000):        
+        rate = rospy.Rate(1000)
+        for time in range(0, 1000):
             for t in tfList:
                 t.header.stamp = rospy.Time.now()
-                self.br.sendTransform(t)                
+                self.br.sendTransform(t)
             rate.sleep()
 
     def broadcast_single_tf(self, t):
-        rate = rospy.Rate(1000)        
-        for time in range(0,10):
+        rate = rospy.Rate(1000)
+        for time in range(0, 10):
             t.header.stamp = rospy.Time.now()
-            self.br.sendTransform(t)                
+            self.br.sendTransform(t)
             rate.sleep()
 
     def generate_tf(self, parent, child, position, rotation):
@@ -98,26 +100,26 @@ class grasping:
         t.header.stamp = rospy.Time.now()
         t.header.frame_id = parent
         t.child_frame_id = child
-        t.transform.translation = position #needs to be postion tuple
-        t.transform.rotation = rotation #needs to be quat tuple  
+        t.transform.translation = position  # needs to be postion tuple
+        t.transform.rotation = rotation  # needs to be quat tuple
         self.tfList.append(t)
         return t
 
     def construct_4Dmatrix(self, trans, rot):
-        #print trans, rot
-        transform = numpy.zeros([4,4])
-        transform[0:3,0:3] = rot
-        transform[0:3,3] = trans
-        transform[3,3] = 1
+        # print trans, rot
+        transform = numpy.zeros([4, 4])
+        transform[0:3, 0:3] = rot
+        transform[0:3, 3] = trans
+        transform[3, 3] = 1
         return transform
 
-    def generate_rotation_matrix(self, theta): 
+    def generate_rotation_matrix(self, theta):
         # Generate matrix to rotation about the z-axis of shelf frame to get bunch of new transforms to use for projection
         transform = numpy.array([[numpy.cos(theta), numpy.sin(theta), 0, 0],
                                 [-numpy.sin(theta), numpy.cos(theta), 0, 0],
                                 [0, 0, 1, 0],
                                 [0, 0, 0, 1]])
-        return transform 
+        return transform
 
     def get_object_extents(self, req):
         # Select object
@@ -195,20 +197,20 @@ class grasping:
 
         return numpy.array(size)
 
-    def generate_apc_grasp_poses(self, projectionList, approachList):  
+    def generate_apc_grasp_poses(self, projectionList, approachList):
         grasps = []
         for i in range(len(approachList)):
             projection = projectionList[i]
             approach = approachList[i]
             grasp = apcGraspPose()
-            grasp.posegrasp.position = projection.position         
+            grasp.posegrasp.position = projection.position
             grasp.posegrasp.orientation = projection.orientation
-            grasp.poseapproach.position = approach.position         
+            grasp.poseapproach.position = approach.position
             grasp.poseapproach.orientation = approach.orientation
             grasps.append(grasp)
-          
+
         return grasps
-        
+
     def get_obb_points(self, size):
         x = size[0]
         y = size[1]
@@ -230,66 +232,69 @@ class grasping:
         return width
 
     def compute_depth(self, min_x, max_x, pointList):
-        x_lowerbound = min_x + self.x_lowerboundoffset
-        x_upperbound = max_x + self.x_upperboundoffset
-        depth = x_lowerbound #depth currently simply set as the lowerbound later may want to make it as a function of if collision check fail, we can reselect the depth to use to be within the bound. current we don't have this function
+        x_lowerbound = min_x - self.fingerlength + self.x_lowerboundoffset
+        x_upperbound = max_x - self.fingerlength + self.x_upperboundoffset
+        depth = x_lowerbound  # depth currently simply set as the lowerbound later may want to make it as a function of if collision check fail, we can reselect the depth to use to be within the bound. current we don't have this function
         return depth
 
     def compute_height(self, min_z, max_z):
         z_lowerbound = min_z + self.z_lowerboundoffset
         z_upperbound = max_z + self.z_upperboundoffset
-        height = z_lowerbound #height currently set so gripper won't collide into the shelf lip. later we may want this as a function simliar to the function we may use for the depth calculation with collision check. 
+        height = z_lowerbound  # height currently set so gripper won't collide into the shelf lip. later we may want this as a function simliar to the function we may use for the depth calculation with collision check. 
         if self.showOutput:
             print "height: " + str(height)
         return height
 
-    def compute_y_mid(self, miny, maxy): 
+    def compute_y_mid(self, miny, maxy):
         y = (miny+maxy)/2
-        ymid = numpy.array([[0],[y],[0],[1]])
+        ymid = numpy.array([[0], [y], [0], [1]])
         return ymid
 
-    def check_width(self, width):        
-        if width <= self.gripperwidth: 
+    def check_width(self, width):
+        if width <= self.gripperwidth:
             isSmaller = True
         else:
             isSmaller = False
         return isSmaller
 
-    def compute_score(self, width):
-        score =numpy.true_divide(width,self.gripperwidth)
+    def compute_score(self, width, rotation):
+        fscore = numpy.true_divide(width, self.gripperwidth)
+        gscore = rotation
+        weight = 0.5
+        score = (1-weight)*fscore + weight*gscore
         return score
 
     def compute_minmax(self, pointList):
-        #Loop through pointList to find the min & max for the x, y, and z
+        # Loop through pointList to find the min & max for the x, y, and z
         min_x = 999999999999999
         min_y = 999999999999999
         min_z = 999999999999999
         max_x = -99999999999999
         max_y = -99999999999999
         max_z = -99999999999999
-        
-        for point in pointList:            
-            if point[0] > max_x: #if x point is larger than current max x then replace with new one
+
+        for point in pointList:
+            if point[0] > max_x:  # if x point is larger than current max x then replace with new one
                 max_x = point[0]
-            if point[0] < min_x: #if x point is smaller than current min x then replace with new one
+            if point[0] < min_x:  # if x point is smaller than current min x then replace with new one
                 min_x = point[0]
-            if point[1] > max_y: #if y point is larger than current max y then replace with new one
+            if point[1] > max_y:  # if y point is larger than current max y then replace with new one
                 max_y = point[1]
-            if point[1] < min_y: #if y point is smaller than current min y then replace with new one
+            if point[1] < min_y:  # if y point is smaller than current min y then replace with new one
                 min_y = point[1]
-            if point[2] > max_z: #if z point is larger than current max z then replace with new one
+            if point[2] > max_z:  # if z point is larger than current max z then replace with new one
                 max_z = point[2]
-            if point[2] < min_z: #if z point is smaller than current min z then replace with new one
+            if point[2] < min_z:  # if z point is smaller than current min z then replace with new one
                 min_z = point[2]
         min_max = numpy.array([min_x, max_x, min_y, max_y, min_z, max_z])
-        return min_max                    
+        return min_max
 
     def checkquaternion(self, transform, name):
         approach = geometry_msgs.msg.Pose()
         [trans, quat] = ExtractFromMatrix(transform)
         approach.position.x = trans[0]
         approach.position.y = trans[1]
-        approach.position.z = trans[2]            
+        approach.position.z = trans[2]
         approach.orientation.x = quat[0]
         approach.orientation.y = quat[1]
         approach.orientation.z = quat[2]
@@ -304,23 +309,22 @@ class grasping:
         projectionList = []
         countbad = 0
 
-        print "================================================== Request start =================================================="
-        print "Requesting valid grasps for %s" %req.item
-    
+        print "************************************************** Request start **************************************************"
+        print "Requesting valid grasps for %s" % req.item
+
         # Request the 8 Oriented bounding box points wrt to the object's frame.
         size = self.get_object_extents(req)
         OBBPoints = self.get_obb_points(size)
-                    
 
         # Generate TFs to project onto
         for theta in self.thetaList:
-            #raw_input("Press Enter to continue...")
-            print " ================================================== Start loop =================================================="
+            # raw_input("Press Enter to continue...")
+            print "************************************************** Start loop **************************************************"
             # Get TFs
             Tbaseshelf = self.get_tf('/base_link', '/shelf')
-            #Tshelfobj = self.get_tf('/shelf', '/object')
-            #Tbaseobj = Tbaseshelf*Tshelfobj
-            Tbaseobj = PoseToMatrix(req.Trob_obj) #same Trob_obj request from offline planner
+            # Tshelfobj = self.get_tf('/shelf', '/object')
+            # Tbaseobj = Tbaseshelf*Tshelfobj
+            Tbaseobj = PoseToMatrix(req.Trob_obj)  # same Trob_obj request from offline planner
 
             Tshelfobj = PoseToMatrix(self.tf.transformPose("/shelf", PoseStamped(Header(stamp=rospy.Time.now(), frame_id='/base_link'), req.Trob_obj)).pose)
             if self.showOutput:
@@ -329,24 +333,24 @@ class grasping:
                 print "Transform from shelf to obj: ", Tshelfobj
 
             Tshelfproj = self.generate_rotation_matrix(theta)
-            Tbaseproj = numpy.dot(Tbaseshelf,Tshelfproj)
+            Tbaseproj = numpy.dot(Tbaseshelf, Tshelfproj)
             if theta == 0:
                 print "projecting to shelf frame"
-             
+
             if self.showOutput:
                 print "Transform from shelf to proj: ", Tshelfproj, type(Tshelfproj)
                 # print "Transform from base to proj", Tbaseproj, type(Tbaseproj)
 
             # Extract Translation component of Tshelfobj
-            Trans_shelfobj = Tshelfobj[0:3,3]
-            Rot_shelfproj = Tshelfproj[0:3,0:3]
+            Trans_shelfobj = Tshelfobj[0:3, 3]
+            Rot_shelfproj = Tshelfproj[0:3, 0:3]
             Tshelfproj_new = self.construct_4Dmatrix(Trans_shelfobj, Rot_shelfproj)
             if self.showOutput:
                 print Tshelfproj_new
 
             # Get TF for projection to object
             Tprojshelf = inv(Tshelfproj_new)
-            Tprojobj = numpy.dot(Tprojshelf,Tshelfobj)
+            Tprojobj = numpy.dot(Tprojshelf, Tshelfobj)
 
             self.checkquaternion(Tprojobj, "Tprojobj")
 
@@ -354,47 +358,42 @@ class grasping:
             OBBPointsList = []
             for OBBPoint in OBBPoints:
                 oldpt = numpy.array([[OBBPoint[0]], [OBBPoint[1]], [OBBPoint[2]], [1]])
-                # print "<<<<<<<<<<<<<<"
-                # print oldpt
-                projected_OBBPoint = numpy.dot(Tprojobj,oldpt)
-                # print Tprojobj
-                # print projected_OBBPoint
-                OBBPointsList.append(projected_OBBPoint) 
+                projected_OBBPoint = numpy.dot(Tprojobj, oldpt)
+                OBBPointsList.append(projected_OBBPoint)
             if self.showOutput:
                 print "List of transformed OBB points after projection to target projection frame"
                 print OBBPointsList
 
             # Get min max points. Pass in transformed OBBPoints list to get min max for target frame. Compute width of projection shadow. Width is the y axis because shelf frame is set that way with y axis as width. Check if width of shadow projection can fit inside gripper width
-
             min_max = self.compute_minmax(OBBPointsList)
-            min_x, max_x, min_y, max_y, min_z, max_z = min_max         
+            min_x, max_x, min_y, max_y, min_z, max_z = min_max
             width = self.compute_width(min_y, max_y)
             if self.showOutput:
                 print "Min-max values [minx,maxx,miny,maxy,minz,maxz]: ", min_x, max_x, min_y, max_y, min_z, max_z
                 print "projection width: " + str(width)
                 print "min_y: " + str(min_y)
-                print "max_y: " + str(max_y)            
+                print "max_y: " + str(max_y)
             isSmaller = self.check_width(width)
 
             # Compute cost
-            if isSmaller == True:
-                score = self.compute_score(width)
+            if isSmaller:
+                score = self.compute_score(width, theta)
 
-                # Compute mid-y point using miny maxy 
+                # Compute mid-y point using miny maxy
                 mid_y = self.compute_y_mid(min_y, max_y)
-                depth = self.compute_depth(min_x, max_x, OBBPointsList) #select depth to be with a min and max bound
-                height = self.compute_height(min_z, max_z) #select the height so bottom  of object and also hand won't collide wit shelf lip. may need to take into acount the max_z and objects height to see if object will hit top of shelf.
+                depth = self.compute_depth(min_x, max_x, OBBPointsList)  # select depth to be with a min and max bound
+                height = self.compute_height(min_z, max_z)  # select the height so bottom  of object and also hand won't collide wit shelf lip. may need to take into acount the max_z and objects height to see if object will hit top of shelf.
                 if self.showOutput:
                     print "mid-y: "+str(mid_y)
                     print "x depth value "+str(depth)
                     print "x height value "+str(height)
 
-                """ Compute midpt is probably not necessary. Seems it should alsways be centered I believe."""
+                """ Compute midpt is probably not necessary. Seems it should always be centered I believe."""
                 # Update projection TF with new y value set to be middle of the projection wrt to the projection frame
-                
+
                 # Trans_shelfproj = numpy.array([Tshelfproj_new[0,3], mid_y[1], Tshelfproj_new[2,3]+zoffset])
-                Trans_shelfproj = numpy.array([Tshelfproj_new[0,3]+depth, mid_y[1], Tshelfproj_new[2,3]]+height)
-                Rot_shelfproj = Tshelfproj_new[0:3,0:3]
+                Trans_shelfproj = numpy.array([Tshelfproj_new[0, 3]+depth, mid_y[1], Tshelfproj_new[2,3]]+height)
+                Rot_shelfproj = Tshelfproj_new[0:3, 0:3]
                 Tshelfproj_update = self.construct_4Dmatrix(Trans_shelfproj, Rot_shelfproj)
 
                 self.checkquaternion(Tshelfproj_update, "Tshelfproj_update")
@@ -404,7 +403,7 @@ class grasping:
                 [trans, quat] = ExtractFromMatrix(Tshelfproj_update)
                 proj.position.x = trans[0]
                 proj.position.y = trans[1]
-                proj.position.z = trans[2]            
+                proj.position.z = trans[2]
                 proj.orientation.x = quat[0]
                 proj.orientation.y = quat[1]
                 proj.orientation.z = quat[2]
@@ -414,55 +413,65 @@ class grasping:
 
                 # Construct approach TF as projection but further back
                 Trans_projapproach = numpy.array([-0.3, 0, 0])
-                Rot_projapproach = numpy.eye(3,3)
+                Rot_projapproach = numpy.eye(3, 3)
                 Tprojapproach = self.construct_4Dmatrix(Trans_projapproach, Rot_projapproach)
 
                 self.checkquaternion(Tprojapproach, "Tprojapproach")
-                
+
                 # Generate TF for projection to approach pose
                 approach = geometry_msgs.msg.Pose()
                 [trans, quat] = ExtractFromMatrix(Tprojapproach)
                 approach.position.x = trans[0]
                 approach.position.y = trans[1]
-                approach.position.z = trans[2]            
+                approach.position.z = trans[2]
                 approach.orientation.x = quat[0]
                 approach.orientation.y = quat[1]
                 approach.orientation.z = quat[2]
                 approach.orientation.w = quat[3]
                 tf_projapproach = self.generate_tf('/projection', '/approach', approach.position, approach.orientation)
-                self.broadcast_single_tf(tf_projapproach)                
+                self.broadcast_single_tf(tf_projapproach)
+
+                # camera -15 deg offset about z-axis
+                #camtheta = 0.174532925
+                camtheta = 0.261799
+                Tcamera = numpy.array([[1, 0, 0, 0],
+                                       [0, numpy.cos(camtheta), -numpy.sin(camtheta), 0],
+                                       [0, numpy.sin(camtheta), numpy.cos(camtheta), 0],
+                                       [0, 0, 0, 1]])
 
                 # Transform to orient hand to use x as approach direction
-
                 TgraspIK = numpy.array([[0, 0, -1, -0.17],
                                         [-1, 0, 0, 0],
                                         [0, 1, 0, 0],
                                         [0, 0, 0, 1]])
+
+                #TgraspIK = numpy.dot(TgraspIK, Tcamera)
+                TgraspIK = numpy.dot(Tcamera, TgraspIK)
+
                 self.checkquaternion(TgraspIK, "TgraspIK")
 
-                Tbasepregrasp = numpy.dot(Tbaseshelf,Tshelfproj_update)
-                TbaseIK_pregrasp = numpy.dot(Tbasepregrasp,TgraspIK)
+                Tbasepregrasp = numpy.dot(Tbaseshelf, Tshelfproj_update)
+                TbaseIK_pregrasp = numpy.dot(Tbasepregrasp, TgraspIK)
                 self.checkquaternion(Tbasepregrasp, "Tbasepregrasp")
                 self.checkquaternion(TbaseIK_pregrasp, "TbaseIK_pregrasp")
 
-
-                Tshelfapproach = numpy.dot(Tshelfproj_update,Tprojapproach)
-                Tbaseapproach = numpy.dot(Tbaseshelf,Tshelfapproach)
-                TbaseIK_approach = numpy.dot(Tbaseapproach,TgraspIK)
+                Tshelfapproach = numpy.dot(Tshelfproj_update, Tprojapproach)
+                Tbaseapproach = numpy.dot(Tbaseshelf, Tshelfapproach)
+                TbaseIK_approach = numpy.dot(Tbaseapproach, TgraspIK)
                 self.checkquaternion(Tshelfapproach, "Tshelfapproach")
-                self.checkquaternion(Tbaseapproach, "Tbaseapproach")                
+                self.checkquaternion(Tbaseapproach, "Tbaseapproach")
                 self.checkquaternion(TbaseIK_approach, "TbaseIK_approach")
 
                 # Construct msg. Then appened to queue with score as the priority in queue. This will put lowest score msg first in list.
                 proj_msg = PoseFromMatrix(TbaseIK_pregrasp)
                 approach_msg = PoseFromMatrix(TbaseIK_approach)
-                q_proj_msg.put((score,proj_msg))
-                q_approach_msg.put((score,approach_msg))
+                q_proj_msg.put((score, proj_msg))
+                q_approach_msg.put((score, approach_msg))
                 if self.showOutput:
                     print "score is %f. Good approach direction. Gripper is wide enough" %score
             else:
                 # poseList.pop() #Removed the pose that has bad cost. projection width doesn't fit in gripper
-                score = self.compute_score(width)
+                score = self.compute_score(width, theta)
                 if self.showOutput:
                     print "score is %f. Bad approach direction. Gripper not wide enough" %score
                 countbad += 1
@@ -478,20 +487,22 @@ class grasping:
         # APC grasp message to return
         graspList = self.generate_apc_grasp_poses(projectionList, approachList)
         grasps = apcGraspArray(
-            grasps = graspList
+            grasps=graspList
         )
 
         # From center of palm to edge of it is 6cm then lip is about 2cm up so need to offset robot z-axis to move hand approach vector to be 8cm up from bottom of object.        
         print "================================================== Request end =================================================="
-        return apcGraspDBResponse(status=True,apcGraspArray=grasps)
-    
+        return apcGraspDBResponse(status=True, apcGraspArray=grasps)
+
+
 def publisher():
     rospy.init_node('online_grasp_server')
 
     grasp = grasping()
     while not rospy.is_shutdown():
         try:
-            s = rospy.Service('getGrasps_online_server', apcGraspDB, grasp.get_grasp_cb)
+            rospy.Service('getGrasps_online_server',
+                          apcGraspDB, grasp.get_grasp_cb)
             print "Online grasp planner ready"
             rospy.spin()
         except:
