@@ -38,13 +38,6 @@ class grasping:
         self.tfList = []        
         # self.thetaList = numpy.linspace(-0.34906585, 0.34906585, num=11) # 0.174532925 = 10deg. SO range is from -10deg to 10deg using num=41 spacing        
         # self.thetaList = numpy.linspace(-0.698131701, 0.698131701, num=41)
-        #self.thetaList = numpy.linspace(0, 6.28, num=360) # 360 degrees. Use for tray?
-        #self.thetaList = numpy.linspace(0, 0.34906585, num=21) # 0.174532925 = 10deg. SO range is from -10deg to 10deg using num=41 spacing        
-        # self.thetaList = numpy.array([0, 1.57079632679])
-        # self.thetaList = numpy.array([0])
-        # self.thetaList = numpy.array([0.0174532925]) #1 deg
-        #self.thetaList = numpy.array([1.57079633 ]) #90 deg
-        #self.thetaList = numpy.array([0.785398163]) #45 deg
         self.thetaList = numpy.linspace(-1.57079633, 1.57079633, num=51)
         if self.showOutput:
             print "theta range list"
@@ -126,14 +119,6 @@ class grasping:
                                 [0, 0, 0, 1]])
         return transform 
 
-    # def generate_translation_matrix(self, point): 
-    #     # Generate matrix to rotation about the z-axis of shelf frame to get bunch of new transforms to use for projection
-    #     transform = numpy.array([[1, 0, 0, point.item(0)],
-    #                             [0, 1, 0, point.item(1)],
-    #                             [0, 0, 1, point.item(2)],
-    #                             [0, 0, 0, 1]])
-    #     return transform
-
     def get_object_extents(self, req):
         # Select object
         if req.item == 'cheezit_big_original':
@@ -206,11 +191,8 @@ class grasping:
             item = '../env/tennisball.env.xml'
             size = [0.07, 0.108, 0.19]
         else:
-            print "could not find scene xml for object: %s"%req.item 
-        #self.size = numpy.array(size)
-        #self.item = req.item
+            print "could not find scene xml for object: %s"%req.item
 
-        #return self.item, self.size
         return numpy.array(size)
 
     def generate_apc_grasp_poses(self, projectionList, approachList):  
@@ -226,45 +208,6 @@ class grasping:
             grasps.append(grasp)
           
         return grasps
-
-    # def genAPCGraspPose(grasp, object):
-
-    #     grasp = apcGraspPose(
-    #         posegrasp = Pose(
-    #             position=Point(
-    #                 x=grasp.item(0,3),
-    #                 y=grasp.item(1,3),
-    #                 z=grasp.item(2,3),
-    #             ),
-    #             orientation=Quaternion(
-    #                 x=qx,
-    #                 y=qy,
-    #                 z=qz,
-    #                 w=qw,
-    #             )
-    #         ),    
-    #         poseapproach = Pose(
-    #             position=Point(
-    #                 x=newApproachVector.item(0),
-    #                 y=newApproachVector.item(1),
-    #                 z=newApproachVector.item(2),
-    #             ),
-    #             orientation=Quaternion(
-    #                 x=qx,
-    #                 y=qy,
-    #                 z=qz,
-    #                 w=qw,
-    #             )
-    #         )
-    #     )
-
-    # def get_quaternion(self, matrix):
-    #     qw = numpy.sqrt(1 + matrix.item(0,0) + matrix.item(1,1) + matrix.item(2,2))/2
-    #     qx = (matrix.item(2,1) - matrix.item(1,2)) / (4*qw)
-    #     qy = (matrix.item(0,2) - matrix.item(2,0)) / (4*qw)
-    #     qz = (matrix.item(1,0) - matrix.item(0,1)) / (4*qw)
-    #     quatVector = numpy.array([qx, qy, qz, qw])
-    #     return quatVector
         
     def get_obb_points(self, size):
         x = size[0]
@@ -326,7 +269,6 @@ class grasping:
         max_z = -99999999999999
         
         for point in pointList:            
-            
             if point[0] > max_x: #if x point is larger than current max x then replace with new one
                 max_x = point[0]
             if point[0] < min_x: #if x point is smaller than current min x then replace with new one
@@ -341,11 +283,6 @@ class grasping:
                 min_z = point[2]
         min_max = numpy.array([min_x, max_x, min_y, max_y, min_z, max_z])
         return min_max                    
-
-    # def compute_approach_tf(self, Tbaseobj):
-    #     xDirVector = numpy.matrix([1],[0],[0],[1])
-    #     approachx = numpy.matrix([[Tbaseproj.item(0,0)], [Tbaseproj.item(1,0)], [Tbaseproj.item(2,0)], [1] ])
-    #     return approachx
 
     def checkquaternion(self, transform, name):
         approach = geometry_msgs.msg.Pose()
