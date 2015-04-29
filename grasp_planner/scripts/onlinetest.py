@@ -63,9 +63,9 @@ def main():
         tfs = []
 
         msg = geometry_msgs.msg.Pose()
-        msg.position.x = 0
-        msg.position.y = 0
-        msg.position.z = 0
+        msg.position.x = 0.885315
+        msg.position.y = 0.413907
+        msg.position.z = 0.787417+0.8
         msg.orientation.x = 0
         msg.orientation.y = 0
         msg.orientation.z = 0
@@ -123,7 +123,7 @@ def main():
 
         br = tf2_ros.TransformBroadcaster()
         rate = rospy.Rate(1000)        
-        for time in range(0,10000):
+        for time in range(0,1000):
             for tf in tfs:
                 tf.header.stamp = rospy.Time.now()
                 br.sendTransform(tf)                

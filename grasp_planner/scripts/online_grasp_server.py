@@ -31,7 +31,7 @@ class grasping:
         self.gripperwidth = 0.155 - self.offset # 0.155 is the gripper width in meters. 15.5cm        
         self.x_upperboundoffset = 0.04 # fingertip is allowed move at most 4cm beyond the lower bound value
         self.x_lowerboundoffset = 0.1 # fingertip goes past nearest point cloud's x value by at least 4 cm 
-        self.showOutput = True # Enable to show print statements
+        self.showOutput = False # Enable to show print statements
         self.tf = tf.TransformListener(True, rospy.Duration(10.0))
         self.br = tf2_ros.TransformBroadcaster()
         self.rate = rospy.Rate(60.0)
@@ -110,7 +110,7 @@ class grasping:
         return t
 
     def construct_4Dmatrix(self, trans, rot):
-        print trans, rot
+        #print trans, rot
         transform = numpy.zeros([4,4])
         transform[0:3,0:3] = rot
         transform[0:3,3] = trans
@@ -125,13 +125,13 @@ class grasping:
                                 [0, 0, 0, 1]])
         return transform 
 
-    #def generate_translation_matrix(self, point): 
-        # Generate matrix to rotation about the z-axis of shelf frame to get bunch of new transforms to use for projection
-        transform = numpy.array([[1, 0, 0, point.item(0)],
-                                [0, 1, 0, point.item(1)],
-                                [0, 0, 1, point.item(2)],
-                                [0, 0, 0, 1]])
-        return transform
+    # def generate_translation_matrix(self, point): 
+    #     # Generate matrix to rotation about the z-axis of shelf frame to get bunch of new transforms to use for projection
+    #     transform = numpy.array([[1, 0, 0, point.item(0)],
+    #                             [0, 1, 0, point.item(1)],
+    #                             [0, 0, 1, point.item(2)],
+    #                             [0, 0, 0, 1]])
+    #     return transform
 
     def get_object_extents(self, req):
         # Select object
@@ -295,7 +295,8 @@ class grasping:
         z_lowerbound = min_z + self.z_lowerboundoffset
         z_upperbound = max_z + self.z_upperboundoffset
         height = z_lowerbound #height currently set so gripper won't collide into the shelf lip. later we may want this as a function simliar to the function we may use for the depth calculation with collision check. 
-        print "height: " + str(height)
+        if self.showOutput:
+            print "height: " + str(height)
         return height
 
     def compute_y_mid(self, miny, maxy): 
@@ -340,10 +341,22 @@ class grasping:
         min_max = numpy.array([min_x, max_x, min_y, max_y, min_z, max_z])
         return min_max                    
 
-    #def compute_approach_tf(self, Tbaseobj):
-        xDirVector = numpy.matrix([1],[0],[0],[1])
-        approachx = numpy.matrix([[Tbaseproj.item(0,0)], [Tbaseproj.item(1,0)], [Tbaseproj.item(2,0)], [1] ])
-        return approachx
+    # def compute_approach_tf(self, Tbaseobj):
+    #     xDirVector = numpy.matrix([1],[0],[0],[1])
+    #     approachx = numpy.matrix([[Tbaseproj.item(0,0)], [Tbaseproj.item(1,0)], [Tbaseproj.item(2,0)], [1] ])
+    #     return approachx
+
+    def checkquaternion(self, transform, name):
+        approach = geometry_msgs.msg.Pose()
+        [trans, quat] = ExtractFromMatrix(transform)
+        approach.position.x = trans[0]
+        approach.position.y = trans[1]
+        approach.position.z = trans[2]            
+        approach.orientation.x = quat[0]
+        approach.orientation.y = quat[1]
+        approach.orientation.z = quat[2]
+        approach.orientation.w = quat[3]
+        print name + " is unit quaternion: " + str((approach.orientation.x)**2 + (approach.orientation.y)**2 + (approach.orientation.z)**2 + (approach.orientation.w)**2)
 
     def get_grasp_cb(self, req):
 
@@ -390,11 +403,14 @@ class grasping:
             Trans_shelfobj = Tshelfobj[0:3,3]
             Rot_shelfproj = Tshelfproj[0:3,0:3]
             Tshelfproj_new = self.construct_4Dmatrix(Trans_shelfobj, Rot_shelfproj)
-            print Tshelfproj_new
+            if self.showOutput:
+                print Tshelfproj_new
 
             # Get TF for projection to object
             Tprojshelf = inv(Tshelfproj_new)
-            Tprojobj = numpy.dot(Tprojshelf,Tshelfobj) 
+            Tprojobj = numpy.dot(Tprojshelf,Tshelfobj)
+
+            self.checkquaternion(Tprojobj, "Tprojobj")
 
             # Loop through OBB points and transform them to be wrt to the target projection frame which then is wrt to base
             OBBPointsList = []
@@ -443,6 +459,8 @@ class grasping:
                 Rot_shelfproj = Tshelfproj_new[0:3,0:3]
                 Tshelfproj_update = self.construct_4Dmatrix(Trans_shelfproj, Rot_shelfproj)
 
+                self.checkquaternion(Tshelfproj_update, "Tshelfproj_update")
+
                 # Generate TF shelf to projection
                 proj = geometry_msgs.msg.Pose()
                 [trans, quat] = ExtractFromMatrix(Tshelfproj_update)
@@ -460,6 +478,8 @@ class grasping:
                 Trans_projapproach = numpy.array([-0.5, 0, 0])
                 Rot_projapproach = numpy.eye(3,3)
                 Tprojapproach = self.construct_4Dmatrix(Trans_projapproach, Rot_projapproach)
+
+                self.checkquaternion(Tprojapproach, "Tprojapproach")
                 
                 # Generate TF for projection to approach pose
                 approach = geometry_msgs.msg.Pose()
@@ -475,17 +495,45 @@ class grasping:
                 self.broadcast_single_tf(tf_projapproach)                
 
                 # Transform to orient hand to use x as approach direction
-                TgraspIK = numpy.array([[1,  0, 0, -0.17],
-                                        [0,  0, 1, 0],
-                                        [0, -1, 0, 0],
-                                        [0,  0, 0, 1]])
+
+                # TgraspIK = numpy.array([[0, -1, 0, -0.17],
+                #                         [0, 0, -1, 0],
+                #                         [1, 0, 0, 0],
+                #                         [0, 0, 0, 1]])
+                # TgraspIK = numpy.array([[0, 1, 0, -0.17],
+                #                         [0, 0, 1, 0],
+                #                         [1, 0, 0, 0],
+                #                         [0, 0, 0, 1]])
+                # TgraspIK = numpy.array([[1, 0, 0, -0.17],
+                #                         [0, -1, 0, 0],
+                #                         [0, 0, -1, 0],
+                #                         [0, 0, 0, 1]])
+                # TgraspIK = numpy.array([[1, 0, 0, 0],
+                #                         [0, 0, 1, -0.17],
+                #                         [0, -1, 0, 0],
+                #                         [0, 0, 0, 1]])
+                TgraspIK = numpy.array([[0, 0, -1, 0],
+                                        [0, 1, 0, -0.17],
+                                        [1, 0, 0, 0],
+                                        [0, 0, 0, 1]])
+                TgraspIK = numpy.array([[0, 0, -1, 0],
+                                        [-1, 0, 0, -0.17],
+                                        [0, 1, 0, 0],
+                                        [0, 0, 0, 1]])
+                self.checkquaternion(TgraspIK, "TgraspIK")
 
                 Tbasepregrasp = numpy.dot(Tbaseshelf,Tshelfproj_update)
                 TbaseIK_pregrasp = numpy.dot(Tbasepregrasp,TgraspIK)
+                self.checkquaternion(Tbasepregrasp, "Tbasepregrasp")
+                self.checkquaternion(TbaseIK_pregrasp, "TbaseIK_pregrasp")
+
 
                 Tshelfapproach = numpy.dot(Tshelfproj_update,Tprojapproach)
                 Tbaseapproach = numpy.dot(Tbaseshelf,Tshelfapproach)
                 TbaseIK_approach = numpy.dot(Tbaseapproach,TgraspIK)
+                self.checkquaternion(Tshelfapproach, "Tshelfapproach")
+                self.checkquaternion(Tbaseapproach, "Tbaseapproach")                
+                self.checkquaternion(TbaseIK_approach, "TbaseIK_approach")
 
                 # Construct msg. Then appened to queue with score as the priority in queue. This will put lowest score msg first in list.
                 proj_msg = PoseFromMatrix(TbaseIK_pregrasp)
