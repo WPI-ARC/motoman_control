@@ -6,6 +6,7 @@ import tf2_ros
 from gripper_srv.srv import gripper
 from grasp_planner.srv import apcGraspDB
 from geometry_msgs.msg import TransformStamped
+from sensor_msgs.msg import PointCloud2
 
 from util.grasping import filterGrasps, execute_grasp
 
@@ -20,6 +21,7 @@ class PICKITEM(smach.State):
         # self.grasp_generator = rospy.ServiceProxy('getGrasps" apcGraspDB)
         self.grasp_generator = rospy.ServiceProxy('getGrasps_online_server', apcGraspDB)
         self.gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
+        self.points = rospy.Publisher("/grasp_points", PointCloud2)
 
         # TODO: Handle response error
         response = self.gripper_control.call(command="activate")
@@ -28,6 +30,7 @@ class PICKITEM(smach.State):
     def execute(self, userdata):
         rospy.loginfo("Trying to pick '"+userdata.item+"'...")
         userdata.output = userdata.input
+        self.points.publish(userdata.points)
 
         # TODO: Handle response error
         response = self.grasp_generator(

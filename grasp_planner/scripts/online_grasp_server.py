@@ -15,6 +15,7 @@ from math import pi
 from transformation_helper import ExtractFromMatrix, BuildMatrix, PoseFromMatrix, PoseToMatrix, InvertMatrix
 
 # Message and Service imports
+import sensor_msgs.point_cloud2 as pc2
 from std_msgs.msg import Header
 from geometry_msgs.msg import PoseStamped
 from grasp_planner.msg import apcGraspPose, apcGraspArray
@@ -228,8 +229,7 @@ class grasping:
         return points
 
     def compute_width(self, min_y, max_y):
-        width = abs(max_y-min_y)
-        return width
+        return abs(max_y-min_y)
 
     def compute_depth(self, min_x, max_x, pointList):
         x_lowerbound = min_x - self.fingerlength + self.x_lowerboundoffset
@@ -314,12 +314,13 @@ class grasping:
 
         # Request the 8 Oriented bounding box points wrt to the object's frame.
         size = self.get_object_extents(req)
-        OBBPoints = self.get_obb_points(size)
+        #pointcloud = self.get_obb_points(size)
+        pointcloud = list(pc2.read_points(req.object_points, skip_nans=True,
+                                          field_names=("x", "y", "z")))
 
         # Generate TFs to project onto
         for theta in self.thetaList:
             # raw_input("Press Enter to continue...")
-            print "************************************************** Start loop **************************************************"
             # Get TFs
             Tbaseshelf = self.get_tf('/base_link', '/shelf')
             # Tshelfobj = self.get_tf('/shelf', '/object')
@@ -329,7 +330,8 @@ class grasping:
             # Tshelfobj = PoseToMatrix(self.tf.transformPose("/shelf", PoseStamped(Header(stamp=rospy.Time.now(), frame_id='/base_link'), req.object_pose)).pose)
             Tshelfobj = numpy.dot(inv(Tbaseshelf), Tbaseobj)
             if self.showOutput:
-                print "OBBPoints: ", OBBPoints
+                print "************************************************** Start loop **************************************************"
+                print "OBBPoints: ", pointcloud
                 print "Transform from base to shelf: ", Tbaseshelf
                 print "Transform from shelf to obj: ", Tshelfobj
 
@@ -353,22 +355,21 @@ class grasping:
             Tprojshelf = inv(Tshelfproj_new)
             Tprojobj = numpy.dot(Tprojshelf, Tshelfobj)
 
-            self.checkquaternion(Tprojobj, "Tprojobj")
-
             # Loop through OBB points and transform them to be wrt to the target projection frame which then is wrt to base
-            OBBPointsList = []
-            for OBBPoint in OBBPoints:
+            points = []
+            for OBBPoint in pointcloud:
                 oldpt = numpy.array([[OBBPoint[0]], [OBBPoint[1]], [OBBPoint[2]], [1]])
                 projected_OBBPoint = numpy.dot(Tprojobj, oldpt)
-                OBBPointsList.append(projected_OBBPoint)
+                points.append(projected_OBBPoint)
             if self.showOutput:
                 print "List of transformed OBB points after projection to target projection frame"
-                print OBBPointsList
+                print points
 
             # Get min max points. Pass in transformed OBBPoints list to get min max for target frame. Compute width of projection shadow. Width is the y axis because shelf frame is set that way with y axis as width. Check if width of shadow projection can fit inside gripper width
-            min_max = self.compute_minmax(OBBPointsList)
+            min_max = self.compute_minmax(points)
             min_x, max_x, min_y, max_y, min_z, max_z = min_max
             width = self.compute_width(min_y, max_y)
+            print "Min-max values: ", min_x, max_x, min_y, max_y, min_z, max_z
             if self.showOutput:
                 print "Min-max values [minx,maxx,miny,maxy,minz,maxz]: ", min_x, max_x, min_y, max_y, min_z, max_z
                 print "projection width: " + str(width)
@@ -382,7 +383,7 @@ class grasping:
 
                 # Compute mid-y point using miny maxy
                 mid_y = self.compute_y_mid(min_y, max_y)
-                depth = self.compute_depth(min_x, max_x, OBBPointsList)  # select depth to be with a min and max bound
+                depth = self.compute_depth(min_x, max_x, points)  # select depth to be with a min and max bound
                 height = self.compute_height(min_z, max_z)  # select the height so bottom  of object and also hand won't collide wit shelf lip. may need to take into acount the max_z and objects height to see if object will hit top of shelf.
                 if self.showOutput:
                     print "mid-y: "+str(mid_y)
@@ -394,16 +395,9 @@ class grasping:
 
                 # Trans_shelfproj = numpy.array([Tshelfproj_new[0,3], mid_y[1], Tshelfproj_new[2,3]+zoffset])
                 # Trans_shelfproj = numpy.array([Tshelfproj_new[0, 3]+depth, mid_y[1], Tshelfproj_new[2,3]]+height)
-                Trans_shelfproj = numpy.array([Tshelfproj_new[0, 3], Tshelfproj_new[1,3], Tshelfproj_new[2,3]+height])
+                Trans_shelfproj = numpy.array([Tshelfproj_new[0, 3], Tshelfproj_new[1, 3], Tshelfproj_new[2, 3]+height])
                 Rot_shelfproj = Tshelfproj_new[0:3, 0:3]
                 Tshelfproj_update = self.construct_4Dmatrix(Trans_shelfproj, Rot_shelfproj)
-
-                self.checkquaternion(Tshelfproj_update, "Tshelfproj_update")
-
-                # # Construct approach TF as projection but further back
-                # Tshelfproj_update = numpy.array([depth, 0, height])
-                # Rot_projapproach = numpy.eye(3, 3)
-                # Tshelfproj_update = self.construct_4Dmatrix(Tshelfproj_update, Rot_shelfproj)
 
                 # Generate TF shelf to projection
                 proj = geometry_msgs.msg.Pose()
@@ -422,8 +416,6 @@ class grasping:
                 Trans_projapproach = numpy.array([-0.3, 0, 0])
                 Rot_projapproach = numpy.eye(3, 3)
                 Tprojapproach = self.construct_4Dmatrix(Trans_projapproach, Rot_projapproach)
-
-                self.checkquaternion(Tprojapproach, "Tprojapproach")
 
                 # Generate TF for projection to approach pose
                 approach = geometry_msgs.msg.Pose()
@@ -455,19 +447,12 @@ class grasping:
                 # TgraspIK = numpy.dot(TgraspIK, Tcamera)
                 TgraspIK = numpy.dot(Tcamera, TgraspIK)
 
-                self.checkquaternion(TgraspIK, "TgraspIK")
-
                 Tbasepregrasp = numpy.dot(Tbaseshelf, Tshelfproj_update)
                 TbaseIK_pregrasp = numpy.dot(Tbasepregrasp, TgraspIK)
-                self.checkquaternion(Tbasepregrasp, "Tbasepregrasp")
-                self.checkquaternion(TbaseIK_pregrasp, "TbaseIK_pregrasp")
 
                 Tshelfapproach = numpy.dot(Tshelfproj_update, Tprojapproach)
                 Tbaseapproach = numpy.dot(Tbaseshelf, Tshelfapproach)
                 TbaseIK_approach = numpy.dot(Tbaseapproach, TgraspIK)
-                self.checkquaternion(Tshelfapproach, "Tshelfapproach")
-                self.checkquaternion(Tbaseapproach, "Tbaseapproach")
-                self.checkquaternion(TbaseIK_approach, "TbaseIK_approach")
 
                 # Construct msg. Then appened to queue with score as the priority in queue. This will put lowest score msg first in list.
                 proj_msg = PoseFromMatrix(TbaseIK_pregrasp)
