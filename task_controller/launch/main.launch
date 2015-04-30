@@ -1,5 +1,5 @@
 <launch>
-
+  <node name="convert_trajectory_server" pkg="motoman_moveit" type="convert_trajectory_server" output="screen"/>
   <arg name="speed" default="slow" />
     
   <!-- Vision Code -->

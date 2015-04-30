@@ -2,7 +2,8 @@ import roslib; roslib.load_manifest('task_controller')
 import rospy
 import smach
 
-from util import goto_pose, bin_pose
+from util.moveit import goto_pose
+from util.shelf import bin_pose
 
 class MOVETOBIN(smach.State):
 
@@ -29,5 +30,3 @@ class MOVETOBIN(smach.State):
             return 'Success'
         else:
             return 'Failure'
-
-

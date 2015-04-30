@@ -26,6 +26,8 @@ class SIMPLESCHEDULER(smach.State):
             elif action == 'scoop':
                 rospy.loginfo("Scheduling scoop of %s from bin %s." % (item, bin))
                 return 'Scoop'
+            elif action == "pick_scoop":
+                return 'ToolChange'
             else:
                 return 'Failure'
 

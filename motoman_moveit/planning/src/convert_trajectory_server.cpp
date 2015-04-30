@@ -16,6 +16,8 @@ std::vector<sensor_msgs::JointState> jointStates(4);
 bool move_callback(motoman_moveit::convert_trajectory_server::Request &req,
                    motoman_moveit::convert_trajectory_server::Response &res) {
 
+    std::vector<sensor_msgs::JointState> currentStates(4);
+
     std::vector<motoman_msgs::DynamicJointPoint> trajPoints;
 
     std::vector<motoman_msgs::DynamicJointsGroup> leftGroupPoints;
@@ -56,27 +58,6 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req,
     msgJointsSize = msgTraj.joint_names.size();
     trajPoints.resize(msgSize);
 
-
-
-//    std::map<std::string, double> joint_commands;
-//    for (joint : joints)
-//    {
-//        joint_commands[joint_name] = joint_value;
-//    }
-//    // check
-//    for (name : left_arm_names)
-//    {
-//        std::map<std::string, double>::const_iterator found = joint_commands.find(name);
-//        if (found != joint_commands.end())
-//        {
-//            // joint is there
-//        }
-//        else
-//        {
-//            // not there
-//        }
-//    }
-
     // if joint names for left/right/torso are contained in message joint_names,
     // set corresponding booleans to true
     for(i = 0; i < msgJointsSize; i++) {
@@ -95,17 +76,17 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req,
     }
 
     // vectors for all 'zero' velocity values
-    std::vector<double> zeroVelArm(7);
-    zeroVelArm[0] = 0.0;
-    zeroVelArm[1] = 0.0;
-    zeroVelArm[2] = 0.0;
-    zeroVelArm[3] = 0.0;
-    zeroVelArm[4] = 0.0;
-    zeroVelArm[5] = 0.0;
-    zeroVelArm[6] = 0.0;
+    std::vector<double> zeroArmVector(7);
+    zeroArmVector[0] = 0.0;
+    zeroArmVector[1] = 0.0;
+    zeroArmVector[2] = 0.0;
+    zeroArmVector[3] = 0.0;
+    zeroArmVector[4] = 0.0;
+    zeroArmVector[5] = 0.0;
+    zeroArmVector[6] = 0.0;
 
-    std::vector<double> zeroVelTorso(1);
-    zeroVelTorso[0] = 0.0;
+    std::vector<double> zeroTorsoVector(1);
+    zeroTorsoVector[0] = 0.0;
 
     // fill in DynamicPointsGroup vectors
     // create dummy trajectories for any controllers not receiving trajectories
@@ -117,7 +98,11 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req,
                 leftPositions[j] = msgTraj.points[i].positions[j + leftJointsStart];
             }
             for(j = 0; j < 7; j++) {
-                leftVelocities[j] = msgTraj.points[i].velocities[j + leftJointsStart];
+                if (msgTraj.points[i].velocities.size() > j + leftJointsStart) {
+                    leftVelocities[j] = msgTraj.points[i].velocities[j + leftJointsStart];
+                } else {
+                    leftVelocities[j] = 0;
+                }
             }
             leftGroupPoints[i].group_number = 0;
             leftGroupPoints[i].num_joints = 7;
@@ -126,19 +111,15 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req,
             leftGroupPoints[i].time_from_start = msgTraj.points[i].time_from_start;
         }
     }else {
-        leftSize = 2;
-        leftGroupPoints.resize(leftSize);
-        leftGroupPoints[0].group_number = 0;
-        leftGroupPoints[0].num_joints = 7;
-        leftGroupPoints[0].positions = jointStates[0].position;
-        leftGroupPoints[0].velocities = zeroVelArm;
-        leftGroupPoints[0].time_from_start = ros::Duration(0.0);
-
-        leftGroupPoints[1].group_number = 0;
-        leftGroupPoints[1].num_joints = 7;
-        leftGroupPoints[1].positions = jointStates[0].position;
-        leftGroupPoints[1].velocities = zeroVelArm;
-        leftGroupPoints[1].time_from_start = ros::Duration(0.1);
+        leftSize = msgSize;
+        leftGroupPoints.resize(msgSize);
+        for(i = 0; i < msgSize; i++) {
+            leftGroupPoints[i].group_number = 0;
+            leftGroupPoints[i].num_joints = 7;
+            leftGroupPoints[i].positions = jointStates[0].position;
+            leftGroupPoints[i].velocities = zeroArmVector;
+            leftGroupPoints[i].time_from_start = ros::Duration(0.01*i);
+        }
     }
 
     if(moveRight) {
@@ -149,7 +130,11 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req,
                 rightPositions[j] = msgTraj.points[i].positions[j + rightJointsStart];
             }
             for(j = 0; j < 7; j++) {
-                rightVelocities[j] = msgTraj.points[i].velocities[j + rightJointsStart];
+                if (msgTraj.points[i].velocities.size() > j + rightJointsStart) {
+                    rightVelocities[j] = msgTraj.points[i].velocities[j + rightJointsStart];
+                } else {
+                    rightVelocities[j] = 0;
+                }
             }
             rightGroupPoints[i].group_number = 1;
             rightGroupPoints[i].num_joints = 7;
@@ -158,19 +143,16 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req,
             rightGroupPoints[i].time_from_start = msgTraj.points[i].time_from_start;
         }
     }else {
-        rightSize = 2;
-        rightGroupPoints.resize(rightSize);
-        rightGroupPoints[0].group_number = 1;
-        rightGroupPoints[0].num_joints = 7;
-        rightGroupPoints[0].positions = jointStates[1].position;
-        rightGroupPoints[0].velocities = zeroVelArm;
-        rightGroupPoints[0].time_from_start = ros::Duration(0.0);
+        rightSize = msgSize;
 
-        rightGroupPoints[1].group_number = 1;
-        rightGroupPoints[1].num_joints = 7;
-        rightGroupPoints[1].positions = jointStates[1].position;
-        rightGroupPoints[1].velocities = zeroVelArm;
-        rightGroupPoints[1].time_from_start = ros::Duration(0.1);
+        rightGroupPoints.resize(msgSize);
+        for(i = 0; i < msgSize; i++) {
+            rightGroupPoints[i].group_number = 1;
+            rightGroupPoints[i].num_joints = 7;
+            rightGroupPoints[i].positions = jointStates[1].position;
+            rightGroupPoints[i].velocities = zeroArmVector;
+            rightGroupPoints[i].time_from_start = ros::Duration(0.01*i);
+        }
     }
 
     if(moveTorso) {
@@ -179,7 +161,11 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req,
         torso2GroupPoints.resize(torsoSize);
         for(i = 0; i < torsoSize; i++) {
             torsoPositions[0] = msgTraj.points[i].positions[torsoJointsStart];
-            torsoVelocities[0] = msgTraj.points[i].velocities[torsoJointsStart];
+            if (msgTraj.points[i].velocities.size() > torsoJointsStart) {
+                torsoVelocities[0] = msgTraj.points[i].velocities[torsoJointsStart];
+            } else {
+                torsoVelocities[0] = 0;
+            }
 
             torso1GroupPoints[i].group_number = 2;
             torso1GroupPoints[i].num_joints = 1;
@@ -194,32 +180,24 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req,
             torso2GroupPoints[i].time_from_start = msgTraj.points[i].time_from_start;
         }
     }else {
-        torsoSize = 2;
-        torso1GroupPoints.resize(torsoSize);
-        torso1GroupPoints[0].group_number = 2;
-        torso1GroupPoints[0].num_joints = 1;
-        torso1GroupPoints[0].positions = jointStates[2].position;
-        torso1GroupPoints[0].velocities = zeroVelTorso;
-        torso1GroupPoints[0].time_from_start = ros::Duration(0.0);
+        torsoSize = msgSize;
+        torso1GroupPoints.resize(msgSize);
+        for(i = 0; i < msgSize; i++) {
+            torso1GroupPoints[i].group_number = 2;
+            torso1GroupPoints[i].num_joints = 1;
+            torso1GroupPoints[i].positions = jointStates[2].position;
+            torso1GroupPoints[i].velocities = zeroTorsoVector;
+            torso1GroupPoints[i].time_from_start = ros::Duration(0.01*i);
+        }
 
-        torso1GroupPoints[1].group_number = 2;
-        torso1GroupPoints[1].num_joints = 1;
-        torso1GroupPoints[1].positions = jointStates[2].position;
-        torso1GroupPoints[1].velocities = zeroVelTorso;
-        torso1GroupPoints[1].time_from_start = ros::Duration(0.1);
-
-        torso2GroupPoints.resize(torsoSize);
-        torso2GroupPoints[0].group_number = 3;
-        torso2GroupPoints[0].num_joints = 1;
-        torso2GroupPoints[0].positions = jointStates[3].position;
-        torso2GroupPoints[0].velocities = zeroVelTorso;
-        torso2GroupPoints[0].time_from_start = ros::Duration(0.0);
-
-        torso2GroupPoints[1].group_number = 3;
-        torso2GroupPoints[1].num_joints = 1;
-        torso2GroupPoints[1].positions = jointStates[3].position;
-        torso2GroupPoints[1].velocities = zeroVelTorso;
-        torso2GroupPoints[1].time_from_start = ros::Duration(0.1);
+        torso2GroupPoints.resize(msgSize);
+        for(i = 0; i < msgSize; i++) {
+            torso2GroupPoints[i].group_number = 3;
+            torso2GroupPoints[i].num_joints = 1;
+            torso2GroupPoints[i].positions = jointStates[3].position;
+            torso2GroupPoints[i].velocities = zeroTorsoVector;
+            torso2GroupPoints[i].time_from_start = ros::Duration(0.01*i);
+        }
     }
 
     std::vector<motoman_msgs::DynamicJointsGroup> groups;
@@ -242,7 +220,7 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req,
             groups.push_back(torso1GroupPoints[i]);
             groups.push_back(torso2GroupPoints[i]);
         }
-        trajPoints[i].num_groups = num_groups;
+        trajPoints[i].num_groups = 4;
         trajPoints[i].groups = groups;
     }
 

@@ -2,14 +2,12 @@ import roslib; roslib.load_manifest('task_controller')
 import rospy
 import smach
 import tf2_ros
-import random
-from copy import deepcopy
-from geometry_msgs.msg import TransformStamped
 
 from gripper_srv.srv import gripper
 from grasp_planner.srv import apcGraspDB
+from geometry_msgs.msg import TransformStamped
 
-from util import filterGrasps, execute_grasp
+from util.grasping import filterGrasps, execute_grasp
 
 
 class PICKITEM(smach.State):
@@ -18,7 +16,7 @@ class PICKITEM(smach.State):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],
                              input_keys=['input', 'item', 'pose', 'bin'],
                              output_keys=['output'])
-        self.arm = robot.arm_left
+        self.arm = robot.arm_left_torso
         # self.grasp_generator = rospy.ServiceProxy('getGrasps" apcGraspDB)
         self.grasp_generator = rospy.ServiceProxy('getGrasps_online_server', apcGraspDB)
         self.gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)

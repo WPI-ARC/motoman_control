@@ -129,7 +129,7 @@ def mainLoop(address):
     #We connect to the address received as an argument
     gripper.client.connectToDevice(address)
 
-    rospy.init_node('gipper_server')
+    rospy.init_node('gripper_server')
 
     #The Gripper status is published on the topic named 'SModelRobotInput'
     pub = rospy.Publisher('SModelRobotInput', inputMsg.SModel_robot_input)

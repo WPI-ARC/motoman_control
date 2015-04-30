@@ -1,7 +1,5 @@
 <launch>
-  <!--
-<node name="convert_trajectory_server" pkg="motoman_moveit" type="convert_trajectory_server" output="screen"/>
-  -->
+
   <node name="convert_trajectory_test1" pkg="motoman_moveit" type="convert_trajectory_test1" respawn="false" output="screen"/>
 
 </launch>

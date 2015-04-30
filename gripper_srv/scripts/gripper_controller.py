@@ -46,8 +46,10 @@ import roslib; roslib.load_manifest('robotiq_s_model_control')
 import rospy
 from robotiq_s_model_control.msg import _SModel_robot_output  as outputMsg
 from time import sleep
+import sys
 
 from gripper_srv.srv import *
+from sensor_msgs.msg import JointState
 
 
 #--------------------------------------------------------------------
@@ -60,10 +62,22 @@ called it will set all the values to 0. So probably if you set a speed, it will 
 
 #---------------------------------------------------------------------
 
-command = outputMsg.SModel_robot_output();
+command = outputMsg.SModel_robot_output()
+
+def update_joint_states(hand, state):
+    msg = JointState(name=["hand_"+hand+"_palm_finger_1_joint", "hand_"+hand+"_finger_1_joint_1", "hand_"+hand+"_finger_1_joint_2", "hand_"+hand+"_finger_1_joint_3", "hand_"+hand+"_palm_finger_2_joint", "hand_"+hand+"_finger_2_joint_1", "hand_"+hand+"_finger_2_joint_2", "hand_"+hand+"_finger_2_joint_3", "hand_"+hand+"_finger_middle_joint_1", "hand_"+hand+"_finger_middle_joint_2", "hand_"+hand+"_finger_middle_joint_3"])
+    msg.header.stamp = rospy.Time.now()
+    if state == "70":
+        msg.position = [0, 0.5, -0.15, -0.5, 0, 0.5, -0.15, -0.5, 0.5, -0.15, -0.5]
+    else:
+        msg.position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    joint_states.publish(msg)
 
 def genCommand(req):
     global command
+
+    hand = sys.argv[1]
+    update_joint_states(hand, req.command)
 
     #Update the command according to request command
 
@@ -159,12 +173,14 @@ def genCommand(req):
 def publisher():
     global pub
     global command
+    global joint_states
 
     """Main loop which requests new commands and publish them on the SModelRobotOutput topic."""
 
     rospy.init_node('gripper_service')
 
-    pub = rospy.Publisher('SModelRobotOutput', outputMsg.SModel_robot_output,queue_size=5)
+    pub = rospy.Publisher('SModelRobotOutput', outputMsg.SModel_robot_output)
+    joint_states = rospy.Publisher('/joint_states', JointState)
 
     # Activate gripper command
     #command = outputMsg.SModel_robot_output();
@@ -176,6 +192,8 @@ def publisher():
     rospy.sleep(0.1)
 
     s = rospy.Service('command_gripper', gripper, genCommand)
+    hand = sys.argv[1]
+    update_joint_states(hand, "open")
 
     rospy.spin()
 
