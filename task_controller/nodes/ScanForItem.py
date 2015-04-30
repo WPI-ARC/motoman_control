@@ -3,10 +3,9 @@ import rospy
 import smach
 from tf import TransformListener
 
-from geometry_msgs.msg import PoseStamped
-
 from apc_vision.srv import *
 from apc_vision.msg import *
+
 
 class SCANFORITEM(smach.State):
 
@@ -16,7 +15,7 @@ class SCANFORITEM(smach.State):
         self.sample = rospy.ServiceProxy("sample_vision", SampleVision)
         self.process = rospy.ServiceProxy("process_vision", ProcessVision)
         self.tf = TransformListener(True, rospy.Duration(10.0))
-        rospy.sleep(rospy.Duration(1.0)) # Wait for network timting
+        rospy.sleep(rospy.Duration(1.0))  # Wait for network timting
 
     def execute(self, userdata):
         rospy.loginfo("Trying to find "+userdata.item+"...")
@@ -35,7 +34,6 @@ class SCANFORITEM(smach.State):
                 target=APCObject(name=userdata.item, number=1),
                 objects=[APCObject(name=userdata.item, number=1)],
             )
-            print "Process:", response
             userdata.pose = self.tf.transformPose("/base_link", response.pose)
             print "Pose:", self.tf.transformPose("/base_link", response.pose)
             userdata.output = userdata.input
