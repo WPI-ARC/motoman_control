@@ -260,9 +260,9 @@ class grasping:
     def compute_score(self, width, rotation):
         fscore = numpy.true_divide(width, self.gripperwidth)
         gscore = rotation
-        weight = 0.5
+        weight = 0.8
         score = (1-weight)*fscore + weight*gscore
-        return score
+        return fscore
 
     def compute_minmax(self, pointList):
         # Loop through pointList to find the min & max for the x, y, and z
@@ -402,11 +402,16 @@ class grasping:
 
                 # Trans_shelfproj = numpy.array([Tshelfproj_new[0,3], mid_y[1], Tshelfproj_new[2,3]+zoffset])
                 # Trans_shelfproj = numpy.array([Tshelfproj_new[0, 3]+depth, mid_y[1], Tshelfproj_new[2,3]]+height)
-                Trans_shelfproj = numpy.array([Tshelfproj_new[0,3] + depth, Tshelfproj_new[1,3], Tshelfproj_new[2,3] + height])
+                Trans_shelfproj = numpy.array([Tshelfproj_new[0, 3], Tshelfproj_new[1,3], Tshelfproj_new[2,3]+height])
                 Rot_shelfproj = Tshelfproj_new[0:3, 0:3]
                 Tshelfproj_update = self.construct_4Dmatrix(Trans_shelfproj, Rot_shelfproj)
 
                 self.checkquaternion(Tshelfproj_update, "Tshelfproj_update")
+
+                # # Construct approach TF as projection but further back
+                # Tshelfproj_update = numpy.array([depth, 0, height])
+                # Rot_projapproach = numpy.eye(3, 3)
+                # Tshelfproj_update = self.construct_4Dmatrix(Tshelfproj_update, Rot_shelfproj)
 
                 # Generate TF shelf to projection
                 proj = geometry_msgs.msg.Pose()
