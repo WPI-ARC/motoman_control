@@ -1,6 +1,7 @@
 
 import rospy
 
+from copy import deepcopy
 from moveit_msgs.srv import GetPositionIK, GetPositionIKRequest
 from gripper_srv.srv import gripper, gripperRequest
 
@@ -25,7 +26,7 @@ def check_ik(group, pose, collision_checking=True):
 def filterGrasps(group, grasps):
     for i, grasp in enumerate(grasps):
         print "%s/%s" % (i+1, len(grasps))
-        if check_ik(group, grasp.posegrasp) and check_ik(group, grasp.poseapproach):
+        if check_ik(group, grasp.pregrasp) and check_ik(group, grasp.approach):
             print "Success"
             yield grasp
 
@@ -34,14 +35,20 @@ gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
 
 def execute_grasp(group, grasp, object_pose):
     # add_object(object_pose)
-    if not goto_pose(group, grasp.poseapproach, [1, 5, 30, 60], with_shelf=False):
+    if not goto_pose(group, grasp.approach, [1, 5, 30, 60], with_shelf=False):
         # remove_object()
         return False
     # remove_object()
-    if not follow_path(group, [group.get_current_pose().pose, grasp.posegrasp]):
+    if not follow_path(group, [group.get_current_pose().pose, grasp.pregrasp]):
         return False
     request = gripperRequest(command="close")
     response = gripper_control.call(request)
-    if not follow_path(group, [group.get_current_pose().pose, grasp.poseapproach]):
+
+    poses = [group.get_current_pose().pose]
+    poses.append(deepcopy(poses[-1]))
+    poses[-1].position.z += 0.025
+    poses.append(deepcopy(grasp.approach))
+    poses[-1].position.z += 0.025
+    if not follow_path(group, poses):
         return False
     return True

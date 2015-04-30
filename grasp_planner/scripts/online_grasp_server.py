@@ -193,7 +193,7 @@ class grasping:
             item = '../env/tennisball.env.xml'
             size = [0.07, 0.108, 0.19]
         else:
-            print "could not find scene xml for object: %s"%req.item
+            print "could not find scene xml for object: %s" % req.item
 
         return numpy.array(size)
 
@@ -203,10 +203,10 @@ class grasping:
             projection = projectionList[i]
             approach = approachList[i]
             grasp = apcGraspPose()
-            grasp.posegrasp.position = projection.position
-            grasp.posegrasp.orientation = projection.orientation
-            grasp.poseapproach.position = approach.position
-            grasp.poseapproach.orientation = approach.orientation
+            grasp.pregrasp.position = projection.position
+            grasp.pregrasp.orientation = projection.orientation
+            grasp.approach.position = approach.position
+            grasp.approach.orientation = approach.orientation
             grasps.append(grasp)
 
         return grasps
@@ -324,9 +324,10 @@ class grasping:
             Tbaseshelf = self.get_tf('/base_link', '/shelf')
             # Tshelfobj = self.get_tf('/shelf', '/object')
             # Tbaseobj = Tbaseshelf*Tshelfobj
-            Tbaseobj = PoseToMatrix(req.Trob_obj)  # same Trob_obj request from offline planner
+            Tbaseobj = PoseToMatrix(req.object_pose)  # same Trob_obj request from offline planner
 
-            Tshelfobj = PoseToMatrix(self.tf.transformPose("/shelf", PoseStamped(Header(stamp=rospy.Time.now(), frame_id='/base_link'), req.Trob_obj)).pose)
+            # Tshelfobj = PoseToMatrix(self.tf.transformPose("/shelf", PoseStamped(Header(stamp=rospy.Time.now(), frame_id='/base_link'), req.object_pose)).pose)
+            Tshelfobj = numpy.dot(inv(Tbaseshelf), Tbaseobj)
             if self.showOutput:
                 print "OBBPoints: ", OBBPoints
                 print "Transform from base to shelf: ", Tbaseshelf
@@ -344,15 +345,6 @@ class grasping:
             # Extract Translation component of Tshelfobj
             Trans_shelfobj = Tshelfobj[0:3, 3]
             Rot_shelfproj = Tshelfproj[0:3, 0:3]
-            print self.tf.transformPose("/shelf", PoseStamped(Header(stamp=rospy.Time.now(), frame_id='/base_link'), req.Trob_obj)).pose
-            print req.Trob_obj
-            print Tshelfobj
-            print "--------"
-            print Tshelfobj
-            print Trans_shelfobj
-            print "--------"
-            print Tshelfproj
-            print Rot_shelfproj
             Tshelfproj_new = self.construct_4Dmatrix(Trans_shelfobj, Rot_shelfproj)
             if self.showOutput:
                 print Tshelfproj_new
@@ -447,7 +439,7 @@ class grasping:
                 self.broadcast_single_tf(tf_projapproach)
 
                 # camera -15 deg offset about z-axis
-                #camtheta = 0.174532925
+                # camtheta = 0.174532925
                 camtheta = 0.261799
                 Tcamera = numpy.array([[1, 0, 0, 0],
                                        [0, numpy.cos(camtheta), -numpy.sin(camtheta), 0],
@@ -460,7 +452,7 @@ class grasping:
                                         [0, 1, 0, 0],
                                         [0, 0, 0, 1]])
 
-                #TgraspIK = numpy.dot(TgraspIK, Tcamera)
+                # TgraspIK = numpy.dot(TgraspIK, Tcamera)
                 TgraspIK = numpy.dot(Tcamera, TgraspIK)
 
                 self.checkquaternion(TgraspIK, "TgraspIK")
@@ -483,12 +475,12 @@ class grasping:
                 q_proj_msg.put((score, proj_msg))
                 q_approach_msg.put((score, approach_msg))
                 if self.showOutput:
-                    print "score is %f. Good approach direction. Gripper is wide enough" %score
+                    print "score is %f. Good approach direction. Gripper is wide enough" % score
             else:
                 # poseList.pop() #Removed the pose that has bad cost. projection width doesn't fit in gripper
                 score = self.compute_score(width, theta)
                 if self.showOutput:
-                    print "score is %f. Bad approach direction. Gripper not wide enough" %score
+                    print "score is %f. Bad approach direction. Gripper not wide enough" % score
                 countbad += 1
 
         print "number of bad approach directions: " + str(countbad)
@@ -507,7 +499,7 @@ class grasping:
 
         # From center of palm to edge of it is 6cm then lip is about 2cm up so need to offset robot z-axis to move hand approach vector to be 8cm up from bottom of object.        
         print "================================================== Request end =================================================="
-        return apcGraspDBResponse(status=True, apcGraspArray=grasps)
+        return apcGraspDBResponse(status=True, grasps=grasps)
 
 
 def publisher():
