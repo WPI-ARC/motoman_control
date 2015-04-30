@@ -258,11 +258,12 @@ class grasping:
         return isSmaller
 
     def compute_score(self, width, rotation):
-        fscore = numpy.true_divide(width, self.gripperwidth)
-        gscore = rotation
-        weight = 0.8
+        fscore = numpy.true_divide(width, self.gripperwidth)[0]
+        gscore = abs(rotation)
+        weight = 0.5
         score = (1-weight)*fscore + weight*gscore
-        return fscore
+        # print "%s = 0.5*%s + 0.5*%s" % (score, fscore, gscore)
+        return score
 
     def compute_minmax(self, pointList):
         # Loop through pointList to find the min & max for the x, y, and z
@@ -314,9 +315,9 @@ class grasping:
 
         # Request the 8 Oriented bounding box points wrt to the object's frame.
         size = self.get_object_extents(req)
-        #pointcloud = self.get_obb_points(size)
-        pointcloud = list(pc2.read_points(req.object_points, skip_nans=True,
-                                          field_names=("x", "y", "z")))
+        pointcloud = self.get_obb_points(size)
+        # pointcloud = list(pc2.read_points(req.object_points, skip_nans=True,
+        #                                   field_names=("x", "y", "z")))
 
         # Generate TFs to project onto
         for theta in self.thetaList:
