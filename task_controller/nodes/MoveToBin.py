@@ -10,7 +10,7 @@ class MOVETOBIN(smach.State):
     def __init__(self, robot):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],
                              input_keys=['input', 'bin'], output_keys=['output'])
-        self.arm = robot.arm_left
+        self.arm = robot.arm_left_torso
 
     def execute(self, userdata):
         rospy.loginfo("Trying to move to bin '"+userdata.bin+"'...")
@@ -26,7 +26,7 @@ class MOVETOBIN(smach.State):
 
         self.arm.set_planner_id("RRTstarkConfigDefault")
         self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
-        if goto_pose(self.arm, pose.pose, [1, 5, 30, 60]):
+        if goto_pose(self.arm, pose.pose, [10, 30, 60]):
             return 'Success'
         else:
             return 'Failure'

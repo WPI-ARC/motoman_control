@@ -28,11 +28,11 @@ class grasping:
         self.description = "Online grasp planning code"
         self.offset = 0.01  # safety buffer between object and gripper is 1cm on each side. Total of 2cm
         self.fingerlength = 0.11  # palm to finger tip offset is 11cm
-        self.z_lowerboundoffset = 0.08  # move gripper up 1.5 cm to avoid lip when going straigh in
+        self.z_lowerboundoffset = 0.06  # move gripper up 1.5 cm to avoid lip when going straigh in
         self.z_upperboundoffset = 0.18
         self.gripperwidth = 0.155 - self.offset  # 0.155 is the gripper width in meters. 15.5cm        
         self.x_upperboundoffset = 0.04  # fingertip is allowed move at most 4cm beyond the lower bound value
-        self.x_lowerboundoffset = 0.1  # fingertip goes past nearest point cloud's x value by at least 4 cm 
+        self.x_lowerboundoffset = 0.05  # fingertip goes past nearest point cloud's x value by at least 4 cm 
         self.showOutput = False  # Enable to show print statements
         self.tf = tf.TransformListener(True, rospy.Duration(10.0))
         self.br = tf2_ros.TransformBroadcaster()
@@ -232,18 +232,10 @@ class grasping:
         return abs(max_y-min_y)
 
     def compute_depth(self, min_x, max_x, pointList):
-        x_lowerbound = min_x - self.fingerlength + self.x_lowerboundoffset
-        x_upperbound = max_x - self.fingerlength + self.x_upperboundoffset
-        depth = x_lowerbound  # depth currently simply set as the lowerbound later may want to make it as a function of if collision check fail, we can reselect the depth to use to be within the bound. current we don't have this function
-        return depth
+        return min_x - self.fingerlength + self.x_lowerboundoffset
 
     def compute_height(self, min_z, max_z):
-        z_lowerbound = min_z + self.z_lowerboundoffset
-        z_upperbound = max_z + self.z_upperboundoffset
-        height = z_lowerbound  # height currently set so gripper won't collide into the shelf lip. later we may want this as a function simliar to the function we may use for the depth calculation with collision check. 
-        if self.showOutput:
-            print "height: " + str(height)
-        return height
+        return min_z + self.z_lowerboundoffset
 
     def compute_y_mid(self, miny, maxy):
         y = (miny+maxy)/2
@@ -315,9 +307,9 @@ class grasping:
 
         # Request the 8 Oriented bounding box points wrt to the object's frame.
         size = self.get_object_extents(req)
-        pointcloud = self.get_obb_points(size)
-        # pointcloud = list(pc2.read_points(req.object_points, skip_nans=True,
-        #                                   field_names=("x", "y", "z")))
+        # pointcloud = self.get_obb_points(size)
+        pointcloud = list(pc2.read_points(req.object_points, skip_nans=True,
+                                          field_names=("x", "y", "z")))
 
         # Generate TFs to project onto
         for theta in self.thetaList:
@@ -360,7 +352,7 @@ class grasping:
             points = []
             for OBBPoint in pointcloud:
                 oldpt = numpy.array([[OBBPoint[0]], [OBBPoint[1]], [OBBPoint[2]], [1]])
-                projected_OBBPoint = numpy.dot(Tprojobj, oldpt)
+                projected_OBBPoint = numpy.dot(Tprojshelf, oldpt)
                 points.append(projected_OBBPoint)
             if self.showOutput:
                 print "List of transformed OBB points after projection to target projection frame"
@@ -396,20 +388,18 @@ class grasping:
 
                 # Trans_shelfproj = numpy.array([Tshelfproj_new[0,3], mid_y[1], Tshelfproj_new[2,3]+zoffset])
                 # Trans_shelfproj = numpy.array([Tshelfproj_new[0, 3]+depth, mid_y[1], Tshelfproj_new[2,3]]+height)
-                Trans_shelfproj = numpy.array([Tshelfproj_new[0, 3], Tshelfproj_new[1, 3], Tshelfproj_new[2, 3]+height])
+                Trans_shelfproj = numpy.array([Tshelfproj_new[0, 3], Tshelfproj_new[1, 3], Tshelfproj_new[2, 3]])
                 Rot_shelfproj = Tshelfproj_new[0:3, 0:3]
                 Tshelfproj_update = self.construct_4Dmatrix(Trans_shelfproj, Rot_shelfproj)
+                Tshelfproj_update[0, 3] += depth
+                Tshelfproj_update[2, 3] += min_z+self.z_lowerboundoffset
 
                 # Generate TF shelf to projection
                 proj = geometry_msgs.msg.Pose()
                 [trans, quat] = ExtractFromMatrix(Tshelfproj_update)
-                proj.position.x = trans[0]
-                proj.position.y = trans[1]
-                proj.position.z = trans[2]
-                proj.orientation.x = quat[0]
-                proj.orientation.y = quat[1]
-                proj.orientation.z = quat[2]
-                proj.orientation.w = quat[3]
+                proj.position.x, proj.position.y, proj.position.z = trans
+                proj.orientation.x, proj.orientation.y, proj.orientation.z, \
+                    proj.orientation.w = quat
                 tf_shelfproj = self.generate_tf('/shelf', '/projection', proj.position, proj.orientation)
                 self.broadcast_single_tf(tf_shelfproj)
 

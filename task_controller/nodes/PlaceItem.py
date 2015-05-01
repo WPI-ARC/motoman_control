@@ -13,7 +13,7 @@ class PLACEITEM(smach.State):
     def __init__(self, robot):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],
                              input_keys=['input'], output_keys=['output'])
-        self.arm = robot.arm_left
+        self.arm = robot.arm_left_torso
         self.gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
 
     def execute(self, userdata):
@@ -39,7 +39,7 @@ class PLACEITEM(smach.State):
         self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
         if not goto_pose(self.arm, pose, [10, 30, 60, 120]):
             return 'Failure'
-        
+
         request = gripperRequest(command="open")
         # TODO: Handle response error
         response = self.gripper_control.call(request)

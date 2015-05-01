@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <ros/console.h>
 #include <iostream>
 #include <trajectory_msgs/JointTrajectory.h>
 #include <trajectory_msgs/JointTrajectoryPoint.h>
@@ -15,6 +16,12 @@ std::vector<sensor_msgs::JointState> jointStates(4);
 
 bool move_callback(motoman_moveit::convert_trajectory_server::Request &req,
                    motoman_moveit::convert_trajectory_server::Response &res) {
+
+    if (req.jointTraj.points.size() == 0) {
+        ROS_WARN("Received empty trajectory, not doing anything.");
+        res.success = true;
+        return true;
+    }
 
     std::vector<sensor_msgs::JointState> currentStates(4);
 

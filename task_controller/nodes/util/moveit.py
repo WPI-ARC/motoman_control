@@ -5,9 +5,12 @@ import moveit_commander
 
 from geometry_msgs.msg import PoseStamped
 from moveit_msgs.msg import CollisionObject
+from motoman_moveit.srv import convert_trajectory_server
 
 
 scene = moveit_commander.PlanningSceneInterface()
+move = rospy.ServiceProxy("/convert_trajectory_service", convert_trajectory_server)
+
 
 def goto_pose(group, pose, times=[5, 20, 40, 60], with_shelf=True):
     """Moves the hand to a given `pose`, using the configured `group`. The
@@ -20,11 +23,13 @@ def goto_pose(group, pose, times=[5, 20, 40, 60], with_shelf=True):
     for t in times:
         group.set_planning_time(t)
         rospy.loginfo("Planning for "+str(t)+" seconds...")
-        result = group.go(pose)
-        if result:
-            if with_shelf:
-                remove_shelf()
-            return True
+        plan = group.plan(pose)
+        print move(plan.joint_trajectory)
+        # if result:
+        #     if with_shelf:
+        #         remove_shelf()
+        remove_shelf()
+        return True
     if with_shelf:
         remove_shelf()
     return False
@@ -41,9 +46,14 @@ def follow_path(group, path, collision_checking=True):
         avoid_collisions=collision_checking,
     )
     if success < 1:
-        rospy.logwarn("Cartesian trajectory could not be completed. Only solved for: '"+str(success)+"'...")
-        #return False
-    return group.execute(traj)
+        rospy.logwarn(
+            "Cartesian trajectory could not be completed. Only solved for: '"
+            + str(success) + "'..."
+        )
+        # return False
+    print move(traj.joint_trajectory)
+    return True
+
 
 def add_object(center, name="Object", radius=0.17):
     pose = PoseStamped()
@@ -57,6 +67,7 @@ def add_object(center, name="Object", radius=0.17):
         pose=pose,
         radius=radius,
     )
+
 
 def remove_object(name="Object"):
     co = CollisionObject()

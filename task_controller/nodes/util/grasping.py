@@ -20,6 +20,7 @@ def check_ik(group, pose, collision_checking=True):
     # request.ik_request.timeout.nsecs = 500000 # 5ms
     # request.ik_request.timeout = rospy.Duration(0.005)
     response = position_ik(request)
+    print response.error_code.val
     return response.error_code.val == 1
 
 
@@ -42,13 +43,13 @@ def execute_grasp(group, grasp, object_pose):
     if not follow_path(group, [group.get_current_pose().pose, grasp.pregrasp]):
         return False
     request = gripperRequest(command="close")
-    response = gripper_control.call(request)
+    print "Grabbing:", gripper_control.call(request)
 
     poses = [group.get_current_pose().pose]
     poses.append(deepcopy(poses[-1]))
-    poses[-1].position.z += 0.025
-    poses.append(deepcopy(grasp.approach))
-    poses[-1].position.z += 0.025
+    poses[-1].position.z += 0.032
+    poses.append(deepcopy(poses[-1]))
+    poses[-1].position.x = 0.50
     if not follow_path(group, poses):
         return False
     return True
