@@ -6,11 +6,12 @@
 #include <motoman_msgs/DynamicJointTrajectory.h>
 #include <motoman_msgs/DynamicJointPoint.h>
 #include <motoman_msgs/DynamicJointsGroup.h>
+#include <motoman_msgs/CmdJointTrajectoryEx.h>
 #include <sensor_msgs/JointState.h>
 
 #include <motoman_moveit/convert_trajectory_server.h>
 
-ros::Publisher completePub;
+ros::ServiceClient jointPathCommand;
 
 std::vector<sensor_msgs::JointState> jointStates(4);
 
@@ -257,23 +258,17 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req,
     completeTraj.points = trajPoints;
 
     // print trajectory message
-    std::cout << "##########   TRAJECTORY:   ##########" << std::endl;
-    std::cout << completeTraj << std::endl;
+    // std::cout << "##########   TRAJECTORY:   ##########" << std::endl;
+    // std::cout << completeTraj << std::endl;
 
-    // publish trrajectory
-    completePub.publish(completeTraj);
+    // Execute trajectory
+    motoman_msgs::CmdJointTrajectoryEx cmd;
+    cmd.request.trajectory = completeTraj;
+    jointPathCommand.call(cmd);
 
-    double trajDuration = 0;
-    trajDuration = msgTraj.points[msgSize-1].time_from_start.toSec();
-
-    // sleep for expected duration of trajectory (rounded up to nearest second)
-    for (int i = 0; i < (int)trajDuration + 1; i++) {
-        sleep(1.0);
-        std::cout << i + 1 << " seconds" << std::endl;
-    }
-
+    std::cout << cmd.response << std::endl;
     std::cout << "##########   COMPLETED TRAJECTORY   ##########" << std::endl;
-    res.success = true;
+    res.success = cmd.response.code.val == 1;
     return true;
 }
 
@@ -297,7 +292,7 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "convert_trajectory_server");
     ros::NodeHandle node_handle;
 
-    completePub = node_handle.advertise<motoman_msgs::DynamicJointTrajectory>("/joint_path_command", 1);
+    jointPathCommand = node_handle.serviceClient<motoman_msgs::CmdJointTrajectoryEx>("/joint_path_command");
 
     ros::Subscriber jointStateSub = node_handle.subscribe("/joint_states", 0, jointStateCallback);
 
