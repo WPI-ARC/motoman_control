@@ -33,6 +33,8 @@ class PICKITEM(smach.State):
         userdata.output = userdata.input
         self.points.publish(userdata.points)
 
+        
+
         # TODO: Handle response error
         response = self.grasp_generator(
             item=userdata.item,

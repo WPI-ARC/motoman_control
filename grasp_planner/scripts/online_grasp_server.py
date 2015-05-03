@@ -28,7 +28,7 @@ class grasping:
         self.description = "Online grasp planning code"
         self.offset = 0.01  # safety buffer between object and gripper is 1cm on each side. Total of 2cm
         self.fingerlength = 0.11  # palm to finger tip offset is 11cm
-        self.z_lowerboundoffset = 0.06  # move gripper up 1.5 cm to avoid lip when going straigh in
+        self.z_lowerboundoffset = 0.07  # move gripper up 1.5 cm to avoid lip when going straigh in
         self.z_upperboundoffset = 0.18
         self.gripperwidth = 0.155 - self.offset  # 0.155 is the gripper width in meters. 15.5cm        
         self.x_upperboundoffset = 0.04  # fingertip is allowed move at most 4cm beyond the lower bound value
