@@ -7,7 +7,7 @@ import moveit_commander
 
 from motoman_moveit.srv import convert_trajectory_server
 from trajlib.srv import GetTrajectory
-from util.shelf import add_shelf, remove_shelf
+from util.moveit import goto_pose
 # from util.moveit import goto_pose
 
 move = rospy.ServiceProxy("/convert_trajectory_service", convert_trajectory_server)
@@ -54,35 +54,3 @@ class MOVETOBIN(smach.State):
 
         print move(response.plan.joint_trajectory)
         return 'Success'
-
-
-def goto_pose(group, pose, times=[5, 20, 40, 60], with_shelf=True):
-    """Moves the hand to a given `pose`, using the configured `group`. The
-    planning time is modified based on the passed in `times` to try to
-    plan quickly if possible, but fall back on longer plans if
-    necessary. If `add_shelf` is true, a box model of the shelf is
-    added to the environment to avoid collisions."""
-    if with_shelf:
-        add_shelf()
-    for t in times:
-        group.set_planning_time(t)
-        rospy.loginfo("Planning for "+str(t)+" seconds...")
-        plan = group.plan(pose)
-
-        display_trajectory_publisher = rospy.Publisher('/move_group/display_planned_path',moveit_msgs.msg.DisplayTrajectory)
-        display_trajectory = moveit_msgs.msg.DisplayTrajectory();    
-        robot = moveit_commander.RobotCommander();
-        display_trajectory.trajectory_start = robot.get_current_state()
-        display_trajectory.trajectory.append(plan)
-        display_trajectory_publisher.publish(display_trajectory)
-        print plan
-        raw_input("Continue? ")
-
-        if plan:
-            print move(plan.joint_trajectory)
-            if with_shelf:
-                remove_shelf()
-            return True
-    if with_shelf:
-        remove_shelf()
-    return False

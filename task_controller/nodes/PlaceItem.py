@@ -11,20 +11,12 @@ from util.shelf import bin_pose
 class PLACEITEM(smach.State):
 
     def __init__(self, robot):
-        smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],
-                             input_keys=['input'], output_keys=['output'])
+        smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'])
         self.arm = robot.arm_left_torso
         self.gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
 
     def execute(self, userdata):
         rospy.loginfo("Trying to place...")
-        print "Input data: " + str(userdata.input)
-
-        # TODO: Remove?
-        output = {}
-        output['data'] = userdata.input
-        output['error'] = "None"
-        userdata.output = output
 
         pose = Pose()
         pose.position.x = 0.212677

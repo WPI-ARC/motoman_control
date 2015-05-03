@@ -33,9 +33,8 @@ class MotomanController:
 
         self.sm = smach.StateMachine(
             outcomes=['DONE', 'FAILED', 'SAFE'],
-            # input_keys=['sm_input', 'bin', 'item'],
-            input_keys=['sm_input'],
-            output_keys=['sm_output']
+            input_keys=[],
+            output_keys=[]
         )
 
         # Populate the state machine from the modules
@@ -60,40 +59,34 @@ class MotomanController:
                 'PickAndPlaceItem',
                 PickAndPlaceItem.PICKANDPLACEITEM(self.robot),
                 transitions={'Success': 'Scheduler', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
-                remapping={'input': 'sm_input', 'output': 'sm_data'}
             )
 
             smach.StateMachine.add(
                 'ScoopAndPickItem',
                 ScoopAndPickItem.SCOOPANDPICKITEM(self.robot),
                 transitions={'Success': 'Scheduler', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
-                remapping={'input': 'sm_input', 'output': 'sm_data'}
             )
 
             smach.StateMachine.add(
                 'PickScoop',
                 PickScoop.PICKSCOOP(self.robot),
                 transitions={'Success': 'Scheduler', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
-                remapping={'input': 'sm_input', 'output': 'sm_data'}
             )
 
             smach.StateMachine.add(
                 'FinishTask', FinishTask.FINISHTASK(),
                 transitions={'Success': 'DONE', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
-                remapping={'input': 'sm_data', 'output': 'sm_output'}
             )
 
             smach.StateMachine.add(
                 'SafeMode', self.safemode,
                 transitions={'Safed': 'SAFE'},
-                remapping={'input': 'sm_data', 'output': 'sm_output'}
             )
 
             smach.StateMachine.add(
                 'ErrorHandler', ErrorHandler.ERRORHANDLER(),
                 transitions={'ReMove': 'SafeMode', 'ReScan': 'SafeMode', 'RePick': 'SafeMode',
                              'ReFinish': 'SafeMode', 'Failed': 'FAILED', 'Fatal': 'SafeMode'},
-                remapping={'input': 'sm_data', 'output': 'sm_output'}
             )
 
         # Set up the introspection server
