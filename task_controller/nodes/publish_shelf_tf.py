@@ -25,7 +25,7 @@ if __name__ == '__main__':
     tf.transform.rotation.w = 1
 
     br = tf2_ros.TransformBroadcaster()
-    rate = rospy.Rate(100.0)
+    rate = rospy.Rate(250.0)
     while (not rospy.is_shutdown()):
         tf.header.stamp = rospy.Time.now()
         br.sendTransform(tf)

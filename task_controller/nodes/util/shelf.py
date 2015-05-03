@@ -6,14 +6,14 @@ from geometry_msgs.msg import PoseStamped
 
 def add_shelf():
     pose = get_shelf_pose()
-    pose.pose.position.y += 1.25
+    pose.pose.position.z += 1.25
     print "Adding shelf", scene._pub_co.get_num_connections()
     while scene._pub_co.get_num_connections() == 0:
         rospy.sleep(0.01)
         print "Waiting..."
     scene.add_box(
         name="shelf",
-        pose=get_shelf_pose(),
+        pose=pose,
         size=(0.86, 2.5, 0.86)
     )
     print "Added"
