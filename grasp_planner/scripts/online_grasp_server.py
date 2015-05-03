@@ -307,9 +307,9 @@ class grasping:
 
         # Request the 8 Oriented bounding box points wrt to the object's frame.
         size = self.get_object_extents(req)
-        # pointcloud = self.get_obb_points(size)
-        pointcloud = list(pc2.read_points(req.object_points, skip_nans=True,
-                                          field_names=("x", "y", "z")))
+        pointcloud = self.get_obb_points(size)
+        # pointcloud = list(pc2.read_points(req.object_points, skip_nans=True,
+        #                                   field_names=("x", "y", "z")))
 
         # Generate TFs to project onto
         for theta in self.thetaList:

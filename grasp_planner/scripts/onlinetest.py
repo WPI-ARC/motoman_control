@@ -9,12 +9,14 @@ import traceback
 import time
 import openravepy
 import geometry_msgs.msg
+import sensor_msgs.msg
 import moveit_commander
 from numpy import *
 from grasp_planner.srv import apcGraspDB, apcGraspDBResponse
 from std_msgs.msg import Header
 from geometry_msgs.msg import PoseArray, PoseStamped, Pose, Point, Quaternion
 from grasp_planner.msg import apcGraspPose, apcGraspArray
+from sensor_msgs.msg import PointCloud2
 
 def goto_pose(group, pose, times=[5, 20, 30], with_shelf=False):
     """Moves the hand to a given `pose`, using the configured `group`. The
@@ -61,6 +63,7 @@ def main():
         item = 'expo_dry_erase_board_eraser' # Set response item
         #item = 'cheezit_big_original'
         tfs = []
+        pts = []
 
         msg = geometry_msgs.msg.Pose()
         msg.position.x = 0.885315-0.2
@@ -69,16 +72,21 @@ def main():
         msg.orientation.x = 0
         msg.orientation.y = 0
         msg.orientation.z = 0
-        msg.orientation.w = 1        
+        msg.orientation.w = 1
 
-        response = client(item, msg)
+        points = sensor_msgs.msg.PointCloud2()
+        points.data = pts
+
+
+        response = client(item, msg, points)
         print "returned pose"
         print response.status
-        print response.apcGraspArray
+        print response.grasps
 
-        grasps = response.apcGraspArray.grasps
+
+        grasps = response.grasps.grasps
         for i in range(len(grasps)):
-            grasp = grasps[i].posegrasp        
+            grasp = grasps[i].pregrasp        
             t = geometry_msgs.msg.TransformStamped()
             t.header.stamp = rospy.Time.now()
             t.header.frame_id = "base_link"
@@ -86,7 +94,7 @@ def main():
             t.transform.translation = grasp.position
             t.transform.rotation = grasp.orientation
             tfs.append(t)
-            approach = grasps[i].poseapproach
+            approach = grasps[i].approach
             t = geometry_msgs.msg.TransformStamped()
             t.header.stamp = rospy.Time.now()
             t.header.frame_id = "base_link"
@@ -103,30 +111,30 @@ def main():
                 br.sendTransform(t)
             rate.sleep()
 
-        # i = 0
-        # grasp = grasps[i].posegrasp        
-        # t = geometry_msgs.msg.TransformStamped()
-        # t.header.stamp = rospy.Time.now()
-        # t.header.frame_id = "base_link"
-        # t.child_frame_id = "grasp"+str(i)
-        # t.transform.translation = grasp.position
-        # t.transform.rotation = grasp.orientation
-        # tfs.append(t)
-        # approach = grasps[i].poseapproach
-        # t = geometry_msgs.msg.TransformStamped()
-        # t.header.stamp = rospy.Time.now()
-        # t.header.frame_id = "base_link"
-        # t.child_frame_id = "approach"+str(i)
-        # t.transform.translation = approach.position
-        # t.transform.rotation = approach.orientation
-        # tfs.append(t)
-        # br = tf2_ros.TransformBroadcaster()
-        # rate = rospy.Rate(1000)        
-        # for time in range(0,1000):
-        #     for tf in tfs:
-        #         tf.header.stamp = rospy.Time.now()
-        #         br.sendTransform(tf)                
-        #     rate.sleep()
+        i = 0
+        grasp = grasps[i].posegrasp        
+        t = geometry_msgs.msg.TransformStamped()
+        t.header.stamp = rospy.Time.now()
+        t.header.frame_id = "base_link"
+        t.child_frame_id = "grasp"+str(i)
+        t.transform.translation = grasp.position
+        t.transform.rotation = grasp.orientation
+        tfs.append(t)
+        approach = grasps[i].poseapproach
+        t = geometry_msgs.msg.TransformStamped()
+        t.header.stamp = rospy.Time.now()
+        t.header.frame_id = "base_link"
+        t.child_frame_id = "approach"+str(i)
+        t.transform.translation = approach.position
+        t.transform.rotation = approach.orientation
+        tfs.append(t)
+        br = tf2_ros.TransformBroadcaster()
+        rate = rospy.Rate(1000)        
+        for time in range(0,1000):
+            for tf in tfs:
+                tf.header.stamp = rospy.Time.now()
+                br.sendTransform(tf)                
+            rate.sleep()
 
         rospy.loginfo("Trying to move to initial pose...")
         approachpose = grasps[i].poseapproach
