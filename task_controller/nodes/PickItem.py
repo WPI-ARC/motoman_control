@@ -9,6 +9,7 @@ from geometry_msgs.msg import TransformStamped
 from sensor_msgs.msg import PointCloud2
 
 from util.grasping import filterGrasps, execute_grasp
+from util.shelf import Shelf, FULL_SHELF
 
 
 class PICKITEM(smach.State):
@@ -72,19 +73,20 @@ class PICKITEM(smach.State):
         #         br.sendTransform(t)
         #     rate.sleep()
 
-        grasps = filterGrasps(self.arm, response.grasps.grasps)
-        try:
-            grasp = grasps.next()
-        except StopIteration:
-            rospy.logwarn("No online grasps found.")
-            return "Failure"
-        grasps = [grasp]
-        print "Grasp:", grasps[0]
+        with Shelf(FULL_SHELF):
+            grasps = filterGrasps(self.arm, response.grasps.grasps)
+            try:
+                grasp = grasps.next()
+            except StopIteration:
+                rospy.logwarn("No online grasps found.")
+                return "Failure"
+            grasps = [grasp]
+            print "Grasp:", grasps[0]
 
-        self.arm.set_planner_id("RRTstarkConfigDefault")
-        self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
+            self.arm.set_planner_id("RRTstarkConfigDefault")
+            self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
 
-        if not execute_grasp(self.arm, grasps[0], userdata.pose.pose):
-            return "Failure"
+            if not execute_grasp(self.arm, grasps[0], userdata.pose.pose):
+                return "Failure"
 
-        return 'Success'
+            return 'Success'

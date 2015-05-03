@@ -5,7 +5,8 @@ from copy import deepcopy
 from moveit_msgs.srv import GetPositionIK, GetPositionIKRequest
 from gripper_srv.srv import gripper, gripperRequest
 
-from moveit import add_object, remove_object, goto_pose, follow_path
+from moveit import goto_pose, follow_path, NO_SHELF
+from collision import add_object, remove_object
 
 position_ik = rospy.ServiceProxy("compute_ik", GetPositionIK, persistent=True)
 
@@ -36,7 +37,7 @@ gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
 
 def execute_grasp(group, grasp, object_pose):
     # add_object(object_pose)
-    if not goto_pose(group, grasp.approach, [1, 5, 30, 60], with_shelf=False):
+    if not goto_pose(group, grasp.approach, [1, 5, 30, 60], shelf=NO_SHELF):
         # remove_object()
         return False
     # remove_object()

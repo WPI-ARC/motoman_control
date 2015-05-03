@@ -6,35 +6,28 @@ import moveit_commander
 from geometry_msgs.msg import PoseStamped
 from moveit_msgs.msg import CollisionObject
 from motoman_moveit.srv import convert_trajectory_server
+from shelf import Shelf, NO_SHELF, SIMPLE_SHELF, FULL_SHELF
+from collision import scene
 
 
-scene = moveit_commander.PlanningSceneInterface()
 move = rospy.ServiceProxy("/convert_trajectory_service", convert_trajectory_server)
 
 
-def goto_pose(group, pose, times=[5, 20, 40, 60], with_shelf=True):
+def goto_pose(group, pose, times=[5, 20, 40, 60], shelf=SIMPLE_SHELF):
     """Moves the hand to a given `pose`, using the configured `group`. The
     planning time is modified based on the passed in `times` to try to
     plan quickly if possible, but fall back on longer plans if
     necessary. If `add_shelf` is true, a box model of the shelf is
     added to the environment to avoid collisions."""
-    if with_shelf:
-        add_shelf()
-    for t in times:
-        group.set_planning_time(t)
-        rospy.loginfo("Planning for "+str(t)+" seconds...")
-        plan = group.plan(pose)
-        print "Plan:", plan
-        if len(plan.joint_trajectory.points) > 0:
-            print "Move:", move(plan.joint_trajectory)
-            # if result:
-            #     if with_shelf:
-            #         remove_shelf()
-            remove_shelf()
-            return True
-    if with_shelf:
-        remove_shelf()
-    return False
+    with Shelf(SIMPLE_SHELF):
+        for t in times:
+            group.set_planning_time(t)
+            rospy.loginfo("Planning for "+str(t)+" seconds...")
+            plan = group.plan(pose)
+            if len(plan.joint_trajectory.points) > 0:
+                print "Move:", move(plan.joint_trajectory)
+                return True
+        return False
 
 
 def follow_path(group, path, collision_checking=True):
@@ -55,31 +48,3 @@ def follow_path(group, path, collision_checking=True):
         # return False
     print move(traj.joint_trajectory)
     return True
-
-
-def add_object(center, name="Object", radius=0.17):
-    pose = PoseStamped()
-    pose.header.frame_id = "/base_link"
-    pose.header.stamp = rospy.Time.now()
-    pose.pose = center
-    while scene._pub_co.get_num_connections() == 0:
-        rospy.sleep(0.01)
-    scene.add_sphere(
-        name=name,
-        pose=pose,
-        radius=radius,
-    )
-
-
-def remove_object(name="Object"):
-    co = CollisionObject()
-    co.operation = CollisionObject.REMOVE
-    co.id = name
-    co.header.frame_id = "/base_link"
-    co.header.stamp = rospy.Time.now()
-    while scene._pub_co.get_num_connections() == 0:
-        rospy.sleep(0.01)
-    scene._pub_co.publish(co)
-
-
-from shelf import add_shelf, remove_shelf
