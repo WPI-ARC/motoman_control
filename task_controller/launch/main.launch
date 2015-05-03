@@ -1,4 +1,6 @@
+<?xml version="1.0"?>
 <launch>
+  <!-- Trajectory Execution Server -->
   <node name="convert_trajectory_server" pkg="motoman_moveit" type="convert_trajectory_server" output="screen"/>
   <arg name="speed" default="slow" />
     
@@ -21,13 +23,6 @@
   <arg name="version0" default="false" />
 
   <rosparam param="/move_group/trajectory_execution/execution_duration_monitoring">true</rosparam>  
- 
-  <!-- Load the robot_description parameter before launching ROS-I nodes 
-  <include file="$(find motoman_sda10f_moveit_config)/launch/planning_context.launch" >
-    <arg name="load_robot_description" value="true" />
-    <arg name="joint_limits"
-         value="$(find motoman_sda10f_moveit_config)/config/joint_limits_$(arg speed).yaml" />
-  </include> -->
 
   <!-- run the "real robot" interface nodes -->
   <!--   - this typically includes: robot_state, motion_interface, and joint_7_trajectory_action nodes -->
@@ -55,6 +50,7 @@
   
   <!-- <include file="$(find motoman_sda10f_moveit_config)/launch/default_warehouse_db.launch" /> -->
 
-  <!-- Publish shelf model -->
+  <!-- Environment models -->
+  <rosparam command="load" file="$(find task_controller)/cfg/shelf.yaml" />
   <node pkg="apc_models" type="publish_lab.py" name="publish_lab" />
 </launch>

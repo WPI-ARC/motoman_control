@@ -6,24 +6,30 @@ from geometry_msgs.msg import PoseStamped
 from moveit import scene, remove_object
 
 
-def add_shelf():
+def get_shelf_pose(prefix="/shelf"):
     pose = PoseStamped()
     pose.header.frame_id = "/base_link"
     pose.header.stamp = rospy.Time.now()
-    pose.pose.position.x = 1.25
-    pose.pose.position.y = 0
-    pose.pose.position.z = 1.25
-    pose.pose.orientation.x = 0.5
-    pose.pose.orientation.y = 0.5
-    pose.pose.orientation.z = 0.5
-    pose.pose.orientation.w = 0.5
+    pose.pose.position.x = rospy.get_param(prefix+"/position/x")
+    pose.pose.position.y = rospy.get_param(prefix+"/position/y")
+    pose.pose.position.z = rospy.get_param(prefix+"/position/z")
+    pose.pose.orientation.x = rospy.get_param(prefix+"/orientation/x")
+    pose.pose.orientation.y = rospy.get_param(prefix+"/orientation/y")
+    pose.pose.orientation.z = rospy.get_param(prefix+"/orientation/z")
+    pose.pose.orientation.w = rospy.get_param(prefix+"/orientation/w")
+    return pose
+
+
+def add_shelf():
+    pose = get_shelf_pose()
+    pose.pose.position.y += 1.25
     print "Adding shelf", scene._pub_co.get_num_connections()
     while scene._pub_co.get_num_connections() == 0:
         rospy.sleep(0.01)
         print "Waiting..."
     scene.add_box(
         name="shelf",
-        pose=pose,
+        pose=get_shelf_pose(),
         size=(0.86, 2.5, 0.86)
     )
     print "Added"
