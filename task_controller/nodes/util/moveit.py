@@ -30,6 +30,7 @@ def goto_pose(group, pose, times=[5, 20, 40, 60], with_shelf=True):
         #     if with_shelf:
         #         remove_shelf()
         remove_shelf()
+        rospy.sleep(1)
         return True
     if with_shelf:
         remove_shelf()
@@ -53,6 +54,7 @@ def follow_path(group, path, collision_checking=True):
         )
         # return False
     print move(traj.joint_trajectory)
+    rospy.sleep(1)
     return True
 
 

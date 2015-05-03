@@ -44,10 +44,10 @@ def execute_grasp(group, grasp, object_pose):
         return False
 
     request = gripperRequest(command="pinch")
-    print "change to pinch mode:", gripper_control.call(request)
+    print "Change to pinch mode:", gripper_control(request)
 
     request = gripperRequest(command="close")
-    print "Grabbing:", gripper_control.call(request)
+    print "Grabbing:", gripper_control(request)
 
     poses = [group.get_current_pose().pose]
     poses.append(deepcopy(poses[-1]))

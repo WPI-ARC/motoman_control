@@ -28,13 +28,13 @@ class SCANFORITEM(smach.State):
         userdata.output = output
 
         for i in range(5):
-            response = self.sample(command=userdata.bin)
-            print "Sample:", response
+            print "Reset:", self.sample(command="reset")
+            print "Sample:", self.sample(command=userdata.bin)
             try:
                 response = self.process(
                     bin=userdata.bin,
                     target=APCObject(name=userdata.item, number=1),
-                    objects=[APCObject(name=userdata.item, number=1)],
+                    objects=[],
                 )
                 userdata.pose = self.tf.transformPose("/base_link", response.pose)
                 userdata.points = response.object_points
@@ -42,6 +42,6 @@ class SCANFORITEM(smach.State):
                 userdata.output = userdata.input
                 return 'Success'
             except rospy.ServiceException as e:
-                rospy.logwarn("Error sampling: "+str(e))
+                rospy.logwarn("Error process: "+str(e))
         rospy.logwarn("Can't find "+userdata.item+"...")
         return 'Failure'

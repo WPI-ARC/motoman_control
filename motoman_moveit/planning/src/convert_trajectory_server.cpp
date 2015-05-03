@@ -266,6 +266,14 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req,
     cmd.request.trajectory = completeTraj;
     jointPathCommand.call(cmd);
 
+    // sleep for expected duration of trajectory (rounded up to nearest second)
+    double trajDuration = 0;
+    trajDuration = msgTraj.points[msgSize-1].time_from_start.toSec();
+    for (int i = 0; i < (int)trajDuration + 1; i++) {
+        sleep(1.0);
+        std::cout << i + 1 << " seconds" << std::endl;
+    }
+
     std::cout << cmd.response << std::endl;
     std::cout << "##########   COMPLETED TRAJECTORY   ##########" << std::endl;
     res.success = cmd.response.code.val == 1;
