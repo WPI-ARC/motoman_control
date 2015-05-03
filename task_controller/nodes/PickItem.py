@@ -36,6 +36,7 @@ class PICKITEM(smach.State):
             item=userdata.item,
             object_pose=userdata.pose.pose,
             object_points=userdata.points,
+            bin=userdata.bin,
         )
         # for grasp in response.grasps.grasps:
         #     grasp.poseapproach = deepcopy(grasp.pregrasp)
