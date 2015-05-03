@@ -40,7 +40,7 @@ class MOVETOBIN(smach.State):
         if self.arm.get_current_joint_values() != start:
             self.arm.set_planner_id("RRTstarkConfigDefault")
             self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
-            if not goto_pose(self.arm, start, [10, 30, 60, 120]):
+            if not goto_pose(self.arm, start, [1, 10, 30, 60, 120]):
                 return 'Failure'
 
         display_trajectory_publisher = rospy.Publisher('/move_group/display_planned_path', moveit_msgs.msg.DisplayTrajectory)
@@ -50,7 +50,6 @@ class MOVETOBIN(smach.State):
         display_trajectory.trajectory.append(response.plan)
         display_trajectory_publisher.publish(display_trajectory)
         print response.plan
-        raw_input("Continue? ")
 
         print move(response.plan.joint_trajectory)
         return 'Success'

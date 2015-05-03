@@ -2,38 +2,45 @@ import roslib; roslib.load_manifest('task_controller')
 import rospy
 import smach
 
-from geometry_msgs.msg import Pose
-from gripper_srv.srv import gripper, gripperRequest
-
+from gripper_srv.srv import gripper
+from motoman_moveit.srv import convert_trajectory_server
+from trajlib.srv import GetTrajectory
 from util.moveit import goto_pose
-from util.shelf import bin_pose
+
+move = rospy.ServiceProxy("/convert_trajectory_service", convert_trajectory_server)
+
 
 class PLACEITEM(smach.State):
 
     def __init__(self, robot):
-        smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'])
+        smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],
+                             input_keys=['bin'], output_keys=[])
         self.arm = robot.arm_left_torso
         self.gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
+        self.trajlib = rospy.ServiceProxy("/trajlib", GetTrajectory)
 
     def execute(self, userdata):
-        rospy.loginfo("Trying to place...")
+        rospy.loginfo("Trying to place from bin '"+userdata.bin+"'...")
 
-        pose = Pose()
-        pose.position.x = 0.212677
-        pose.position.y = 0.492155
-        pose.position.z = 0.507941
-        pose.orientation.x = -0.030455
-        pose.orientation.y = -0.0479809
-        pose.orientation.z = -0.790298
-        pose.orientation.w = 0.610082
+        response = self.trajlib(task="Drop", bin_num=userdata.bin)
+        # plan = self.trajlib(task="Drop", bin_num="A")
+        print self.arm.get_active_joints()
+        print response.plan.joint_trajectory.joint_names
+        print self.arm.get_current_joint_values()
+        response.plan.joint_trajectory.points.pop(0)
+        print response.plan.joint_trajectory.points[0].positions
+        print response.plan.joint_trajectory.points[1].positions
+        print response.plan.joint_trajectory.points[2].positions
 
-        self.arm.set_planner_id("RRTstarkConfigDefault")
-        self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
-        if not goto_pose(self.arm, pose, [10, 30, 60, 120]):
-            return 'Failure'
+        start = list(response.plan.joint_trajectory.points[0].positions)
+        print start
 
-        request = gripperRequest(command="open")
-        # TODO: Handle response error
-        response = self.gripper_control.call(request)
-        print "Open Gripper:", response
+        if self.arm.get_current_joint_values() != start:
+            self.arm.set_planner_id("RRTstarkConfigDefault")
+            self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
+            if not goto_pose(self.arm, start, [1, 10, 30, 60, 120]):
+                return 'Failure'
+
+        print move(response.plan.joint_trajectory)
+        print "Open Gripper:", self.gripper_control(command="open")
         return 'Success'
