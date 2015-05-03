@@ -10,6 +10,7 @@ Panels:
         - /MotionPlanning1/Scene Robot1
         - /MotionPlanning1/Planning Request1
         - /MotionPlanning1/Planned Path1
+        - /TF1
         - /TF1/Frames1
         - /Pose1
         - /PointCloud22

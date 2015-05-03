@@ -1,5 +1,6 @@
 string item
-geometry_msgs/Pose Trob_obj
+geometry_msgs/Pose object_pose
+sensor_msgs/PointCloud2 object_points
 ---
 bool status
-grasp_planner/apcGraspArray apcGraspArray
+grasp_planner/apcGraspArray grasps

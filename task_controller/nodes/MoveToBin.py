@@ -7,9 +7,11 @@ import moveit_commander
 
 from motoman_moveit.srv import convert_trajectory_server
 from trajlib.srv import GetTrajectory
-from util import add_shelf, remove_shelf
+from util.shelf import add_shelf, remove_shelf
+# from util.moveit import goto_pose
 
 move = rospy.ServiceProxy("/convert_trajectory_service", convert_trajectory_server)
+
 
 class MOVETOBIN(smach.State):
 
@@ -41,10 +43,9 @@ class MOVETOBIN(smach.State):
             if not goto_pose(self.arm, start, [10, 30, 60, 120]):
                 return 'Failure'
 
-
-        display_trajectory_publisher = rospy.Publisher('/move_group/display_planned_path',moveit_msgs.msg.DisplayTrajectory)
-        display_trajectory = moveit_msgs.msg.DisplayTrajectory();    
-        robot = moveit_commander.RobotCommander();
+        display_trajectory_publisher = rospy.Publisher('/move_group/display_planned_path', moveit_msgs.msg.DisplayTrajectory)
+        display_trajectory = moveit_msgs.msg.DisplayTrajectory()
+        robot = moveit_commander.RobotCommander()
         display_trajectory.trajectory_start = robot.get_current_state()
         display_trajectory.trajectory.append(response.plan)
         display_trajectory_publisher.publish(display_trajectory)

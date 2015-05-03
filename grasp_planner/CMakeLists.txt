@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   cmake_modules
   geometry_msgs
+  sensor_msgs
   message_runtime
   cmake_modules
 )
@@ -61,7 +62,6 @@ add_message_files(
 add_service_files(
   FILES
   apcGraspDB.srv
-  graspDB.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -76,6 +76,7 @@ generate_messages(
   DEPENDENCIES
   std_msgs  # Or other packages containing msgs
   geometry_msgs
+  sensor_msgs
 )
 
 ###################################

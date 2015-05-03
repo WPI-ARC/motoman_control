@@ -1,106 +1,10 @@
 
 import rospy
 
-import moveit_commander
-
 from geometry_msgs.msg import PoseStamped
-from moveit_msgs.msg import CollisionObject
-from moveit_msgs.srv import GetPositionIK, GetPositionIKRequest
-from gripper_srv.srv import gripper, gripperRequest
 
-scene = moveit_commander.PlanningSceneInterface()
+from moveit import scene, remove_object
 
-
-def goto_pose(group, pose, times=[5, 20, 40, 60], with_shelf=True):
-    """Moves the hand to a given `pose`, using the configured `group`. The
-    planning time is modified based on the passed in `times` to try to
-    plan quickly if possible, but fall back on longer plans if
-    necessary. If `add_shelf` is true, a box model of the shelf is
-    added to the environment to avoid collisions."""
-    if with_shelf:
-        add_shelf()
-    for t in times:
-        group.set_planning_time(t)
-        rospy.loginfo("Planning for "+str(t)+" seconds...")
-        result = group.go(pose)
-        if result:
-            if with_shelf:
-                remove_shelf()
-            return True
-    if with_shelf:
-        remove_shelf()
-    return False
-
-
-def follow_path(group, path, collision_checking=True):
-    """Follows a cartesian path using a linear interpolation of the given
-    `path`. The `collision_checking` parameter controls whether or not
-    to check the path for collisions with the environment."""
-    traj, success = group.compute_cartesian_path(
-        path,
-        0.01,  # 1cm interpolation resolution
-        0.0,  # jump_threshold disabled
-        avoid_collisions=collision_checking,
-    )
-    if success < 1:
-        rospy.logwarn("Cartesian trajectory could not be completed. Only solved for: '"+str(success)+"'...")
-        #return False
-    return group.execute(traj)
-
-position_ik = rospy.ServiceProxy("compute_ik", GetPositionIK)
-def check_ik(group, pose, collision_checking=True):
-    request = GetPositionIKRequest()
-    request.ik_request.group_name = group.get_name();
-    request.ik_request.pose_stamped.pose = pose
-    request.ik_request.avoid_collisions = True
-    response = position_ik.call(request)
-    print response
-    return response.error_code.val == 1
-
-def filterGrasps(group, grasps):
-    filtered = []
-    for grasp in grasps:
-        if check_ik(group, grasp.posegrasp) and check_ik(group, grasp.poseapproach):
-            filtered.append(grasp)
-    return filtered
-
-gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
-def execute_grasp(group, grasp, object_pose):
-    add_object(object_pose)
-    if not goto_pose(group, grasp.poseapproach, [1, 5, 30, 60]):
-        remove_object()
-        return False
-    remove_object()
-    if not follow_path(group, [group.get_current_pose().pose, grasp.posegrasp]):
-        return False
-    request = gripperRequest(command="close")
-    response = gripper_control.call(request)
-    if not follow_path(group, [group.get_current_pose().pose, grasp.poseapproach]):
-        return False
-    return True
-
-def add_object(center, name="Object", radius=0.17):
-    pose = PoseStamped()
-    pose.header.frame_id = "/base_link"
-    pose.header.stamp = rospy.Time.now()
-    pose.pose = center
-    while scene._pub_co.get_num_connections() == 0:
-        rospy.sleep(0.01)
-    scene.add_sphere(
-        name=name,
-        pose=pose,
-        radius=radius,
-    )
-
-def remove_object(name="Object"):
-    co = CollisionObject()
-    co.operation = CollisionObject.REMOVE
-    co.id = name
-    co.header.frame_id = "/base_link"
-    co.header.stamp = rospy.Time.now()
-    while scene._pub_co.get_num_connections() == 0:
-        rospy.sleep(0.01)
-    scene._pub_co.publish(co)
 
 def add_shelf():
     pose = PoseStamped()
@@ -127,6 +31,7 @@ def add_shelf():
 
 def remove_shelf():
     remove_object("shelf")
+
 
 def bin_pose(bin, bin_x=1.32, bin_y=0, bin_z=-0.01):
     # Setting Configuration:
@@ -203,17 +108,9 @@ def bin_pose(bin, bin_x=1.32, bin_y=0, bin_z=-0.01):
         pose.pose.position.y = bin_y - Right_horizontal_ShiftValue
         pose.pose.position.z = bin_z + BottomLayer_vertical_shiftvalue
     else:
-        raise Exception("Bin `%s` not supported."%bin)
+        raise Exception("Bin `%s` not supported." % bin)
         # TODO: Throw exception
 
-    #pose.pose.orientation.x = -0.12384;
-    #pose.pose.orientation.y = 0.0841883;
-    #pose.pose.orientation.z = -0.730178;
-    #pose.pose.orientation.w = 0.666646;
-    #pose.pose.orientation.x = 0.5
-    #pose.pose.orientation.y = -0.5
-    #pose.pose.orientation.z = -0.5
-    #pose.pose.orientation.w = 0.5
     pose.pose.orientation.x = -0.484592
     pose.pose.orientation.y = 0.384602
     pose.pose.orientation.z = 0.615524

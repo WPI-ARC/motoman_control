@@ -7,7 +7,8 @@ from geometry_msgs.msg import TransformStamped, Pose, Quaternion
 from gripper_srv.srv import gripper
 from motoman_moveit.srv import convert_trajectory_server
 
-from util import filterGrasps, execute_grasp
+from util.grasping import filterGrasps, execute_grasp
+from util.scoop import allow_scoop_collision, disallow_scoop_collision, attach_scoop
 from copy import deepcopy
 
 
@@ -31,6 +32,9 @@ class PICKSCOOP(smach.State):
 
         print self.gripper_control(command="70")
 
+        self.arm.detach_object("Scoop")
+        raw_input("Continue?")
+
         orientation = Quaternion(x=-0.083657, y=0.71336, z=0.69142, w=0.077827)
         initial = Pose(orientation=orientation)
         approach = Pose(orientation=orientation)
@@ -49,8 +53,9 @@ class PICKSCOOP(smach.State):
         self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
         self.arm.set_planning_time(1)
         plan = self.arm.plan(initial)
-        #print plan
         print self.move(plan.joint_trajectory)
+
+        allow_scoop_collision()
 
         poses = [self.arm.get_current_pose().pose, approach, target]
         traj, success = self.arm.compute_cartesian_path(
@@ -59,7 +64,6 @@ class PICKSCOOP(smach.State):
             0.0,  # jump_threshold disabled
             avoid_collisions=True,
         )
-        #print traj
         if success < 1:
             rospy.logwarn("Cartesian trajectory could not be completed. Only solved for: '"+str(success)+"'...")
 
@@ -67,6 +71,7 @@ class PICKSCOOP(smach.State):
         print self.move(traj.joint_trajectory)
         print self.gripper_control(command="close")
 
+        attach_scoop(self.arm)
 
         raw_input("Continue?")
         print "Picking scoop"
