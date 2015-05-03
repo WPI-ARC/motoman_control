@@ -3,8 +3,6 @@ import rospy
 
 from geometry_msgs.msg import PoseStamped
 
-from moveit import scene, remove_object
-
 
 def add_shelf():
     pose = PoseStamped()
@@ -117,3 +115,6 @@ def bin_pose(bin, bin_x=1.32, bin_y=0, bin_z=-0.01):
     pose.pose.orientation.w = -0.488244
 
     return pose
+
+
+from moveit import scene, remove_object

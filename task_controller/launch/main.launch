@@ -55,6 +55,7 @@
   </include>
   
   <!-- <include file="$(find motoman_sda10f_moveit_config)/launch/default_warehouse_db.launch" /> -->
+  <node pkg="trajlib" type="trajectory_server.py" name="trajectory_server" />
 
   <!-- Publish shelf model -->
   <node pkg="apc_models" type="publish_lab.py" name="publish_lab" />
