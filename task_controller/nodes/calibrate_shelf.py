@@ -4,12 +4,22 @@ import roslib; roslib.load_manifest('task_controller')
 import rospy
 import subprocess
 import moveit_commander
+import yaml
+import os
 
 from geometry_msgs.msg import Pose, Point, Quaternion
 
 depth = 0.87  # Depth of shelf
 palm_offset = 0.165  # Offset from tool to palm
 
+# Currently shelf + orientation are not calibrated
+z = -0.045
+orientation = {
+    "x": 0.5,
+    "y": 0.5,
+    "z": 0.5,
+    "w": 0.5,
+}
 
 default_orientation = Quaternion(
     x=0.557211015648,
@@ -53,5 +63,22 @@ if __name__ == '__main__':
     raw_input("Hit enter to continue ")
     left = robot.arm_left.get_current_pose().pose
     right = robot.arm_right.get_current_pose().pose
-    print "X =", depth/2 + palm_offset + (left.position.x + right.position.x)/2
-    print "Y =", (left.position.y + right.position.y)/2
+    x = depth/2 + palm_offset + (left.position.x + right.position.x)/2
+    y = (left.position.y + right.position.y)/2
+    print "X =", x
+    print "Y =", y
+
+    cfg = {
+        "shelf": {
+            "position": {
+                "x": x,
+                "y": y,
+                "z": z
+            },
+            "orientation": orientation
+        }
+    }
+
+    filename = os.path.join(os.path.dirname(__file__), "../cfg/shelf.yaml")
+    with open(filename, "w") as file:
+        yaml.dump(cfg, file, default_flow_style=False)
