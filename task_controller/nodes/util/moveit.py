@@ -25,12 +25,13 @@ def goto_pose(group, pose, times=[5, 20, 40, 60], with_shelf=True):
         rospy.loginfo("Planning for "+str(t)+" seconds...")
         plan = group.plan(pose)
         print "Plan:", plan
-        print "Move:", move(plan.joint_trajectory)
-        # if result:
-        #     if with_shelf:
-        #         remove_shelf()
-        remove_shelf()
-        return True
+        if len(plan.joint_trajectory.points) > 0:
+            print "Move:", move(plan.joint_trajectory)
+            # if result:
+            #     if with_shelf:
+            #         remove_shelf()
+            remove_shelf()
+            return True
     if with_shelf:
         remove_shelf()
     return False

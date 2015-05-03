@@ -15,8 +15,7 @@ class PICKITEM(smach.State):
 
     def __init__(self, robot):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],
-                             input_keys=['input', 'item', 'pose', 'points', 'bin'],
-                             output_keys=['output'])
+                             input_keys=['item', 'pose', 'points', 'bin'])
         self.arm = robot.arm_left_torso
         # self.arm = robot.arm_left
         # self.grasp_generator = rospy.ServiceProxy('getGrasps" apcGraspDB)
@@ -30,7 +29,6 @@ class PICKITEM(smach.State):
 
     def execute(self, userdata):
         rospy.loginfo("Trying to pick '"+userdata.item+"'...")
-        userdata.output = userdata.input
         self.points.publish(userdata.points)
 
         # TODO: Handle response error

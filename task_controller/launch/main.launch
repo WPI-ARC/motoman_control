@@ -10,8 +10,9 @@
   <!-- Grasping and Gripper Cade -->
   <node ns="left" pkg="gripper_srv" type="SModelTcpNode.py" name="gripper_tcp_node" args="10.0.0.10"/>
   <node ns="right" pkg="gripper_srv" type="SModelTcpNode.py" name="gripper_tcp_node" args="10.0.0.11"/>
-  <node ns="left" pkg="gripper_srv" type="gripper_controller.py" name="gripper_server"/>
-  <node ns="right" pkg="gripper_srv" type="gripper_controller.py" name="gripper_server"/>
+  <node ns="left" pkg="gripper_srv" type="gripper_controller.py" name="gripper_server" args="left"/>
+  <node ns="right" pkg="gripper_srv" type="gripper_controller.py" name="gripper_server" args="right"/>
+  <node pkg="grasp_planner" type="online_grasp_server.py" name="online_grasp_server" />
   
   <!-- The planning and execution components of MoveIt! configured to run -->
   <!-- using the ROS-Industrial interface. -->
@@ -49,6 +50,7 @@
   </include>
   
   <!-- <include file="$(find motoman_sda10f_moveit_config)/launch/default_warehouse_db.launch" /> -->
+  <node pkg="trajlib" type="trajectory_server.py" name="trajectory_server" />
 
   <!-- Environment models -->
   <rosparam command="load" file="$(find task_controller)/cfg/shelf.yaml" />
