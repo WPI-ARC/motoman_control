@@ -11,7 +11,8 @@ class SCANFORITEM(smach.State):
 
     def __init__(self):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],
-                             input_keys=['input', 'bin', 'item'], output_keys=['output', 'pose', 'points'])
+                             input_keys=['input', 'bin', 'item'],
+                             output_keys=['output', 'pose', 'points'])
         self.sample = rospy.ServiceProxy("sample_vision", SampleVision)
         self.process = rospy.ServiceProxy("process_vision", ProcessVision)
         self.tf = TransformListener(True, rospy.Duration(10.0))
@@ -27,17 +28,20 @@ class SCANFORITEM(smach.State):
         userdata.output = output
 
         for i in range(5):
-            response = self.sample.call(command=userdata.bin)
+            response = self.sample(command=userdata.bin)
             print "Sample:", response
-            response = self.process.call(
-                bin=userdata.bin,
-                target=APCObject(name=userdata.item, number=1),
-                objects=[APCObject(name=userdata.item, number=1)],
-            )
-            userdata.pose = self.tf.transformPose("/base_link", response.pose)
-            userdata.points = response.object_points
-            print "Pose:", self.tf.transformPose("/base_link", response.pose)
-            userdata.output = userdata.input
-            return 'Success'
+            try:
+                response = self.process(
+                    bin=userdata.bin,
+                    target=APCObject(name=userdata.item, number=1),
+                    objects=[APCObject(name=userdata.item, number=1)],
+                )
+                userdata.pose = self.tf.transformPose("/base_link", response.pose)
+                userdata.points = response.object_points
+                print "Pose:", self.tf.transformPose("/base_link", response.pose)
+                userdata.output = userdata.input
+                return 'Success'
+            except rospy.ServiceException as e:
+                rospy.logwarn("Error sampling: "+str(e))
         rospy.logwarn("Can't find "+userdata.item+"...")
         return 'Failure'

@@ -33,8 +33,6 @@ class PICKITEM(smach.State):
         userdata.output = userdata.input
         self.points.publish(userdata.points)
 
-        
-
         # TODO: Handle response error
         response = self.grasp_generator(
             item=userdata.item,
@@ -77,7 +75,11 @@ class PICKITEM(smach.State):
         #     rate.sleep()
 
         grasps = filterGrasps(self.arm, response.grasps.grasps)
-        grasp = grasps.next()
+        try:
+            grasp = grasps.next()
+        except StopIteration:
+            rospy.logwarn("No online grasps found.")
+            return "Failure"
         grasps = [grasp]
         print "Grasp:", grasps[0]
 

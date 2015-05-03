@@ -24,7 +24,8 @@ def goto_pose(group, pose, times=[5, 20, 40, 60], with_shelf=True):
         group.set_planning_time(t)
         rospy.loginfo("Planning for "+str(t)+" seconds...")
         plan = group.plan(pose)
-        print move(plan.joint_trajectory)
+        print "Plan:", plan
+        print "Move:", move(plan.joint_trajectory)
         # if result:
         #     if with_shelf:
         #         remove_shelf()

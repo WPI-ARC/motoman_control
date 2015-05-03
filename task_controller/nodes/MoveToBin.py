@@ -26,7 +26,7 @@ class MOVETOBIN(smach.State):
 
         self.arm.set_planner_id("RRTstarkConfigDefault")
         self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
-        if goto_pose(self.arm, pose.pose, [10, 30, 60]):
+        if goto_pose(self.arm, pose.pose, [1, 10, 30, 60]):
             return 'Success'
         else:
             return 'Failure'
