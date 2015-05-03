@@ -237,10 +237,12 @@ class grasping:
     def compute_height(self, min_z, max_z):
         return min_z + self.z_lowerboundoffset
 
-    def compute_y_mid(self, miny, maxy):
-        y = (miny+maxy)/2
-        ymid = numpy.array([[0], [y], [0], [1]])
-        return ymid
+    def compute_y_mid(self, points):
+        avg = numpy.array([0, 0, 0])
+        for point in points:
+            avg = numpy.array([avg[0]+point[0], avg[1]+point[1], avg[2]+point[2]])
+        midpt = avg/len(points)
+        return numpy.array([midpt[0], midpt[1], midpt[2]])
 
     def check_width(self, width):
         if width <= self.gripperwidth:
@@ -375,7 +377,7 @@ class grasping:
                 score = self.compute_score(width, theta)
 
                 # Compute mid-y point using miny maxy
-                mid_y = self.compute_y_mid(min_y, max_y)
+                mid_y = self.compute_y_mid(points)
                 depth = self.compute_depth(min_x, max_x, points)  # select depth to be with a min and max bound
                 height = self.compute_height(min_z, max_z)  # select the height so bottom  of object and also hand won't collide wit shelf lip. may need to take into acount the max_z and objects height to see if object will hit top of shelf.
                 if self.showOutput:
@@ -389,6 +391,8 @@ class grasping:
                 # Trans_shelfproj = numpy.array([Tshelfproj_new[0,3], mid_y[1], Tshelfproj_new[2,3]+zoffset])
                 # Trans_shelfproj = numpy.array([Tshelfproj_new[0, 3]+depth, mid_y[1], Tshelfproj_new[2,3]]+height)
                 Trans_shelfproj = numpy.array([Tshelfproj_new[0, 3], Tshelfproj_new[1, 3], Tshelfproj_new[2, 3]])
+                # Trans_shelfproj = numpy.array([mid_y[0], mid_y[1], mid_y[2] ])
+                print Trans_shelfproj
                 Rot_shelfproj = Tshelfproj_new[0:3, 0:3]
                 Tshelfproj_update = self.construct_4Dmatrix(Trans_shelfproj, Rot_shelfproj)
                 Tshelfproj_update[0, 3] += depth
