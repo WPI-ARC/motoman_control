@@ -3,22 +3,6 @@ import rospy
 
 from geometry_msgs.msg import PoseStamped
 
-from moveit import scene, remove_object
-
-
-def get_shelf_pose(prefix="/shelf"):
-    pose = PoseStamped()
-    pose.header.frame_id = "/base_link"
-    pose.header.stamp = rospy.Time.now()
-    pose.pose.position.x = rospy.get_param(prefix+"/position/x")
-    pose.pose.position.y = rospy.get_param(prefix+"/position/y")
-    pose.pose.position.z = rospy.get_param(prefix+"/position/z")
-    pose.pose.orientation.x = rospy.get_param(prefix+"/orientation/x")
-    pose.pose.orientation.y = rospy.get_param(prefix+"/orientation/y")
-    pose.pose.orientation.z = rospy.get_param(prefix+"/orientation/z")
-    pose.pose.orientation.w = rospy.get_param(prefix+"/orientation/w")
-    return pose
-
 
 def add_shelf():
     pose = get_shelf_pose()
@@ -37,6 +21,20 @@ def add_shelf():
 
 def remove_shelf():
     remove_object("shelf")
+
+
+def get_shelf_pose(prefix="/shelf"):
+    pose = PoseStamped()
+    pose.header.frame_id = "/base_link"
+    pose.header.stamp = rospy.Time.now()
+    pose.pose.position.x = rospy.get_param(prefix+"/position/x")
+    pose.pose.position.y = rospy.get_param(prefix+"/position/y")
+    pose.pose.position.z = rospy.get_param(prefix+"/position/z")
+    pose.pose.orientation.x = rospy.get_param(prefix+"/orientation/x")
+    pose.pose.orientation.y = rospy.get_param(prefix+"/orientation/y")
+    pose.pose.orientation.z = rospy.get_param(prefix+"/orientation/z")
+    pose.pose.orientation.w = rospy.get_param(prefix+"/orientation/w")
+    return pose
 
 
 def bin_pose(bin, bin_x=1.32, bin_y=0, bin_z=-0.01):
@@ -123,3 +121,6 @@ def bin_pose(bin, bin_x=1.32, bin_y=0, bin_z=-0.01):
     pose.pose.orientation.w = -0.488244
 
     return pose
+
+
+from moveit import scene, remove_object
