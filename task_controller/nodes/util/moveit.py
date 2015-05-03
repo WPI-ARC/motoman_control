@@ -26,7 +26,6 @@ def goto_pose(group, pose, times=[5, 20, 40, 60], with_shelf=True):
         plan = group.plan(pose)
         print "Plan:", plan
         if len(plan.joint_trajectory.points) > 0:
-            continue
             print "Move:", move(plan.joint_trajectory)
             # if result:
             #     if with_shelf:
