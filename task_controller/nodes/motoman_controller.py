@@ -46,7 +46,8 @@ class MotomanController:
             # schedule = [("grab_empty", "A", "crayola_64_ct"),
             #             ("grab_empty", "B", "elmers_washable_no_run_school_glue")]
             # schedule = [("scoop", "C", "elmers_washable_no_run_school_glue")]
-            schedule = [("grab_empty", "B", "feline_greenies_dental_treats")]
+            schedule = [("grab_empty", "B", "feline_greenies_dental_treats"),
+                        ("grab_empty", "E", "crayola_64_ct")]
             # schedule = [("grab_empty", "B", "crayola_64_ct")]
 
             smach.StateMachine.add(
