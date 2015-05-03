@@ -1,4 +1,5 @@
 string item
+string bin
 geometry_msgs/Pose object_pose
 sensor_msgs/PointCloud2 object_points
 ---

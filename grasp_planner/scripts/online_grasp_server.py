@@ -28,7 +28,7 @@ class grasping:
         self.description = "Online grasp planning code"
         self.offset = 0.01  # safety buffer between object and gripper is 1cm on each side. Total of 2cm
         self.fingerlength = 0.11  # palm to finger tip offset is 11cm
-        self.z_lowerboundoffset = 0.07  # move gripper up 1.5 cm to avoid lip when going straigh in
+        self.z_lowerboundoffset = 0.07  # Palm center to bottom of hand is 7cm
         self.z_upperboundoffset = 0.18
         self.gripperwidth = 0.155 - self.offset  # 0.155 is the gripper width in meters. 15.5cm        
         self.x_upperboundoffset = 0.04  # fingertip is allowed move at most 4cm beyond the lower bound value
@@ -40,7 +40,7 @@ class grasping:
         self.tfList = []
         # self.thetaList = numpy.linspace(-0.698131701, 0.698131701, num=41)
         self.thetaList = numpy.linspace(-pi/2, pi/2, num=51)
-        # self.thetaList = numpy.linspace(-pi, pi, num=51)
+        self.thetaList = numpy.linspace(-pi, pi, num=51)
 
         if self.showOutput:
             print "theta range list"
@@ -121,6 +121,35 @@ class grasping:
                                 [0, 0, 1, 0],
                                 [0, 0, 0, 1]])
         return transform
+
+    def get_shelf_bounds(self, req):
+        if req.bin == 'A':
+            size = [.005, .35, -.240, -.025, .724, .962]
+        elif req.bin == 'B':
+            size = [.005, .415, -.563, -.272, .734, .962]
+        elif req.bin == 'C':
+            size = [.005, .415, -.833, -.575, .734, .962]
+        elif req.bin == 'D':
+            size = [.005, .39,   -.260, -.005, .504, .692]
+        elif req.bin == 'E':
+            size = [.005, .415, -.563, -.272, .504, .692]
+        elif req.bin == 'F':
+            size = [.005, .415, -.833, -.575, .504, .692]
+        elif req.bin == 'G':
+            size = [.005, .415, -.260, -.005, .277, .462]
+        elif req.bin == 'H':
+            size = [.005, .415, -.563, -.272, .277, .462]
+        elif req.bin == 'I':
+            size = [.005, .415, -.833, -.575, .277, .462]
+        elif req.bin == 'J':
+            size = [.005, .415, -.260, -.005, .010, .235]
+        elif req.bin == 'K':
+            size = [.005, .415, -.563, -.272, .010, .235]
+        elif req.bin == 'L':
+            size = [.005, .415, -.833, -.575, .010, .235]
+        else:
+            print "could not find bin size: %s" % req.item
+        return numpy.array(size)
 
     def get_object_extents(self, req):
         # Select object
@@ -228,21 +257,24 @@ class grasping:
         points = numpy.array([point1, point2, point3, point4, point5, point6, point7, point8])
         return points
 
+    # def get_shelf_z()
+
     def compute_width(self, min_y, max_y):
         return abs(max_y-min_y)
 
-    def compute_depth(self, min_x, max_x, pointList):
-        return min_x - self.fingerlength + self.x_lowerboundoffset
+    def compute_depth(self, min_x, max_x):
+        difference = abs(max_x-min_x)
+        return min_x - self.fingerlength + difference/4 # the palm is located at min_x so move out till lenght of finger to place lenght of finger at min_x. Then move in 1/4 of the total depth of object
 
-    def compute_height(self, min_z, max_z):
-        return min_z + self.z_lowerboundoffset
+    def compute_height(self, bin_min_z):
+        return bin_min_z + self.z_lowerboundoffset
 
-    def compute_y_mid(self, points):
+    def compute_midpt(self, points):
         avg = numpy.array([0, 0, 0])
         for point in points:
             avg = numpy.array([avg[0]+point[0], avg[1]+point[1], avg[2]+point[2]])
-        midpt = avg/len(points)
-        return numpy.array([midpt[0], midpt[1], midpt[2]])
+        return avg/len(points)
+
 
     def check_width(self, width):
         if width <= self.gripperwidth:
@@ -306,9 +338,12 @@ class grasping:
 
         print "************************************************** Request start **************************************************"
         print "Requesting valid grasps for %s" % req.item
+        print "Requesting object in bin %s" % req.bin
 
         # Request the 8 Oriented bounding box points wrt to the object's frame.
         size = self.get_object_extents(req)
+        binbounds = self.get_shelf_bounds(req)
+        bin_min_x, bin_max_x, bin_min_y, bin_max_y, bin_min_z, bin_max_z = binbounds
         pointcloud = self.get_obb_points(size)
         # pointcloud = list(pc2.read_points(req.object_points, skip_nans=True,
         #                                   field_names=("x", "y", "z")))
@@ -318,12 +353,19 @@ class grasping:
             # raw_input("Press Enter to continue...")
             # Get TFs
             Tbaseshelf = self.get_tf('/base_link', '/shelf')
-            # Tshelfobj = self.get_tf('/shelf', '/object')
-            # Tbaseobj = Tbaseshelf*Tshelfobj
-            Tbaseobj = PoseToMatrix(req.object_pose)  # same Trob_obj request from offline planner
+            
 
-            # Tshelfobj = PoseToMatrix(self.tf.transformPose("/shelf", PoseStamped(Header(stamp=rospy.Time.now(), frame_id='/base_link'), req.object_pose)).pose)
-            Tshelfobj = numpy.dot(inv(Tbaseshelf), Tbaseobj)
+            select = 1 #set to one to use the local boudindbox points. set to else for ptcloud stuff
+            if select ==1:
+                Tshelfobj = self.get_tf('/shelf', '/object')
+                Tbaseobj = numpy.dot(Tbaseshelf,Tshelfobj)
+                # Tbaseshelf = Tbaseobj
+                # Tshelfobj = Tbaseobj
+            else:
+                # for ptcloud
+                Tbaseobj = PoseToMatrix(req.object_pose)  # same Trob_obj request from offline planner
+                Tshelfobj = numpy.dot(inv(Tbaseshelf), Tbaseobj)
+            
             if self.showOutput:
                 print "************************************************** Start loop **************************************************"
                 print "OBBPoints: ", pointcloud
@@ -364,7 +406,7 @@ class grasping:
             min_max = self.compute_minmax(points)
             min_x, max_x, min_y, max_y, min_z, max_z = min_max
             width = self.compute_width(min_y, max_y)
-            print "Min-max values: ", min_x, max_x, min_y, max_y, min_z, max_z
+            
             if self.showOutput:
                 print "Min-max values [minx,maxx,miny,maxy,minz,maxz]: ", min_x, max_x, min_y, max_y, min_z, max_z
                 print "projection width: " + str(width)
@@ -377,9 +419,10 @@ class grasping:
                 score = self.compute_score(width, theta)
 
                 # Compute mid-y point using miny maxy
-                mid_y = self.compute_y_mid(points)
-                depth = self.compute_depth(min_x, max_x, points)  # select depth to be with a min and max bound
-                height = self.compute_height(min_z, max_z)  # select the height so bottom  of object and also hand won't collide wit shelf lip. may need to take into acount the max_z and objects height to see if object will hit top of shelf.
+                midpt = self.compute_midpt(points)
+                mid_x, mid_y, mid_z = midpt
+                depth = self.compute_depth(min_x, max_x)  # select depth to be with a min and max bound
+                height = self.compute_height(bin_min_z)  # select the height so bottom  of object and also hand won't collide wit shelf lip. may need to take into acount the max_z and objects height to see if object will hit top of shelf.
                 if self.showOutput:
                     print "mid-y: "+str(mid_y)
                     print "x depth value "+str(depth)
@@ -391,20 +434,24 @@ class grasping:
                 # Trans_shelfproj = numpy.array([Tshelfproj_new[0,3], mid_y[1], Tshelfproj_new[2,3]+zoffset])
                 # Trans_shelfproj = numpy.array([Tshelfproj_new[0, 3]+depth, mid_y[1], Tshelfproj_new[2,3]]+height)
                 Trans_shelfproj = numpy.array([Tshelfproj_new[0, 3], Tshelfproj_new[1, 3], Tshelfproj_new[2, 3]])
-                # Trans_shelfproj = numpy.array([mid_y[0], mid_y[1], mid_y[2] ])
-                print Trans_shelfproj
+
                 Rot_shelfproj = Tshelfproj_new[0:3, 0:3]
                 Tshelfproj_update = self.construct_4Dmatrix(Trans_shelfproj, Rot_shelfproj)
-                Tshelfproj_update[0, 3] += depth
-                Tshelfproj_update[2, 3] += min_z+self.z_lowerboundoffset
+                # Tshelfproj_update[0, 3] += depth
+                # Tshelfproj_update[2, 3] += min_z+self.z_lowerboundoffset
+
+                # push pregrasp TF offsets
+                Trans_projpregrasp = numpy.array([depth, 0, height])
+                Rot_projpregrasp = numpy.eye(3, 3)
+                Tprojpregrasp = self.construct_4Dmatrix(Trans_projpregrasp, Rot_projpregrasp)
+                Tshelfpregrasp = numpy.dot(Tshelfproj_update, Tprojpregrasp)
 
                 # Generate TF shelf to projection
                 proj = geometry_msgs.msg.Pose()
-                [trans, quat] = ExtractFromMatrix(Tshelfproj_update)
+                [trans, quat] = ExtractFromMatrix(Tshelfpregrasp)
                 proj.position.x, proj.position.y, proj.position.z = trans
-                proj.orientation.x, proj.orientation.y, proj.orientation.z, \
-                    proj.orientation.w = quat
-                tf_shelfproj = self.generate_tf('/shelf', '/projection', proj.position, proj.orientation)
+                proj.orientation.x, proj.orientation.y, proj.orientation.z, proj.orientation.w = quat
+                tf_shelfproj = self.generate_tf('/shelf', '/pregrasp', proj.position, proj.orientation)
                 self.broadcast_single_tf(tf_shelfproj)
 
                 # Construct approach TF as projection but further back
@@ -422,7 +469,7 @@ class grasping:
                 approach.orientation.y = quat[1]
                 approach.orientation.z = quat[2]
                 approach.orientation.w = quat[3]
-                tf_projapproach = self.generate_tf('/projection', '/approach', approach.position, approach.orientation)
+                tf_projapproach = self.generate_tf('/pregrasp', '/approach', approach.position, approach.orientation)
                 self.broadcast_single_tf(tf_projapproach)
 
                 # camera -15 deg offset about z-axis
@@ -442,10 +489,10 @@ class grasping:
                 # TgraspIK = numpy.dot(TgraspIK, Tcamera)
                 TgraspIK = numpy.dot(Tcamera, TgraspIK)
 
-                Tbasepregrasp = numpy.dot(Tbaseshelf, Tshelfproj_update)
+                Tbasepregrasp = numpy.dot(Tbaseshelf, Tshelfpregrasp)
                 TbaseIK_pregrasp = numpy.dot(Tbasepregrasp, TgraspIK)
 
-                Tshelfapproach = numpy.dot(Tshelfproj_update, Tprojapproach)
+                Tshelfapproach = numpy.dot(Tshelfpregrasp, Tprojapproach)
                 Tbaseapproach = numpy.dot(Tbaseshelf, Tshelfapproach)
                 TbaseIK_approach = numpy.dot(Tbaseapproach, TgraspIK)
 

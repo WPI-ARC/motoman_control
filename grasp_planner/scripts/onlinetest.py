@@ -66,9 +66,9 @@ def main():
         pts = []
 
         msg = geometry_msgs.msg.Pose()
-        msg.position.x = 0.885315-0.2
-        msg.position.y = 0.413907-0.2
-        msg.position.z = 0.787417+0.8
+        msg.position.x = 0.885315
+        msg.position.y = 0.413907
+        msg.position.z = 0.787417
         msg.orientation.x = 0
         msg.orientation.y = 0
         msg.orientation.z = 0
@@ -76,9 +76,9 @@ def main():
 
         points = sensor_msgs.msg.PointCloud2()
         points.data = pts
+        binnum = "K"
 
-
-        response = client(item, msg, points)
+        response = client(item, binnum, msg, points)
         print "returned pose"
         print response.status
         print response.grasps
