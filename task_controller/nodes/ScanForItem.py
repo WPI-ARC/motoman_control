@@ -4,11 +4,11 @@ import smach
 import numpy
 from math import cos, sin, pi
 from tf import TransformListener
-from transformation_helpers import PoseToMatrix, PoseFromMatrix
+from task_controller.transformation_helpers import PoseToMatrix, PoseFromMatrix
 
 from apc_vision.srv import *
 from apc_vision.msg import *
-
+from util.moveit import follow_path
 
 class SCANFORITEM(smach.State):
 
@@ -46,24 +46,26 @@ class SCANFORITEM(smach.State):
     def get_poses(self):
         center_pose = self.arm.get_current_pose().pose
         center_matrix = PoseToMatrix(center_pose)
-        angle, offset = pi/4, 0.05
-        move_left = numpy.array([[cos(-angle), -sin(-angle), 0, offset],
-                                 [sin(-angle),  cos(-angle), 0,      0],
-                                 [          0,            0, 1,      0],
-                                 [          0,            0, 0,      1]])
-        move_right = numpy.array([[cos(angle), -sin(angle), 0, -offset],
-                                  [sin(angle),  cos(angle), 0,       0],
-                                  [         0,           0, 1,       0],
-                                  [         0,           0, 0,       1]])
+        angle, offset = pi/12, 0.175
+        move_left = numpy.array([[ cos(-angle), 0, sin(-angle), -offset],
+                                 [           0, 1,           0,       0],
+                                 [-sin(-angle), 0, cos(-angle),       0],
+                                 [           0, 0,           0,       1]])
+        move_right = numpy.array([[ cos(angle), 0, sin(angle), offset],
+                                  [          0, 1,          0,      0],
+                                  [-sin(angle), 0, cos(angle),      0],
+                                  [          0, 0,          0,      1]])
+
         return [center_pose,
-                PoseFromMatrix(move_left*center_matrix),
-                PoseFromMatrix(move_right*center_matrix)]
+                PoseFromMatrix(numpy.dot(center_matrix, move_left)),
+                PoseFromMatrix(numpy.dot(center_matrix, move_right))]
 
     def sample_bin(self, bin, poses):
         print "Reset:", self.sample(command="reset")
         for pose in poses:
             current_pose = self.arm.get_current_pose().pose
-            if not follow_path(group, [current_pose, pose]):
+            print current_pose, pose
+            if not follow_path(self.arm, [current_pose, pose]):
                 return False
             print "Sample:", self.sample(command=bin)
         return True
