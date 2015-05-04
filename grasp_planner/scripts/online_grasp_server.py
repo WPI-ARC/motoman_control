@@ -441,7 +441,8 @@ class grasping:
                 # Tshelfproj_update[2, 3] += min_z+self.z_lowerboundoffset
 
                 # push pregrasp TF offsets
-                Trans_projpregrasp = numpy.array([depth, 0, 0])
+                # Trans_projpregrasp = numpy.array([depth, 0, 0])
+                Trans_projpregrasp = numpy.array([0, 0, 0])
                 Rot_projpregrasp = numpy.eye(3, 3)
                 Tprojpregrasp = self.construct_4Dmatrix(Trans_projpregrasp, Rot_projpregrasp)
                 Tshelfpregrasp = numpy.dot(Tshelfproj_update, Tprojpregrasp)

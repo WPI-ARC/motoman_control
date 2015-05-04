@@ -20,7 +20,7 @@ def PICKANDPLACEITEM(robot):
         )
 
         smach.StateMachine.add(
-            'ScanForItem', ScanForItem.SCANFORITEM(),
+            'ScanForItem', ScanForItem.SCANFORITEM(robot),
             transitions={'Success': 'PickItem', 'Failure': 'Failure', 'Fatal': 'Fatal'},
         )
 
