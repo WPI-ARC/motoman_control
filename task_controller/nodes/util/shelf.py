@@ -1,34 +1,75 @@
 
 import rospy
-
+import subprocess
 from geometry_msgs.msg import PoseStamped
+from collision import scene, remove_object
+
+NO_SHELF = 0
+SIMPLE_SHELF = 1
+FULL_SHELF = 2
+
+kiva_pod = subprocess.check_output("rospack find apc_models", shell=True)\
+    .strip("\n") + "/meshes/pod_lowres.stl"
 
 
-def add_shelf():
-    pose = PoseStamped()
-    pose.header.frame_id = "/base_link"
-    pose.header.stamp = rospy.Time.now()
-    pose.pose.position.x = 1.25
-    pose.pose.position.y = 0
-    pose.pose.position.z = 1.25
-    pose.pose.orientation.x = 0.5
-    pose.pose.orientation.y = 0.5
-    pose.pose.orientation.z = 0.5
-    pose.pose.orientation.w = 0.5
+class Shelf(object):
+    """Add shelf collision object"""
+
+    def __init__(self, quality):
+        super(Shelf, self).__init__()
+        self.quality = quality
+
+    def __enter__(self):
+        print "Entering shelf: ", self.quality
+        if self.quality != NO_SHELF:
+            add_shelf(self.quality)
+
+    def __exit__(self, type, value, tb):
+        print "Exit shelf: ", self.quality
+        if self.quality != NO_SHELF:
+            remove_shelf()
+
+
+def add_shelf(quality=SIMPLE_SHELF):
+    pose = get_shelf_pose()
     print "Adding shelf", scene._pub_co.get_num_connections()
     while scene._pub_co.get_num_connections() == 0:
         rospy.sleep(0.01)
         print "Waiting..."
-    scene.add_box(
-        name="shelf",
-        pose=pose,
-        size=(0.86, 2.5, 0.86)
-    )
+    if quality == SIMPLE_SHELF:
+        pose.pose.position.z += 1.25
+        scene.add_box(
+            name="shelf",
+            pose=pose,
+            size=(0.96, 2.5, 0.96)
+        )
+    elif quality == FULL_SHELF:
+        scene.add_mesh(
+            name="shelf",
+            pose=pose,
+            filename=kiva_pod
+        )
+    else:
+        rospy.logwarn("Unsupported quality %s" % quality)
     print "Added"
 
 
 def remove_shelf():
     remove_object("shelf")
+
+
+def get_shelf_pose(prefix="/shelf"):
+    pose = PoseStamped()
+    pose.header.frame_id = "/base_link"
+    pose.header.stamp = rospy.Time.now()
+    pose.pose.position.x = rospy.get_param(prefix+"/position/x")
+    pose.pose.position.y = rospy.get_param(prefix+"/position/y")
+    pose.pose.position.z = rospy.get_param(prefix+"/position/z")
+    pose.pose.orientation.x = rospy.get_param(prefix+"/orientation/x")
+    pose.pose.orientation.y = rospy.get_param(prefix+"/orientation/y")
+    pose.pose.orientation.z = rospy.get_param(prefix+"/orientation/z")
+    pose.pose.orientation.w = rospy.get_param(prefix+"/orientation/w")
+    return pose
 
 
 def bin_pose(bin, bin_x=1.32, bin_y=0, bin_z=-0.01):
@@ -115,6 +156,3 @@ def bin_pose(bin, bin_x=1.32, bin_y=0, bin_z=-0.01):
     pose.pose.orientation.w = -0.488244
 
     return pose
-
-
-from moveit import scene, remove_object

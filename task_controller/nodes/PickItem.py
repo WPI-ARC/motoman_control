@@ -9,6 +9,7 @@ from geometry_msgs.msg import TransformStamped
 from sensor_msgs.msg import PointCloud2
 
 from util.grasping import filterGrasps, execute_grasp
+from util.shelf import Shelf, FULL_SHELF
 
 
 class PICKITEM(smach.State):
@@ -43,49 +44,50 @@ class PICKITEM(smach.State):
         #     grasp.poseapproach.position.x -= 0.2
         # random.shuffle(response.grasps.grasps)
 
-        # grasps = response.grasps.grasps
-        # # grasps = list(filterGrasps(self.arm, response.grasps.grasps))
-        # print "Grasp:", grasps[0]
-        # tfs = []
-        # for i in range(len(grasps)):
-        #     grasp = grasps[i].pregrasp
-        #     approach = grasps[i].approach
-        #     t = TransformStamped()
-        #     t.header.stamp = rospy.Time.now()
-        #     t.header.frame_id = "base_link"
-        #     t.child_frame_id = "grasp "+str(i)
-        #     t.transform.translation = grasp.position
-        #     t.transform.rotation = grasp.orientation
-        #     tfs.append(t)
-        #     t = TransformStamped()
-        #     t.header.stamp = rospy.Time.now()
-        #     t.header.frame_id = "base_link"
-        #     t.child_frame_id = "approach "+str(i)
-        #     t.transform.translation = approach.position
-        #     t.transform.rotation = approach.orientation
-        #     tfs.append(t)
-
-        # br = tf2_ros.TransformBroadcaster()
-        # rate = rospy.Rate(250.0)
-        # while (not rospy.is_shutdown()):
-        #     for t in tfs:
-        #         t.header.stamp = rospy.Time.now()
-        #         br.sendTransform(t)
-        #     rate.sleep()
-
-        grasps = filterGrasps(self.arm, response.grasps.grasps)
-        try:
-            grasp = grasps.next()
-        except StopIteration:
-            rospy.logwarn("No online grasps found.")
-            return "Failure"
-        grasps = [grasp]
+        grasps = response.grasps.grasps
+        # grasps = list(filterGrasps(self.arm, response.grasps.grasps))
         print "Grasp:", grasps[0]
+        tfs = []
+        for i in range(len(grasps)):
+            grasp = grasps[i].pregrasp
+            approach = grasps[i].approach
+            t = TransformStamped()
+            t.header.stamp = rospy.Time.now()
+            t.header.frame_id = "base_link"
+            t.child_frame_id = "grasp "+str(i)
+            t.transform.translation = grasp.position
+            t.transform.rotation = grasp.orientation
+            tfs.append(t)
+            t = TransformStamped()
+            t.header.stamp = rospy.Time.now()
+            t.header.frame_id = "base_link"
+            t.child_frame_id = "approach "+str(i)
+            t.transform.translation = approach.position
+            t.transform.rotation = approach.orientation
+            tfs.append(t)
 
-        self.arm.set_planner_id("RRTstarkConfigDefault")
-        self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
+        br = tf2_ros.TransformBroadcaster()
+        rate = rospy.Rate(250.0)
+        while (not rospy.is_shutdown()):
+            for t in tfs:
+                t.header.stamp = rospy.Time.now()
+                br.sendTransform(t)
+            rate.sleep()
 
-        if not execute_grasp(self.arm, grasps[0], userdata.pose.pose):
-            return "Failure"
+        with Shelf(FULL_SHELF):
+            grasps = filterGrasps(self.arm, response.grasps.grasps)
+            try:
+                grasp = grasps.next()
+            except StopIteration:
+                rospy.logwarn("No online grasps found.")
+                return "Failure"
+            grasps = [grasp]
+            print "Grasp:", grasps[0]
 
-        return 'Success'
+            self.arm.set_planner_id("RRTstarkConfigDefault")
+            self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
+
+            if not execute_grasp(self.arm, grasps[0], userdata.pose.pose):
+                return "Failure"
+
+            return 'Success'

@@ -27,8 +27,8 @@ class grasping:
     def __init__(self):
         self.description = "Online grasp planning code"
         self.offset = 0.01  # safety buffer between object and gripper is 1cm on each side. Total of 2cm
-        self.fingerlength = 0.11  # palm to finger tip offset is 11cm
-        self.z_lowerboundoffset = 0.07  # Palm center to bottom of hand is 7cm
+        self.fingerlength = 0.115  # palm to finger tip offset is 11cm
+        self.z_lowerboundoffset = 0.065  # Palm center to bottom of hand is 7cm
         self.z_upperboundoffset = 0.18
         self.gripperwidth = 0.155 - self.offset  # 0.155 is the gripper width in meters. 15.5cm        
         self.x_upperboundoffset = 0.04  # fingertip is allowed move at most 4cm beyond the lower bound value
@@ -40,7 +40,7 @@ class grasping:
         self.tfList = []
         # self.thetaList = numpy.linspace(-0.698131701, 0.698131701, num=41)
         self.thetaList = numpy.linspace(-pi/2, pi/2, num=51)
-        self.thetaList = numpy.linspace(-pi, pi, num=51)
+        # self.thetaList = numpy.linspace(-pi, pi, num=51)
 
         if self.showOutput:
             print "theta range list"
@@ -124,29 +124,29 @@ class grasping:
 
     def get_shelf_bounds(self, req):
         if req.bin == 'A':
-            size = [.005, .35, -.240, -.025, .724, .962]
+            size = [-0.43, -.01,  0.15764, 0.41,    1.55794, 1.77212]
         elif req.bin == 'B':
-            size = [.005, .415, -.563, -.272, .734, .962]
+            size = [-0.43, -.01, -0.14331, 0.14331, 1.55794, 1.77212]
         elif req.bin == 'C':
-            size = [.005, .415, -.833, -.575, .734, .962]
+            size = [-0.43, -.01, -0.41,   -0.15764, 1.55794, 1.77212]
         elif req.bin == 'D':
-            size = [.005, .39,   -.260, -.005, .504, .692]
+            size = [-0.43, -.01,  0.15764, 0.41,    1.32733, 1.50775]
         elif req.bin == 'E':
-            size = [.005, .415, -.563, -.272, .504, .692]
+            size = [-0.43, -.01, -0.14331, 0.14331, 1.32733, 1.50775]
         elif req.bin == 'F':
-            size = [.005, .415, -.833, -.575, .504, .692]
+            size = [-0.43, -.01, -0.41,   -0.15764, 1.32733, 1.50775]
         elif req.bin == 'G':
-            size = [.005, .415, -.260, -.005, .277, .462]
+            size = [-0.43, -.01,  0.15764, 0.41,    1.11053, 1.29092]
         elif req.bin == 'H':
-            size = [.005, .415, -.563, -.272, .277, .462]
+            size = [-0.43, -.01, -0.14331, 0.14331, 1.11053, 1.29092]
         elif req.bin == 'I':
-            size = [.005, .415, -.833, -.575, .277, .462]
+            size = [-0.43, -.01,  0.41,   -0.15764, 1.11053, 1.29092]
         elif req.bin == 'J':
-            size = [.005, .415, -.260, -.005, .010, .235]
+            size = [-0.43, -.01,  0.15764, 0.41,    0.83651, 1.05069]
         elif req.bin == 'K':
-            size = [.005, .415, -.563, -.272, .010, .235]
+            size = [-0.43, -.01, -0.14331, 0.14331, 0.83651, 1.05069]
         elif req.bin == 'L':
-            size = [.005, .415, -.833, -.575, .010, .235]
+            size = [-0.43, -.01,  0.41,   -0.15764, 0.83651, 1.05069]
         else:
             print "could not find bin size: %s" % req.item
         return numpy.array(size)
@@ -264,17 +264,16 @@ class grasping:
 
     def compute_depth(self, min_x, max_x):
         difference = abs(max_x-min_x)
-        return min_x - self.fingerlength + difference/4 # the palm is located at min_x so move out till lenght of finger to place lenght of finger at min_x. Then move in 1/4 of the total depth of object
+        return min_x - self.fingerlength + numpy.true_divide(difference, 4)  # the palm is located at min_x so move out till lenght of finger to place lenght of finger at min_x. Then move in 1/4 of the total depth of object
 
     def compute_height(self, bin_min_z):
-        return bin_min_z + self.z_lowerboundoffset
+        return bin_min_z + self.z_lowerboundoffset - 0.05  # minus 5cm height
 
     def compute_midpt(self, points):
         avg = numpy.array([0, 0, 0])
         for point in points:
             avg = numpy.array([avg[0]+point[0], avg[1]+point[1], avg[2]+point[2]])
         return avg/len(points)
-
 
     def check_width(self, width):
         if width <= self.gripperwidth:
@@ -344,6 +343,7 @@ class grasping:
         size = self.get_object_extents(req)
         binbounds = self.get_shelf_bounds(req)
         bin_min_x, bin_max_x, bin_min_y, bin_max_y, bin_min_z, bin_max_z = binbounds
+        print "bin min z: " + str(bin_min_z)
         pointcloud = self.get_obb_points(size)
         # pointcloud = list(pc2.read_points(req.object_points, skip_nans=True,
         #                                   field_names=("x", "y", "z")))
@@ -355,8 +355,8 @@ class grasping:
             Tbaseshelf = self.get_tf('/base_link', '/shelf')
             
 
-            select = 1 #set to one to use the local boudindbox points. set to else for ptcloud stuff
-            if select ==1:
+            select = False  # set to one to use the local boudindbox points. set to else for ptcloud stuff
+            if select:
                 Tshelfobj = self.get_tf('/shelf', '/object')
                 Tbaseobj = numpy.dot(Tbaseshelf,Tshelfobj)
                 # Tbaseshelf = Tbaseobj
@@ -441,7 +441,7 @@ class grasping:
                 # Tshelfproj_update[2, 3] += min_z+self.z_lowerboundoffset
 
                 # push pregrasp TF offsets
-                Trans_projpregrasp = numpy.array([depth, 0, height])
+                Trans_projpregrasp = numpy.array([depth, 0, 0])
                 Rot_projpregrasp = numpy.eye(3, 3)
                 Tprojpregrasp = self.construct_4Dmatrix(Trans_projpregrasp, Rot_projpregrasp)
                 Tshelfpregrasp = numpy.dot(Tshelfproj_update, Tprojpregrasp)
@@ -449,8 +449,13 @@ class grasping:
                 # Generate TF shelf to projection
                 proj = geometry_msgs.msg.Pose()
                 [trans, quat] = ExtractFromMatrix(Tshelfpregrasp)
-                proj.position.x, proj.position.y, proj.position.z = trans
-                proj.orientation.x, proj.orientation.y, proj.orientation.z, proj.orientation.w = quat
+                proj.position.x = trans[0]
+                proj.position.y = trans[1]
+                proj.position.z = height
+                proj.orientation.x = quat[0]
+                proj.orientation.y = quat[1]
+                proj.orientation.z = quat[2]
+                proj.orientation.w = quat[3]
                 tf_shelfproj = self.generate_tf('/shelf', '/pregrasp', proj.position, proj.orientation)
                 self.broadcast_single_tf(tf_shelfproj)
 
@@ -498,7 +503,9 @@ class grasping:
 
                 # Construct msg. Then appened to queue with score as the priority in queue. This will put lowest score msg first in list.
                 proj_msg = PoseFromMatrix(TbaseIK_pregrasp)
+                proj_msg.position.z = height
                 approach_msg = PoseFromMatrix(TbaseIK_approach)
+                approach_msg.position.z = height
                 q_proj_msg.put((score, proj_msg))
                 q_approach_msg.put((score, approach_msg))
                 if self.showOutput:
