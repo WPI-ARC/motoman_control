@@ -56,9 +56,11 @@ class SCANFORITEM(smach.State):
                                   [-sin(angle), 0, cos(angle),      0],
                                   [          0, 0,          0,      1]])
 
-        return [center_pose,
-                PoseFromMatrix(numpy.dot(center_matrix, move_left)),
-                PoseFromMatrix(numpy.dot(center_matrix, move_right))]
+        # return [center_pose,
+        #         PoseFromMatrix(numpy.dot(center_matrix, move_left)),
+        #         PoseFromMatrix(numpy.dot(center_matrix, move_right))]
+
+        return [center_pose]
 
     def sample_bin(self, bin, poses):
         print "Reset:", self.sample(command="reset")
