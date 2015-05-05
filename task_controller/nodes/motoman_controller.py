@@ -38,7 +38,7 @@ class MotomanController:
 
         # Populate the state machine from the modules
         with self.sm:
-            self.safemode = SafeMode.SAFEMODE()
+            self.safemode = SafeMode()
 
             smach.StateMachine.add(
                 'Scheduler', SimpleScheduler(schedule),
@@ -54,7 +54,7 @@ class MotomanController:
 
             smach.StateMachine.add(
                 'ScoopAndPickItem',
-                ScoopAndPickItem.SCOOPANDPICKITEM(self.robot),
+                ScoopAndPickItem(self.robot),
                 transitions={'Success': 'Scheduler', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
             )
 
