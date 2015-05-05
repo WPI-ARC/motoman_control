@@ -8,13 +8,13 @@ import yaml
 import os
 import moveit_commander
 
-from task_controller import PickAndPlaceItem
-from task_controller import ScoopAndPickItem
-from task_controller import PickScoop
-from task_controller import Scheduler
-from task_controller import FinishTask
-from task_controller import SafeMode
-from task_controller import ErrorHandler
+from task_controller.PickAndPlaceItem import PickAndPlaceItem
+from task_controller.ScoopAndPickItem import ScoopAndPickItem
+from task_controller.PickScoop import PickScoop
+from task_controller.Scheduler import SimpleScheduler
+from task_controller.FinishTask import FinishTask
+from task_controller.SafeMode import SafeMode
+from task_controller.ErrorHandler import ErrorHandler
 
 
 class MotomanController:
@@ -41,14 +41,14 @@ class MotomanController:
             self.safemode = SafeMode.SAFEMODE()
 
             smach.StateMachine.add(
-                'Scheduler', Scheduler.SIMPLESCHEDULER(schedule),
+                'Scheduler', SimpleScheduler(schedule),
                 transitions={'Pick': 'PickAndPlaceItem', 'Scoop': 'ScoopAndPickItem', 'ToolChange': 'PickScoop',
                              'Success': 'FinishTask', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
             )
 
             smach.StateMachine.add(
                 'PickAndPlaceItem',
-                PickAndPlaceItem.PICKANDPLACEITEM(self.robot),
+                PickAndPlaceItem(self.robot),
                 transitions={'Success': 'Scheduler', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
             )
 
@@ -60,12 +60,12 @@ class MotomanController:
 
             smach.StateMachine.add(
                 'PickScoop',
-                PickScoop.PICKSCOOP(self.robot),
+                PickScoop(self.robot),
                 transitions={'Success': 'Scheduler', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
             )
 
             smach.StateMachine.add(
-                'FinishTask', FinishTask.FINISHTASK(),
+                'FinishTask', FinishTask(),
                 transitions={'Success': 'DONE', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
             )
 
@@ -75,7 +75,7 @@ class MotomanController:
             )
 
             smach.StateMachine.add(
-                'ErrorHandler', ErrorHandler.ERRORHANDLER(),
+                'ErrorHandler', ErrorHandler(),
                 transitions={'ReMove': 'SafeMode', 'ReScan': 'SafeMode', 'RePick': 'SafeMode',
                              'ReFinish': 'SafeMode', 'Failed': 'FAILED', 'Fatal': 'SafeMode'},
             )

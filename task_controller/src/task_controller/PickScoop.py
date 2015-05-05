@@ -1,18 +1,19 @@
 import roslib; roslib.load_manifest('task_controller')
 import rospy
 import smach
-import tf2_ros
-from geometry_msgs.msg import TransformStamped, Pose, Quaternion
+from geometry_msgs.msg import Pose, Quaternion
 
 from gripper_srv.srv import gripper
 from motoman_moveit.srv import convert_trajectory_server
 
-from apc_util.grasping import filterGrasps, execute_grasp
-from apc_util.scoop import allow_scoop_collision, disallow_scoop_collision, attach_scoop
+from apc_util.scoop import allow_scoop_collision, disallow_scoop_collision
 from copy import deepcopy
 
 
-class PICKSCOOP(smach.State):
+class PickScoop(smach.State):
+    """
+    Support for picking up the scoop from a known location.
+    """
 
     def __init__(self, robot):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],

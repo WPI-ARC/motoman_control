@@ -10,7 +10,10 @@ from apc_util.moveit import goto_pose
 move = rospy.ServiceProxy("/convert_trajectory_service", convert_trajectory_server)
 
 
-class PLACEITEM(smach.State):
+class PlaceItem(smach.State):
+    """
+    Place the item in the bin for shipping
+    """
 
     def __init__(self, robot):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],

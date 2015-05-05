@@ -1,9 +1,14 @@
 import roslib; roslib.load_manifest('task_controller')
 import smach
 
-import Scoop
+from Scoop import Scoop
 
-def SCOOPANDPICKITEM(robot):
+
+def ScoopAndPickItem(robot):
+    """
+    State machine to scoop out a bin and eventually pick the item.
+    """
+
     sm = smach.StateMachine(
         outcomes=['Success', 'Failure', 'Fatal'],
         input_keys=['input', 'bin', 'item'],
@@ -13,7 +18,7 @@ def SCOOPANDPICKITEM(robot):
     # Populate the state machine from the modules
     with sm:
         smach.StateMachine.add(
-            'Scoop', Scoop.SCOOP(robot),
+            'Scoop', Scoop(robot),
             transitions={'Success': 'Success', 'Failure': 'Failure', 'Fatal': 'Fatal'},
             # remapping={'output': 'sm_data'}
         )

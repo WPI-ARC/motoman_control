@@ -3,7 +3,7 @@ import rospy
 import smach
 
 
-class SIMPLESCHEDULER(smach.State):
+class SimpleScheduler(smach.State):
 
     def __init__(self, schedule):
         smach.State.__init__(self, outcomes=['Pick', 'Scoop', 'ToolChange', 'Success', 'Failure', 'Fatal'],

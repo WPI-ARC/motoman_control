@@ -12,7 +12,10 @@ from apc_util.moveit import goto_pose
 move = rospy.ServiceProxy("/convert_trajectory_service", convert_trajectory_server)
 
 
-class MOVETOBIN(smach.State):
+class MoveToBin(smach.State):
+    """
+    Moves to the desired bin, so that relevant tasks can be performed.
+    """
 
     def __init__(self, robot):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],
