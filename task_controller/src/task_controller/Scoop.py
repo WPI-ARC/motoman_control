@@ -5,8 +5,8 @@ import smach
 from copy import deepcopy
 from geometry_msgs.msg import Pose, Point, Quaternion
 
-from util.moveit import follow_path, goto_pose
-from util.shelf import bin_pose
+from apc_util.moveit import follow_path, goto_pose
+from apc_util.shelf import bin_pose
 
 class SCOOP(smach.State):
 
@@ -59,6 +59,3 @@ class SCOOP(smach.State):
             return 'Failure'
 
         return 'Success'
-
-
-

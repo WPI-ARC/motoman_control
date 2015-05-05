@@ -8,8 +8,8 @@ from grasp_planner.srv import apcGraspDB
 from geometry_msgs.msg import TransformStamped
 from sensor_msgs.msg import PointCloud2
 
-from util.grasping import filterGrasps, execute_grasp
-from util.shelf import Shelf, FULL_SHELF
+from apc_util.grasping import filterGrasps, execute_grasp
+from apc_util.shelf import Shelf, FULL_SHELF
 
 
 class PICKITEM(smach.State):

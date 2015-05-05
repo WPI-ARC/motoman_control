@@ -2,29 +2,27 @@ import roslib; roslib.load_manifest('task_controller')
 import rospy
 import smach
 
-import moveit_msgs
-import moveit_commander
-
+from gripper_srv.srv import gripper
 from motoman_moveit.srv import convert_trajectory_server
 from trajlib.srv import GetTrajectory
-from util.moveit import goto_pose
-# from util.moveit import goto_pose
+from apc_util.moveit import goto_pose
 
 move = rospy.ServiceProxy("/convert_trajectory_service", convert_trajectory_server)
 
 
-class MOVETOBIN(smach.State):
+class PLACEITEM(smach.State):
 
     def __init__(self, robot):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],
                              input_keys=['bin'], output_keys=[])
         self.arm = robot.arm_left_torso
+        self.gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
         self.trajlib = rospy.ServiceProxy("/trajlib", GetTrajectory)
 
     def execute(self, userdata):
-        rospy.loginfo("Trying to move to bin '"+userdata.bin+"'...")
+        rospy.loginfo("Trying to place from bin '"+userdata.bin+"'...")
 
-        response = self.trajlib(task="Forward", bin_num=userdata.bin)
+        response = self.trajlib(task="Drop", bin_num=userdata.bin)
         # plan = self.trajlib(task="Drop", bin_num="A")
         print self.arm.get_active_joints()
         print response.plan.joint_trajectory.joint_names
@@ -43,13 +41,6 @@ class MOVETOBIN(smach.State):
             if not goto_pose(self.arm, start, [1, 10, 30, 60, 120]):
                 return 'Failure'
 
-        display_trajectory_publisher = rospy.Publisher('/move_group/display_planned_path', moveit_msgs.msg.DisplayTrajectory)
-        display_trajectory = moveit_msgs.msg.DisplayTrajectory()
-        robot = moveit_commander.RobotCommander()
-        display_trajectory.trajectory_start = robot.get_current_state()
-        display_trajectory.trajectory.append(response.plan)
-        display_trajectory_publisher.publish(display_trajectory)
-        print response.plan
-
         print move(response.plan.joint_trajectory)
+        print "Open Gripper:", self.gripper_control(command="open")
         return 'Success'
