@@ -15,19 +15,27 @@ class SIMPLESCHEDULER(smach.State):
         rospy.loginfo("Scheduler running...")
 
         if self.location < len(self.schedule):
-            action, bin, item = self.schedule[self.location]
-            data.item = item
-            data.bin = bin
-            print action, bin, item
+            current = self.schedule[self.location]
+            action = current["action"]
             self.location += 1
+
             if action.startswith("grab"):
-                rospy.loginfo("Scheduling pick of %s from bin %s." % (item, bin))
+                data.item = current["item"]
+                data.bin = current["bin"]
+                print action, current["bin"], current["item"]
+                rospy.loginfo("Scheduling pick of %s from bin %s." % (current["item"], current["bin"]))
                 return 'Pick'
+
             elif action == 'scoop':
-                rospy.loginfo("Scheduling scoop of %s from bin %s." % (item, bin))
+                data.item = current["item"]
+                data.bin = current["bin"]
+                rospy.loginfo("Scheduling scoop of %s from bin %s." % (current["item"], current["bin"]))
                 return 'Scoop'
+
             elif action == "pick_scoop":
+                rospy.loginfo("Picking scoop up.")
                 return 'ToolChange'
+
             else:
                 return 'Failure'
 

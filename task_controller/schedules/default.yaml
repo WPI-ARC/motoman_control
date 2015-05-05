@@ -1,0 +1,8 @@
+- action: grab
+  bin: B
+  item: "crayola_64_ct"
+  others: []
+- action: grab
+  bin: E
+  item: "feline_greenies_dental_treats"
+  others: ["elmers_washable_no_run_school_glue"]
