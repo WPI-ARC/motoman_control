@@ -5,7 +5,7 @@ import roslib; roslib.load_manifest('task_controller')
 import rospy
 import tf2_ros
 import geometry_msgs.msg
-from util.shelf import get_shelf_pose
+from apc_util.shelf import get_shelf_pose
 
 if __name__ == '__main__':
     rospy.init_node("publish_shelf_tf")

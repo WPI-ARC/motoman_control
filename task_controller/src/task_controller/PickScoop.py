@@ -7,8 +7,8 @@ from geometry_msgs.msg import TransformStamped, Pose, Quaternion
 from gripper_srv.srv import gripper
 from motoman_moveit.srv import convert_trajectory_server
 
-from util.grasping import filterGrasps, execute_grasp
-from util.scoop import allow_scoop_collision, disallow_scoop_collision, attach_scoop
+from apc_util.grasping import filterGrasps, execute_grasp
+from apc_util.scoop import allow_scoop_collision, disallow_scoop_collision, attach_scoop
 from copy import deepcopy
 
 
