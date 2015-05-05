@@ -10,11 +10,7 @@ from numpy.linalg import inv
 import traceback
 import geometry_msgs.msg
 from math import pi
-
-# Transformation helper file. quater is (x,y,z,w) format
 from transformation_helper import ExtractFromMatrix, BuildMatrix, PoseFromMatrix, PoseToMatrix, InvertMatrix
-
-# Message and Service imports
 import sensor_msgs.point_cloud2 as pc2
 from std_msgs.msg import Header
 from geometry_msgs.msg import PoseStamped
@@ -22,25 +18,24 @@ from grasp_planner.msg import apcGraspPose, apcGraspArray
 from grasp_planner.srv import apcGraspDB, apcGraspDBResponse
 
 
-class grasping:
+class Grasping:
 
     def __init__(self):
         self.description = "Online grasp planning code"
-        self.offset = 0.01  # safety buffer between object and gripper is 1cm on each side. Total of 2cm
-        self.fingerlength = 0.115  # palm to finger tip offset is 11cm
-        self.z_lowerboundoffset = 0.065  # Palm center to bottom of hand is 7cm
-        self.z_upperboundoffset = 0.18
-        self.gripperwidth = 0.155 - self.offset  # 0.155 is the gripper width in meters. 15.5cm        
-        self.x_upperboundoffset = 0.04  # fingertip is allowed move at most 4cm beyond the lower bound value
-        self.x_lowerboundoffset = 0.05  # fingertip goes past nearest point cloud's x value by at least 4 cm 
-        self.showOutput = False  # Enable to show print statements
         self.tf = tf.TransformListener(True, rospy.Duration(10.0))
         self.br = tf2_ros.TransformBroadcaster()
         self.rate = rospy.Rate(60.0)
         self.tfList = []
-        # self.thetaList = numpy.linspace(-0.698131701, 0.698131701, num=41)
-        self.thetaList = numpy.linspace(-pi/2, pi/2, num=51)
+        self.thetaList = numpy.linspace(-0.698131701, 0.698131701, num=51)
+        # self.thetaList = numpy.linspace(-pi/2, pi/2, num=51)
         # self.thetaList = numpy.linspace(-pi, pi, num=51)
+
+        # Variables that can be set
+        self.showOutput = False  # Enable to show print statements
+        self.padding = 0.01  # Extra padding between object and gripper is 1 cm.
+        self.fingerlength = 0.115  # palm to finger tip offset is 11.5 cm
+        self.gripperwidth = 0.155 - self.padding  # gripper width is 15.5 cm
+        self.z_lowerboundoffset = 0.065  # Palm center to bottom of hand is 6.5 cm
 
         if self.showOutput:
             print "theta range list"
@@ -238,7 +233,6 @@ class grasping:
             grasp.approach.position = approach.position
             grasp.approach.orientation = approach.orientation
             grasps.append(grasp)
-
         return grasps
 
     def get_obb_points(self, size):
@@ -256,8 +250,6 @@ class grasping:
         point8 = (-x/2, -y/2, -z/2)
         points = numpy.array([point1, point2, point3, point4, point5, point6, point7, point8])
         return points
-
-    # def get_shelf_z()
 
     def compute_width(self, min_y, max_y):
         return abs(max_y-min_y)
@@ -355,7 +347,7 @@ class grasping:
             Tbaseshelf = self.get_tf('/base_link', '/shelf')
             
 
-            select = False  # set to one to use the local boudindbox points. set to else for ptcloud stuff
+            select = True  # set to true to use the local boudindbox points. set to else for ptcloud stuff
             if select:
                 Tshelfobj = self.get_tf('/shelf', '/object')
                 Tbaseobj = numpy.dot(Tbaseshelf,Tshelfobj)
@@ -540,11 +532,10 @@ class grasping:
 def publisher():
     rospy.init_node('online_grasp_server')
 
-    grasp = grasping()
+    grasp = Grasping()
     while not rospy.is_shutdown():
         try:
-            rospy.Service('getGrasps_online_server',
-                          apcGraspDB, grasp.get_grasp_cb)
+            rospy.Service('getGrasps_online_server', apcGraspDB, grasp.get_grasp_cb)
             print "Online grasp planner ready"
             rospy.spin()
         except:
