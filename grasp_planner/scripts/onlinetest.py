@@ -61,7 +61,7 @@ def main():
         rospy.init_node("online_planner_test")
         client = rospy.ServiceProxy('getGrasps_online_server', apcGraspDB)
         item = 'expo_dry_erase_board_eraser' # Set response item
-        item = 'cheezit_big_original'
+        # item = 'cheezit_big_original'
         tfs = []
         pts = []
 
@@ -74,9 +74,11 @@ def main():
         msg.orientation.z = 0
         msg.orientation.w = 1
 
+
+
         points = sensor_msgs.msg.PointCloud2()
         points.data = pts
-        binnum = "K"
+        binnum = "B"
 
         response = client(item, binnum, msg, points)
         print "returned pose"

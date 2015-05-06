@@ -36,11 +36,12 @@ class Grasping:
         self.fingerlength = 0.115  # palm to finger tip offset is 11.5 cm
         self.gripperwidth = 0.155 - self.padding  # gripper width is 15.5 cm
         self.z_lowerboundoffset = 0.065  # Palm center to bottom of hand is 6.5 cm
+        self.approachpose_offset = -0.3  # Set aproach pose to be 30cm back from the front of the bin
 
         if self.showOutput:
             print "theta range list"
             print self.thetaList
-
+            
         rospy.sleep(rospy.Duration(1.0))  # Wait for network timing to load TFs
 
     def get_tf(self, parent, child):
@@ -91,15 +92,20 @@ class Grasping:
             self.br.sendTransform(t)
             rate.sleep()
 
-    def generate_tf(self, parent, child, position, rotation):
+    def generate_tf(self, parent, child, transform):
         t = geometry_msgs.msg.TransformStamped()
         t.header.stamp = rospy.Time.now()
         t.header.frame_id = parent
         t.child_frame_id = child
-        t.transform.translation = position  # needs to be postion tuple
-        t.transform.rotation = rotation  # needs to be quat tuple
-        self.tfList.append(t)
-        return t
+        [trans, quat] = ExtractFromMatrix(transform)
+        t.transform.translation.x = trans[0]
+        t.transform.translation.y = trans[1]
+        t.transform.translation.z = trans[2]
+        t.transform.rotation.x = quat[0]
+        t.transform.rotation.y = quat[1]
+        t.transform.rotation.z = quat[2]
+        t.transform.rotation.w = quat[3]
+        self.broadcast_single_tf(t)
 
     def construct_4Dmatrix(self, trans, rot):
         # print trans, rot
@@ -259,7 +265,7 @@ class Grasping:
         return min_x - self.fingerlength + numpy.true_divide(difference, 4)  # the palm is located at min_x so move out till lenght of finger to place lenght of finger at min_x. Then move in 1/4 of the total depth of object
 
     def compute_height(self, bin_min_z):
-        return bin_min_z + self.z_lowerboundoffset - 0.05  # minus 5cm height
+        return bin_min_z + self.z_lowerboundoffset - 0.05  # minus 5cm height as magic number adjustment. Should have to do this if binmin z is correct
 
     def compute_midpt(self, points):
         avg = numpy.array([0, 0, 0])
@@ -350,7 +356,7 @@ class Grasping:
             select = True  # set to true to use the local boudindbox points. set to else for ptcloud stuff
             if select:
                 Tshelfobj = self.get_tf('/shelf', '/object')
-                Tbaseobj = numpy.dot(Tbaseshelf,Tshelfobj)
+                # Tbaseobj = numpy.dot(Tbaseshelf,Tshelfobj)
                 # Tbaseshelf = Tbaseobj
                 # Tshelfobj = Tbaseobj
             else:
@@ -380,18 +386,18 @@ class Grasping:
             if self.showOutput:
                 print Tshelfproj_new
 
-            # Get TF for projection to object
+            # Transform form projection to object
             Tprojshelf = inv(Tshelfproj_new)
             Tprojobj = numpy.dot(Tprojshelf, Tshelfobj)
 
-            # Loop through OBB points and transform them to be wrt to the target projection frame which then is wrt to base
+            # Loop through object points and transform them to be wrt to the target projection frame 
             points = []
             for OBBPoint in pointcloud:
                 oldpt = numpy.array([[OBBPoint[0]], [OBBPoint[1]], [OBBPoint[2]], [1]])
                 projected_OBBPoint = numpy.dot(Tprojshelf, oldpt)
                 points.append(projected_OBBPoint)
             if self.showOutput:
-                print "List of transformed OBB points after projection to target projection frame"
+                print "List of transformed object points after projection to target projection frame"
                 print points
 
             # Get min max points. Pass in transformed OBBPoints list to get min max for target frame. Compute width of projection shadow. Width is the y axis because shelf frame is set that way with y axis as width. Check if width of shadow projection can fit inside gripper width
@@ -422,56 +428,26 @@ class Grasping:
 
                 """ Compute midpt is probably not necessary. Seems it should always be centered I believe."""
                 # Update projection TF with new y value set to be middle of the projection wrt to the projection frame
-
-                # Trans_shelfproj = numpy.array([Tshelfproj_new[0,3], mid_y[1], Tshelfproj_new[2,3]+zoffset])
-                # Trans_shelfproj = numpy.array([Tshelfproj_new[0, 3]+depth, mid_y[1], Tshelfproj_new[2,3]]+height)
                 Trans_shelfproj = numpy.array([Tshelfproj_new[0, 3], Tshelfproj_new[1, 3], Tshelfproj_new[2, 3]])
-
                 Rot_shelfproj = Tshelfproj_new[0:3, 0:3]
                 Tshelfproj_update = self.construct_4Dmatrix(Trans_shelfproj, Rot_shelfproj)
-                # Tshelfproj_update[0, 3] += depth
-                # Tshelfproj_update[2, 3] += min_z+self.z_lowerboundoffset
 
-                # push pregrasp TF offsets
-                # Trans_projpregrasp = numpy.array([depth, 0, 0])
-                Trans_projpregrasp = numpy.array([0, 0, 0])
+                # Transform from projection to pregrasp pose
+                Trans_projpregrasp = numpy.array([depth, 0, 0])
                 Rot_projpregrasp = numpy.eye(3, 3)
                 Tprojpregrasp = self.construct_4Dmatrix(Trans_projpregrasp, Rot_projpregrasp)
                 Tshelfpregrasp = numpy.dot(Tshelfproj_update, Tprojpregrasp)
 
-                # Generate TF shelf to projection
-                proj = geometry_msgs.msg.Pose()
-                [trans, quat] = ExtractFromMatrix(Tshelfpregrasp)
-                proj.position.x = trans[0]
-                proj.position.y = trans[1]
-                proj.position.z = height
-                proj.orientation.x = quat[0]
-                proj.orientation.y = quat[1]
-                proj.orientation.z = quat[2]
-                proj.orientation.w = quat[3]
-                tf_shelfproj = self.generate_tf('/shelf', '/pregrasp', proj.position, proj.orientation)
-                self.broadcast_single_tf(tf_shelfproj)
-
-                # Construct approach TF as projection but further back
-                Trans_projapproach = numpy.array([-0.3, 0, 0])
+                # Transform from pregrasp to approach pose
+                Trans_projapproach = numpy.array([self.approachpose_offset, 0, 0])
                 Rot_projapproach = numpy.eye(3, 3)
                 Tprojapproach = self.construct_4Dmatrix(Trans_projapproach, Rot_projapproach)
 
-                # Generate TF for projection to approach pose
-                approach = geometry_msgs.msg.Pose()
-                [trans, quat] = ExtractFromMatrix(Tprojapproach)
-                approach.position.x = trans[0]
-                approach.position.y = trans[1]
-                approach.position.z = trans[2]
-                approach.orientation.x = quat[0]
-                approach.orientation.y = quat[1]
-                approach.orientation.z = quat[2]
-                approach.orientation.w = quat[3]
-                tf_projapproach = self.generate_tf('/pregrasp', '/approach', approach.position, approach.orientation)
-                self.broadcast_single_tf(tf_projapproach)
+                # Generate and display TF
+                tf_shelfproj = self.generate_tf('/shelf', '/pregrasp', Tshelfpregrasp)
+                tf_projapproach = self.generate_tf('/pregrasp', '/approach', Tprojapproach)
 
                 # camera -15 deg offset about z-axis
-                # camtheta = 0.174532925
                 camtheta = 0.261799
                 Tcamera = numpy.array([[1, 0, 0, 0],
                                        [0, numpy.cos(camtheta), -numpy.sin(camtheta), 0],
@@ -501,8 +477,10 @@ class Grasping:
                 approach_msg.position.z = height
                 q_proj_msg.put((score, proj_msg))
                 q_approach_msg.put((score, approach_msg))
+
                 if self.showOutput:
                     print "score is %f. Good approach direction. Gripper is wide enough" % score
+
             else:
                 # poseList.pop() #Removed the pose that has bad cost. projection width doesn't fit in gripper
                 score = self.compute_score(width, theta)
