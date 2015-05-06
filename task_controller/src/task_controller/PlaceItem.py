@@ -24,6 +24,7 @@ class PlaceItem(smach.State):
     def __init__(self, robot):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],
                              input_keys=['bin'], output_keys=[])
+        self.robot = robot
         self.arm = robot.arm_left_torso
         self.gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
         self.trajlib = rospy.ServiceProxy("/trajlib", GetTrajectory)

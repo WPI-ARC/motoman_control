@@ -28,11 +28,11 @@ class Grasping:
         self.tfList = []
         self.thetaList = numpy.linspace(-0.698131701, 0.698131701, num=51)
         # self.thetaList = numpy.linspace(-pi/2, pi/2, num=51)
-        # self.thetaList = numpy.linspace(-pi, pi, num=51)
+        self.thetaList = numpy.linspace(-pi, pi, num=51)
 
         # Variables that can be set
         self.showOutput = False  # Enable to show print statements
-        self.padding = 0.01  # Extra padding between object and gripper is 1 cm.
+        self.padding = 0.015  # Extra padding between object and gripper is 1 cm.
         self.fingerlength = 0.115  # palm to finger tip offset is 11.5 cm
         self.gripperwidth = 0.155 - self.padding  # gripper width is 15.5 cm
         self.z_lowerboundoffset = 0.065  # Palm center to bottom of hand is 6.5 cm
@@ -265,7 +265,7 @@ class Grasping:
         return min_x - self.fingerlength + numpy.true_divide(difference, 4)  # the palm is located at min_x so move out till lenght of finger to place lenght of finger at min_x. Then move in 1/4 of the total depth of object
 
     def compute_height(self, bin_min_z):
-        return bin_min_z + self.z_lowerboundoffset - 0.05  # minus 5cm height as magic number adjustment. Should have to do this if binmin z is correct
+        return bin_min_z + self.z_lowerboundoffset - 0.045  # minus 5cm height as magic number adjustment. Should have to do this if binmin z is correct
 
     def compute_midpt(self, points):
         avg = numpy.array([0, 0, 0])
@@ -283,7 +283,7 @@ class Grasping:
     def compute_score(self, width, rotation):
         fscore = numpy.true_divide(width, self.gripperwidth)[0]
         gscore = abs(rotation)
-        weight = 0.6
+        weight = 0.7
         score = (1-weight)*fscore + weight*gscore
         # print "%s = 0.5*%s + 0.5*%s" % (score, fscore, gscore)
         return score
@@ -342,9 +342,9 @@ class Grasping:
         binbounds = self.get_shelf_bounds(req)
         bin_min_x, bin_max_x, bin_min_y, bin_max_y, bin_min_z, bin_max_z = binbounds
         print "bin min z: " + str(bin_min_z)
-        pointcloud = self.get_obb_points(size)
-        # pointcloud = list(pc2.read_points(req.object_points, skip_nans=True,
-        #                                   field_names=("x", "y", "z")))
+        # pointcloud = self.get_obb_points(size)
+        pointcloud = list(pc2.read_points(req.object_points, skip_nans=True,
+                                          field_names=("x", "y", "z")))
 
         # Generate TFs to project onto
         for theta in self.thetaList:
@@ -353,7 +353,7 @@ class Grasping:
             Tbaseshelf = self.get_tf('/base_link', '/shelf')
             
 
-            select = True  # set to true to use the local boudindbox points. set to else for ptcloud stuff
+            select = False  # set to true to use the local boudindbox points. set to else for ptcloud stuff
             if select:
                 Tshelfobj = self.get_tf('/shelf', '/object')
                 # Tbaseobj = numpy.dot(Tbaseshelf,Tshelfobj)
