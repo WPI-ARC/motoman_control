@@ -4,22 +4,22 @@ import roslib; roslib.load_manifest('task_controller')
 import rospy
 import smach
 import smach_ros
+import yaml
+import os
 import moveit_commander
 
-import subprocess
-
-from task_controller import PickAndPlaceItem
-from task_controller import ScoopAndPickItem
-from task_controller import PickScoop
-from task_controller import Scheduler
-from task_controller import FinishTask
-from task_controller import SafeMode
-from task_controller import ErrorHandler
+from task_controller.PickAndPlaceItem import PickAndPlaceItem
+from task_controller.ScoopAndPickItem import ScoopAndPickItem
+from task_controller.PickScoop import PickScoop
+from task_controller.Scheduler import SimpleScheduler
+from task_controller.FinishTask import FinishTask
+from task_controller.SafeMode import SafeMode
+from task_controller.ErrorHandler import ErrorHandler
 
 
 class MotomanController:
 
-    def __init__(self):
+    def __init__(self, filename):
         rospy.loginfo("Starting APC task controller...")
         rospy.on_shutdown(self.cleanup)
         # Initialize the state machine
@@ -29,45 +29,43 @@ class MotomanController:
 
         self.sm = smach.StateMachine(outcomes=['DONE', 'FAILED', 'SAFE'])
 
+        if not filename.startswith("/"):
+            filename = os.path.join(os.path.dirname(__file__), "..", filename)
+        print filename
+        with open(filename) as file:
+            schedule = yaml.load(file)
+        print schedule
+
         # Populate the state machine from the modules
         with self.sm:
-            self.safemode = SafeMode.SAFEMODE()
+            self.safemode = SafeMode()
 
-            # schedule = [("grab_empty", "B", "feline_greenies_dental_treats")]
-            # schedule = [("grab_empty", "A", "crayola_64_ct"),
-            #             ("grab_empty", "B", "elmers_washable_no_run_school_glue")]
-            # schedule = [("scoop", "C", "kyjen_squeakin_eggs_plush_puppies")]
-            schedule = [("grab_empty", "B", "crayola_64_ct"),
-                        ("grab_empty", "E", "crayola_64_ct")]
-            # ("grab_empty", "E", "kyjen_squeakin_eggs_plush_puppies")]
-            # schedule = [("grab_empty", "B", "crayola_64_ct")]
             smach.StateMachine.add(
-                'Scheduler', Scheduler.SIMPLESCHEDULER(schedule),
+                'Scheduler', SimpleScheduler(schedule),
                 transitions={'Pick': 'PickAndPlaceItem', 'Scoop': 'ScoopAndPickItem', 'ToolChange': 'PickScoop',
-                             # 'Scoop': 'ScoopAndPlaceItem', 'ToolChange': 'ChangeScoop',
                              'Success': 'FinishTask', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
             )
 
             smach.StateMachine.add(
                 'PickAndPlaceItem',
-                PickAndPlaceItem.PICKANDPLACEITEM(self.robot),
+                PickAndPlaceItem(self.robot),
                 transitions={'Success': 'Scheduler', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
             )
 
             smach.StateMachine.add(
                 'ScoopAndPickItem',
-                ScoopAndPickItem.SCOOPANDPICKITEM(self.robot),
+                ScoopAndPickItem(self.robot),
                 transitions={'Success': 'Scheduler', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
             )
 
             smach.StateMachine.add(
                 'PickScoop',
-                PickScoop.PICKSCOOP(self.robot),
+                PickScoop(self.robot),
                 transitions={'Success': 'Scheduler', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
             )
 
             smach.StateMachine.add(
-                'FinishTask', FinishTask.FINISHTASK(),
+                'FinishTask', FinishTask(),
                 transitions={'Success': 'DONE', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
             )
 
@@ -77,7 +75,7 @@ class MotomanController:
             )
 
             smach.StateMachine.add(
-                'ErrorHandler', ErrorHandler.ERRORHANDLER(),
+                'ErrorHandler', ErrorHandler(),
                 transitions={'ReMove': 'SafeMode', 'ReScan': 'SafeMode', 'RePick': 'SafeMode',
                              'ReFinish': 'SafeMode', 'Failed': 'FAILED', 'Fatal': 'SafeMode'},
             )
@@ -113,8 +111,7 @@ class MotomanController:
 
 
 if __name__ == '__main__':
-    path = subprocess.check_output("rospack find task_controller", shell=True)
-    path = path.strip("\n")
     rospy.init_node("motoman_apc_controller")
-    controller = MotomanController()
+    schedule_file = rospy.get_param("~schedule", "schedules/default.yaml")
+    controller = MotomanController(schedule_file)
     controller.Start()

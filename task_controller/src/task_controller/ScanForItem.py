@@ -10,7 +10,11 @@ from apc_vision.srv import *
 from apc_vision.msg import *
 from apc_util.moveit import follow_path
 
-class SCANFORITEM(smach.State):
+
+class ScanForItem(smach.State):
+    """
+    Scan the bin to find the items it contains.
+    """
 
     def __init__(self, robot):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],

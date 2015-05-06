@@ -1,18 +1,19 @@
 import roslib; roslib.load_manifest('task_controller')
 import rospy
 import smach
-import tf2_ros
 
 from gripper_srv.srv import gripper
 from grasp_planner.srv import apcGraspDB
-from geometry_msgs.msg import TransformStamped
 from sensor_msgs.msg import PointCloud2
 
 from apc_util.grasping import filterGrasps, execute_grasp
 from apc_util.shelf import Shelf, FULL_SHELF
 
 
-class PICKITEM(smach.State):
+class PickItem(smach.State):
+    """
+    Figure out how to grasp an item and execute the appropriate grasp.
+    """
 
     def __init__(self, robot):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],
@@ -44,6 +45,8 @@ class PICKITEM(smach.State):
         #     grasp.poseapproach.position.x -= 0.2
         # random.shuffle(response.grasps.grasps)
 
+        import tf2_ros
+        from geometry_msgs.msg import TransformStamped
         grasps = response.grasps.grasps
         grasps = list(filterGrasps(self.arm, response.grasps.grasps))
         print "Grasp:", grasps[0]

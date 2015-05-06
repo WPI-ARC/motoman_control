@@ -1,12 +1,17 @@
 import roslib; roslib.load_manifest('task_controller')
 import smach
 
-import MoveToBin
-import ScanForItem
-import PickItem
-import PlaceItem
+from MoveToBin import MoveToBin
+from ScanForItem import ScanForItem
+from PickItem import PickItem
+from PlaceItem import PlaceItem
 
-def PICKANDPLACEITEM(robot):
+
+def PickAndPlaceItem(robot):
+    """
+    State machine to pick and place a single item.
+    """
+
     sm = smach.StateMachine(
         outcomes=['Success', 'Failure', 'Fatal'],
         input_keys=['bin', 'item'],
@@ -15,22 +20,22 @@ def PICKANDPLACEITEM(robot):
     # Populate the state machine from the modules
     with sm:
         smach.StateMachine.add(
-            'MoveToBin', MoveToBin.MOVETOBIN(robot),
+            'MoveToBin', MoveToBin(robot),
             transitions={'Success': 'ScanForItem', 'Failure': 'Failure', 'Fatal': 'Fatal'},
         )
 
         smach.StateMachine.add(
-            'ScanForItem', ScanForItem.SCANFORITEM(robot),
+            'ScanForItem', ScanForItem(robot),
             transitions={'Success': 'PickItem', 'Failure': 'Failure', 'Fatal': 'Fatal'},
         )
 
         smach.StateMachine.add(
-            'PickItem', PickItem.PICKITEM(robot),
+            'PickItem', PickItem(robot),
             transitions={'Success': 'PlaceItem', 'Failure': 'Failure', 'Fatal': 'Fatal'},
         )
 
         smach.StateMachine.add(
-            'PlaceItem', PlaceItem.PLACEITEM(robot),
+            'PlaceItem', PlaceItem(robot),
             transitions={'Success': 'Success', 'Failure': 'Failure', 'Fatal': 'Fatal'},
         )
 

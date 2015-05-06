@@ -5,18 +5,27 @@ import smach
 import moveit_msgs
 import moveit_commander
 
+from std_msgs.msg import Header
+from sensor_msgs.msg import JointState
 from motoman_moveit.srv import convert_trajectory_server
 from trajlib.srv import GetTrajectory
 from apc_util.moveit import goto_pose
+from trajectory_verifier.srv import CheckTrajectoryValidity
+from trajectory_verifier.msg import CheckTrajectoryValidityQuery, CheckTrajectoryValidityResult
 
 move = rospy.ServiceProxy("/convert_trajectory_service", convert_trajectory_server)
+check_collisions = rospy.ServiceProxy("/check_trajectory_validity", CheckTrajectoryValidity)
 
 
-class MOVETOBIN(smach.State):
+class MoveToBin(smach.State):
+    """
+    Moves to the desired bin, so that relevant tasks can be performed.
+    """
 
     def __init__(self, robot):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],
                              input_keys=['bin'], output_keys=[])
+        self.robot = robot
         self.arm = robot.arm_left_torso
         self.trajlib = rospy.ServiceProxy("/trajlib", GetTrajectory)
 
@@ -48,7 +57,20 @@ class MOVETOBIN(smach.State):
         display_trajectory.trajectory_start = robot.get_current_state()
         display_trajectory.trajectory.append(response.plan)
         display_trajectory_publisher.publish(display_trajectory)
-        print response.plan
+
+        collisions = check_collisions(CheckTrajectoryValidityQuery(
+            initial_state=JointState(
+                header=Header(stamp=rospy.Time.now()),
+                name=self.robot.sda10f.get_joints(),
+                position=self.robot.sda10f.get_current_joint_values()
+            ),
+            trajectory=response.plan.joint_trajectory,
+            check_type=CheckTrajectoryValidityQuery.CHECK_ENVIRONMENT_COLLISION,
+        ))
+
+        if collisions.result.status != CheckTrajectoryValidityResult.SUCCESS:
+            rospy.logwarn("Can't execute path from trajectory library, status=%s" % collisions.result.status)
+            return 'Failure'
 
         print move(response.plan.joint_trajectory)
         return 'Success'

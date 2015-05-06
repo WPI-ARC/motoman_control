@@ -51,6 +51,8 @@
   
   <!-- <include file="$(find motoman_sda10f_moveit_config)/launch/default_warehouse_db.launch" /> -->
   <node pkg="trajlib" type="trajectory_server.py" name="trajectory_server" />
+  <node pkg="trajectory_verifier" type="trajectory_verifier_node" name="trajectory_verifier" />
+
 
   <!-- Environment models -->
   <rosparam command="load" file="$(find task_controller)/cfg/shelf.yaml" />

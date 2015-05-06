@@ -8,7 +8,10 @@ from geometry_msgs.msg import Pose, Point, Quaternion
 from apc_util.moveit import follow_path, goto_pose
 from apc_util.shelf import bin_pose
 
-class SCOOP(smach.State):
+class Scoop(smach.State):
+    """
+    Scoop the items out of a bin
+    """
 
     def __init__(self, robot):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],

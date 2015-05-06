@@ -1,11 +1,13 @@
 import roslib; roslib.load_manifest('task_controller')
 import rospy
 import smach
-import smach_ros
 
-import sys
 
-class SAFEMODE(smach.State):
+class SafeMode(smach.State):
+    """
+    Ensure that the robot is in a safe state before we shut down due
+    to failure.
+    """
 
     def __init__(self):
         smach.State.__init__(self, outcomes=['Safed'])
