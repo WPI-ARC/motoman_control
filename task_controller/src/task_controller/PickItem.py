@@ -8,8 +8,8 @@ from grasp_planner.srv import apcGraspDB
 from geometry_msgs.msg import TransformStamped
 from sensor_msgs.msg import PointCloud2
 
-from util.grasping import filterGrasps, execute_grasp
-from util.shelf import Shelf, FULL_SHELF
+from apc_util.grasping import filterGrasps, execute_grasp
+from apc_util.shelf import Shelf, FULL_SHELF
 
 
 class PICKITEM(smach.State):
@@ -44,35 +44,35 @@ class PICKITEM(smach.State):
         #     grasp.poseapproach.position.x -= 0.2
         # random.shuffle(response.grasps.grasps)
 
-        # grasps = response.grasps.grasps
-        # grasps = list(filterGrasps(self.arm, response.grasps.grasps))
-        # print "Grasp:", grasps[0]
-        # tfs = []
-        # for i in range(len(grasps)):
-        #     grasp = grasps[i].pregrasp
-        #     approach = grasps[i].approach
-        #     t = TransformStamped()
-        #     t.header.stamp = rospy.Time.now()
-        #     t.header.frame_id = "base_link"
-        #     t.child_frame_id = "grasp "+str(i)
-        #     t.transform.translation = grasp.position
-        #     t.transform.rotation = grasp.orientation
-        #     tfs.append(t)
-        #     t = TransformStamped()
-        #     t.header.stamp = rospy.Time.now()
-        #     t.header.frame_id = "base_link"
-        #     t.child_frame_id = "approach "+str(i)
-        #     t.transform.translation = approach.position
-        #     t.transform.rotation = approach.orientation
-        #     tfs.append(t)
+        grasps = response.grasps.grasps
+        grasps = list(filterGrasps(self.arm, response.grasps.grasps))
+        print "Grasp:", grasps[0]
+        tfs = []
+        for i in range(len(grasps)):
+            grasp = grasps[i].pregrasp
+            approach = grasps[i].approach
+            t = TransformStamped()
+            t.header.stamp = rospy.Time.now()
+            t.header.frame_id = "base_link"
+            t.child_frame_id = "grasp "+str(i)
+            t.transform.translation = grasp.position
+            t.transform.rotation = grasp.orientation
+            tfs.append(t)
+            t = TransformStamped()
+            t.header.stamp = rospy.Time.now()
+            t.header.frame_id = "base_link"
+            t.child_frame_id = "approach "+str(i)
+            t.transform.translation = approach.position
+            t.transform.rotation = approach.orientation
+            tfs.append(t)
 
-        # br = tf2_ros.TransformBroadcaster()
-        # rate = rospy.Rate(250.0)
-        # while (not rospy.is_shutdown()):
-        #     for t in tfs:
-        #         t.header.stamp = rospy.Time.now()
-        #         br.sendTransform(t)
-        #     rate.sleep()
+        br = tf2_ros.TransformBroadcaster()
+        rate = rospy.Rate(250.0)
+        while (not rospy.is_shutdown()):
+            for t in tfs:
+                t.header.stamp = rospy.Time.now()
+                br.sendTransform(t)
+            rate.sleep()
 
         with Shelf(FULL_SHELF):
             grasps = filterGrasps(self.arm, response.grasps.grasps)

@@ -6,19 +6,15 @@ import smach
 import smach_ros
 import moveit_commander
 
-import os
-import sys
 import subprocess
-import threading
-import ctypes
 
-import PickAndPlaceItem
-import ScoopAndPickItem
-import PickScoop
-import Scheduler
-import FinishTask
-import SafeMode
-import ErrorHandler
+from task_controller import PickAndPlaceItem
+from task_controller import ScoopAndPickItem
+from task_controller import PickScoop
+from task_controller import Scheduler
+from task_controller import FinishTask
+from task_controller import SafeMode
+from task_controller import ErrorHandler
 
 
 class MotomanController:
@@ -31,11 +27,7 @@ class MotomanController:
         self.safed = False
         self.robot = moveit_commander.RobotCommander()
 
-        self.sm = smach.StateMachine(
-            outcomes=['DONE', 'FAILED', 'SAFE'],
-            input_keys=[],
-            output_keys=[]
-        )
+        self.sm = smach.StateMachine(outcomes=['DONE', 'FAILED', 'SAFE'])
 
         # Populate the state machine from the modules
         with self.sm:
@@ -44,7 +36,7 @@ class MotomanController:
             # schedule = [("grab_empty", "B", "feline_greenies_dental_treats")]
             # schedule = [("grab_empty", "A", "crayola_64_ct"),
             #             ("grab_empty", "B", "elmers_washable_no_run_school_glue")]
-            # schedule = [("scoop", "C", "elmers_washable_no_run_school_glue")]
+            # schedule = [("scoop", "C", "kyjen_squeakin_eggs_plush_puppies")]
             schedule = [("grab_empty", "B", "crayola_64_ct"),
                         ("grab_empty", "E", "crayola_64_ct")]
             # ("grab_empty", "E", "kyjen_squeakin_eggs_plush_puppies")]

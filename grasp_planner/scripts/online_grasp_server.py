@@ -283,7 +283,7 @@ class Grasping:
     def compute_score(self, width, rotation):
         fscore = numpy.true_divide(width, self.gripperwidth)[0]
         gscore = abs(rotation)
-        weight = 0.5
+        weight = 0.6
         score = (1-weight)*fscore + weight*gscore
         # print "%s = 0.5*%s + 0.5*%s" % (score, fscore, gscore)
         return score

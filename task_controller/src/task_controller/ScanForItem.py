@@ -4,11 +4,11 @@ import smach
 import numpy
 from math import cos, sin, pi
 from tf import TransformListener
-from task_controller.transformation_helpers import PoseToMatrix, PoseFromMatrix
+from apc_util.transformation_helpers import PoseToMatrix, PoseFromMatrix
 
 from apc_vision.srv import *
 from apc_vision.msg import *
-from util.moveit import follow_path
+from apc_util.moveit import follow_path
 
 class SCANFORITEM(smach.State):
 
@@ -56,9 +56,11 @@ class SCANFORITEM(smach.State):
                                   [-sin(angle), 0, cos(angle),      0],
                                   [          0, 0,          0,      1]])
 
-        return [center_pose,
-                PoseFromMatrix(numpy.dot(center_matrix, move_left)),
-                PoseFromMatrix(numpy.dot(center_matrix, move_right))]
+        # return [center_pose,
+        #         PoseFromMatrix(numpy.dot(center_matrix, move_left)),
+        #         PoseFromMatrix(numpy.dot(center_matrix, move_right))]
+
+        return [center_pose]
 
     def sample_bin(self, bin, poses):
         print "Reset:", self.sample(command="reset")
