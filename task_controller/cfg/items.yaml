@@ -1,0 +1,77 @@
+items:
+  prob_catastrophic_failure: 0.2
+  cheezit_big_original:
+    supported: true
+    bonus: 0
+  genuine_joe_plastic_stir_sticks:
+    supported: false
+    bonus: 0
+  crayola_64_ct:
+    supported: true
+    bonus: 0
+  expo_dry_erase_board_eraser:
+    supported: true
+    bonus: 0
+  elmers_washable_no_run_school_glue:
+    supported: true
+    bonus: 0
+  kyjen_squeakin_eggs_plush_puppies:
+    supported: false
+    bonus: 1
+  oreo_mega_stuf:
+    supported: false
+    bonus: 0
+  champion_copper_plus_spark_plug:
+    supported: false
+    bonus: 0
+  munchkin_white_hot_duck_bath_toy:
+    supported: false
+    bonus: 1
+  mommys_helper_outlet_plugs:
+    supported: false
+    bonus: 0
+  sharpie_accent_tank_style_highlighters:
+    supported: false
+    bonus: 0
+  stanley_66_052:
+    supported: false
+    bonus: 3
+  safety_works_safety_glasses:
+    supported: false
+    bonus: 1
+  paper_mate_12_count_mirado_black_warrior:
+    supported: false
+    bonus: 0
+  mark_twain_huckleberry_finn:
+    supported: false
+    bonus: 3
+  first_years_take_and_toss_straw_cup:
+    supported: false
+    bonus: 0
+  feline_greenies_dental_treats:
+    supported: true
+    bonus: 0
+  laugh_out_loud_joke_book:
+    supported: false
+    bonus: 3
+  kong_air_dog_squeakair_tennis_ball:
+    supported: false
+    bonus: 1
+  highland_6539_self_stick_notes:
+    supported: false
+    bonus: 0
+  kong_sitting_frog_dog_toy:
+    supported: false
+    bonus: 1
+  kong_duck_dog_toy:
+    supported: false
+    bonus: 1
+  rolodex_jumbo_pencil_cup:
+    supported: false
+    bonus: 2
+  mead_index_cards:
+    supported: false
+    bonus: 0
+  dr_browns_bottle_brush:
+    supported: false
+    bonus: 2
