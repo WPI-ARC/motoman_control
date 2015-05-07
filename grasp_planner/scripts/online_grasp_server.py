@@ -21,6 +21,7 @@ class Grasping:
 
     def __init__(self):
         self.description = "Online grasp planning code"
+        self.status = True
         self.tf = tf.TransformListener(True, rospy.Duration(10.0))
         self.br = tf2_ros.TransformBroadcaster()
         self.rate = rospy.Rate(60.0)
@@ -30,7 +31,7 @@ class Grasping:
         # self.thetaList = numpy.linspace(-pi, pi, num=51)
 
         # Variables that can be set
-        self.showOutput = False  # Enable to show print statements
+        self.showOutput = True  # Enable to show print statements
         self.padding = 0.015  # Extra padding between object and gripper is 1 cm.
         self.fingerlength = 0.115  # palm to finger tip offset is 11.5 cm
         self.gripperwidth = 0.155 - self.padding  # gripper width is 15.5 cm
@@ -38,18 +39,19 @@ class Grasping:
         self.approachpose_offset = -0.3  # Set aproach pose to be 30cm back from the front of the bin
 
         if self.showOutput:
-            print "theta range list"
-            print self.thetaList
+            rospy.logdebug("theta range list")
+            rospy.logdebug(str(self.thetaList))
             
         rospy.sleep(rospy.Duration(1.0))  # Wait for network timing to load TFs
 
     def get_tf(self, parent, child):
         if self.showOutput:
-            print "Looking up TF transform from %s to %s" % (parent, child)
+            rospy.logdebug("Looking up TF transform from %s to %s", parent, child)
         try:
             (trans, quat) = self.tf.lookupTransform(parent, child, rospy.Time(0))
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-            print "Failed to lookup TF transform from source:%s to target:%s" % (parent, child)
+            rospy.logerr("Failed to lookup TF transform from source:%s to target:%s", parent, child)
+            self.status = False
         trans = numpy.asarray(trans)
         quat = numpy.asarray(quat)
         translation = [trans.item(0), trans.item(1), trans.item(2)]
@@ -121,7 +123,8 @@ class Grasping:
         elif req.bin == 'L':
             size = [-0.43, -.01,  0.41,   -0.15764, 0.83651, 1.05069]
         else:
-            print "could not find bin size: %s" % req.item
+            rospy.logerr("could not find bin size: %s", req.item)
+            self.status = False
         return numpy.array(size)
 
     def get_object_extents(self, req):
@@ -143,7 +146,7 @@ class Grasping:
         elif req.item == 'elmers_washable_no_run_school_glue':
             item = '../env/glue.env.xml'
             size = [0.025, 0.06, 0.145]
-        elif req.item == 'sharpie_accent_tank_style_highlighters':ros
+        elif req.item == 'sharpie_accent_tank_style_highlighters':
             item = '../env/highlighters.env.xml'
             size = [0.023, 0.116, 0.125]
         elif req.item == 'mark_twain_huckleberry_finn':
@@ -195,7 +198,8 @@ class Grasping:
             item = '../env/tennisball.env.xml'
             size = [0.07, 0.108, 0.19]
         else:
-            print "could not find scene xml for object: %s" % req.item
+            rospy.logerr("could not find scene xml for object: %s", req.item)
+            self.status = False
 
         return numpy.array(size)
 
@@ -266,7 +270,7 @@ class Grasping:
         gscore = abs(rotation)
         weight = 0.6
         score = (1-weight)*fscore + weight*gscore
-        # print "%s = 0.5*%s + 0.5*%s" % (score, fscore, gscore)
+        rospy.logdebug("%s = 0.5*%s + 0.5*%s", score, fscore, gscore)
         return score
 
     def compute_minmax(self, pointList):
@@ -298,7 +302,8 @@ class Grasping:
         approach.orientation.w = quat[3]
         unit_quat = str((approach.orientation.x)**2 + (approach.orientation.y)**2 + (approach.orientation.z)**2 + (approach.orientation.w)**2)
         if unit_quat != 1:
-            print name + " is unit quaternion: " + str(unit_quat)
+            rospy.logerr(name + " is unit quaternion: " + str(unit_quat))
+            self.status = False
 
     def get_grasp_cb(self, req):
 
@@ -308,20 +313,20 @@ class Grasping:
         projectionList = []
         countbad = 0
 
-        print "************************************************** Request start **************************************************"
-        print "Requesting valid grasps for %s" % req.item
-        print "Requesting object in bin %s" % req.bin
+        rospy.logdebug( "************************************************** Request start **************************************************")
+        rospy.logdebug("Requesting valid grasps for %s", req.item)
+        rospy.logdebug("Requesting object in bin %s", req.bin)
 
         size = self.get_object_extents(req)
         binbounds = self.get_shelf_bounds(req)
         bin_min_x, bin_max_x, bin_min_y, bin_max_y, bin_min_z, bin_max_z = binbounds
-        print "bin min z: " + str(bin_min_z)
+        rospy.logdebug( "bin min z: " + str(bin_min_z))
 
         # Generate TFs to project onto
         for theta in self.thetaList:
             Tbaseshelf = self.get_tf('/base_link', '/shelf')
 
-            select = False  # set to true to use the local boudindbox points. set to else for point cloud stuff
+            select = True  # set to true to use the local boudindbox points. set to else for point cloud stuff
             if select:
                 Tshelfobj = self.get_tf('/shelf', '/object')
                 pointcloud = self.get_obb_points(size)
@@ -334,25 +339,25 @@ class Grasping:
                                   field_names=("x", "y", "z")))
 
             if self.showOutput:
-                print "********************************************** Start loop ********************************************"
-                print "OBBPoints: ", pointcloud
-                print "Transform from base to shelf: ", Tbaseshelf
-                print "Transform from shelf to obj: ", Tshelfobj
+                rospy.logdebug( "********************************************** Start loop ********************************************")
+                rospy.logdebug( "OBBPoints: "+ str(pointcloud))
+                rospy.logdebug( "Transform from base to shelf: " + str(Tbaseshelf))
+                rospy.logdebug( "Transform from shelf to obj: " + str(Tshelfobj))
 
             Tshelfproj = self.generate_rotation_matrix(theta)
             Tbaseproj = numpy.dot(Tbaseshelf, Tshelfproj)
             if theta == 0:
-                print "projecting to shelf frame"
+                rospy.logdebug("projecting to shelf frame")
 
             if self.showOutput:
-                print "Transform from shelf to proj: ", Tshelfproj, type(Tshelfproj)
+                rospy.logdebug( "Transform from shelf to proj: " + str(Tshelfproj))
 
             # Extract Translation component of Tshelfobj
             Trans_shelfobj = Tshelfobj[0:3, 3]
             Rot_shelfproj = Tshelfproj[0:3, 0:3]
             Tshelfproj_new = self.construct_4Dmatrix(Trans_shelfobj, Rot_shelfproj)
             if self.showOutput:
-                print Tshelfproj_new
+                rospy.logdebug( str(Tshelfproj_new))
 
             # Transform form projection to object
             Tprojshelf = inv(Tshelfproj_new)
@@ -365,8 +370,8 @@ class Grasping:
                 projected_OBBPoint = numpy.dot(Tprojshelf, oldpt)
                 points.append(projected_OBBPoint)
             if self.showOutput:
-                print "List of transformed object points after projection to target projection frame"
-                print points
+                rospy.logdebug( "List of transformed object points after projection to target projection frame")
+                rospy.logdebug( str(points))
 
             # Get min max points. Pass in transformed OBBPoints list to get min max for target frame. Compute width of projection shadow. Width is the y axis because shelf frame is set that way with y axis as width. Check if width of shadow projection can fit inside gripper width
             min_max = self.compute_minmax(points)
@@ -374,10 +379,10 @@ class Grasping:
             width = self.compute_width(min_y, max_y)
             
             if self.showOutput:
-                print "Min-max values [minx,maxx,miny,maxy,minz,maxz]: ", min_x, max_x, min_y, max_y, min_z, max_z
-                print "projection width: " + str(width)
-                print "min_y: " + str(min_y)
-                print "max_y: " + str(max_y)
+                rospy.logdebug( "Min-max values [minx,maxx,miny,maxy,minz,maxz]: " + str(min_max))
+                rospy.logdebug( "projection width: " + str(width))
+                rospy.logdebug( "min_y: " + str(min_y))
+                rospy.logdebug( "max_y: " + str(max_y))
             
             # Get hand pose
             isSmaller = self.check_width(width)
@@ -388,9 +393,9 @@ class Grasping:
                 height = self.compute_height(bin_min_z)  # select the height so bottom of object and also hand won't collide wit shelf lip. may need to take into acount the max_z and objects height to see if object will hit top of shelf.
                 approach_offset = self.compute_approach_offset(grasp_depth, bin_min_x, min_x, max_x, theta)
                 if self.showOutput:
-                    print "score: "+str(score)
-                    print "x grasp depth value "+str(grasp_depth)
-                    print "x height value "+str(height)
+                    rospy.logdebug( "score: "+str(score))
+                    rospy.logdebug( "x grasp depth value "+str(grasp_depth))
+                    rospy.logdebug( "x height value "+str(height))
 
                 # Update projection TF with new y value set to be middle of the projection wrt to the projection frame
                 Trans_shelfproj = numpy.array([Tshelfproj_new[0, 3], Tshelfproj_new[1, 3], Tshelfproj_new[2, 3]])
@@ -446,14 +451,14 @@ class Grasping:
                 q_approach_msg.put((score, approach_msg))
 
                 if self.showOutput:
-                    print "score is %f. Good approach direction. Gripper is wide enough" % score
+                    rospy.logdebug( "score is %f. Good approach direction. Gripper is wide enough", score)
             else:
                 score = self.compute_score(width, theta)
                 if self.showOutput:
-                    print "score is %f. Bad approach direction. Gripper not wide enough" % score
+                    rospy.logdebug( "score is %f. Bad approach direction. Gripper not wide enough", score)
                 countbad += 1
 
-        print "number of bad approach directions: " + str(countbad)
+        rospy.logdebug( "number of bad approach directions: " + str(countbad))
         
         while not q_proj_msg.empty():
             projectionList.append(q_proj_msg.get()[1])
@@ -465,13 +470,13 @@ class Grasping:
         grasps = apcGraspArray(
             grasps=graspList
         )
-        print "************************************************** end loop **************************************************"
-        print "************************************************** Request end ***********************************************"
-        return apcGraspDBResponse(status=True, grasps=grasps)
+        rospy.logdebug( "************************************************** end loop **************************************************")
+        rospy.logdebug( "************************************************** Request end ***********************************************")
+        return apcGraspDBResponse(status=self.status, grasps=grasps)
 
 
 def publisher():
-    rospy.init_node('online_grasp_server')
+    rospy.init_node('online_grasp_server', log_level=rospy.DEBUG)
 
     grasp = Grasping()
     while not rospy.is_shutdown():
@@ -481,6 +486,7 @@ def publisher():
             rospy.spin()
         except:
             print traceback.format_exc()
+            rospy.logdebug(str(traceback.format_exc()))
 
 if __name__ == '__main__':
     publisher()
