@@ -143,7 +143,7 @@ class Grasping:
         elif req.item == 'elmers_washable_no_run_school_glue':
             item = '../env/glue.env.xml'
             size = [0.025, 0.06, 0.145]
-        elif req.item == 'sharpie_accent_tank_style_highlighters':
+        elif req.item == 'sharpie_accent_tank_style_highlighters':ros
             item = '../env/highlighters.env.xml'
             size = [0.023, 0.116, 0.125]
         elif req.item == 'mark_twain_huckleberry_finn':
