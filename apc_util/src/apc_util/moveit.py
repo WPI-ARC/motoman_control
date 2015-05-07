@@ -1,4 +1,3 @@
-
 import rospy
 
 import moveit_commander
@@ -56,31 +55,31 @@ def follow_path(group, path, collision_checking=True):
     return True
 
 
-def execute_known_trajectory(self, group, task, bin):
-        response = self.trajlib(task=task, bin_num=bin)
+def execute_known_trajectory(group, task, bin):
+    response = trajlib(task=task, bin_num=bin)
 
-        start = list(response.plan.joint_trajectory.points[0].positions)
-        print start
+    start = list(response.plan.joint_trajectory.points[0].positions)
+    print start
 
-        if group.get_current_joint_values() != start:
-            rospy.logwarn("execute_known_trajectory(%s, %s): Not starting at the beginning." % (task, bin))
-            if not goto_pose(group, start, [1, 10, 30]):
-                return False
-
-        with SIMPLE_SHELF:
-            collisions = check_collisions(CheckTrajectoryValidityQuery(
-                initial_state=JointState(
-                    header=Header(stamp=rospy.Time.now()),
-                    name=robot.sda10f.get_joints(),
-                    position=robot.sda10f.get_current_joint_values()
-                ),
-                trajectory=response.plan.joint_trajectory,
-                check_type=CheckTrajectoryValidityQuery.CHECK_ENVIRONMENT_COLLISION,
-            ))
-
-        if collisions.result.status != CheckTrajectoryValidityResult.SUCCESS:
-            rospy.logwarn("Can't execute path from trajectory library, status=%s" % collisions.result.status)
+    if group.get_current_joint_values() != start:
+        rospy.logwarn("execute_known_trajectory(%s, %s): Not starting at the beginning." % (task, bin))
+        if not goto_pose(group, start, [1, 10, 30]):
             return False
 
-        print move(response.plan.joint_trajectory)
-        return True
+    with SIMPLE_SHELF:
+        collisions = check_collisions(CheckTrajectoryValidityQuery(
+            initial_state=JointState(
+                header=Header(stamp=rospy.Time.now()),
+                name=robot.sda10f.get_joints(),
+                position=robot.sda10f.get_current_joint_values()
+            ),
+            trajectory=response.plan.joint_trajectory,
+            check_type=CheckTrajectoryValidityQuery.CHECK_ENVIRONMENT_COLLISION,
+        ))
+
+    if collisions.result.status != CheckTrajectoryValidityResult.SUCCESS:
+        rospy.logwarn("Can't execute path from trajectory library, status=%s" % collisions.result.status)
+        return False
+
+    print move(response.plan.joint_trajectory)
+    return True

@@ -1,9 +1,11 @@
-import roslib; roslib.load_manifest('task_controller')
 import rospy
 import smach
 from collections import defaultdict
+from trajlib.srv import GetTrajectory
 
 from genetic_algorithm import genetic_algorithm, mutate, random_sample
+
+trajlib = rospy.ServiceProxy("/trajlib", GetTrajectory)
 
 
 class APCScheduler(smach.State):
@@ -12,6 +14,7 @@ class APCScheduler(smach.State):
         smach.State.__init__(self, outcomes=['Pick', 'Scoop', 'ToolChange', 'Success', 'Failure', 'Fatal'],
                              input_keys=[], output_keys=['item', 'bin'])
         self.order = order
+        self.items = {item.key: item for item in self.order.items}
         self.picked_items = []
         self.schedule = None
         self.location = 0
@@ -67,13 +70,12 @@ class APCScheduler(smach.State):
         )
 
         self.schedule = []
-        mapping = {item.key: item for item in self.order.items}
         for key, method in tour:
             self.schedule.append({
                 "action": method,
-                "bin": mapping[key].bin,
-                "item": mapping[key].name,
-                "others": mapping[key].contents
+                "bin": self.items[key].bin,
+                "item": self.items[key].name,
+                "others": self.items[key].contents
             })
 
         print score, tour
@@ -112,25 +114,30 @@ class APCScheduler(smach.State):
 
         edges = {}
         for i in nodes:
+            edges[("Start", i)] = self.calculate_cost(i[0])
             for j in nodes:
                 if i == j:
                     continue
-                edges[(i, j)] = self.cost(i, j)
+                edges[(i, j)] = self.calculate_cost(j[0])
 
         from pprint import pprint
         # pprint(max_cost)
-        pprint(values)
+        # pprint(values)
         # pprint(sets)
-        # pprint(edges)
+        pprint(edges)
 
         return values, sets, edges, max_cost
 
-    def cost(self, start, end):  # TODO: rename
-        SCAN_TIME = 10  # TODO: measure
-        time_to_bin = 10  # TODO: Use trajlib
+    def calculate_cost(self, item):
+        # TODO: Check status
+        traj_to_bin = trajlib(task="Forward", bin_num=self.items[item].bin)
+        traj_from_bin = trajlib(task="Drop", bin_num=self.items[item].bin)
+
+        SCAN_TIME = 20  # TODO: measure
+        time_to_bin = traj_to_bin.plan.joint_trajectory.points[-1].time_from_start.to_sec()
         PICK_TIME = 25  # TODO: measure
-        time_to_drop = 10  # TODO: Use trajlib
-        DROP_TIME = 2  # TODO: measure
+        time_to_drop = traj_from_bin.plan.joint_trajectory.points[-1].time_from_start.to_sec()
+        DROP_TIME = 10  # TODO: measure
         return SCAN_TIME + time_to_bin + PICK_TIME + time_to_drop + DROP_TIME
 
 
@@ -138,13 +145,14 @@ def get_item_property(item, property, default):
     return rospy.get_param("/items/"+item+"/"+property, default)
 
 
-# TODO: Load
+# TODO: Load prob_catastrophic_failure
 def cost(values, edges, max_cost, prob_catastrophic_failure=0.2):
-    # TODO: Cost currently ignores the cost of the initial edge
     def real_cost(tour):
         score = values[tour[0][0]]
-        cost = 0.0
         prob_continue = 1
+
+        cost = edges[("Start", tour[0])]
+        prob_continue *= (1. - prob_catastrophic_failure)
         for edge in zip(tour, tour[1:]):
             # print cost, score
             if (cost + edges[edge]) <= max_cost:
