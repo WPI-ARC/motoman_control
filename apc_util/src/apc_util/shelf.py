@@ -6,7 +6,7 @@ from geometry_msgs.msg import PoseStamped
 from collision import scene, remove_object
 
 kiva_pod = os.path.join(os.path.dirname(__file__),
-                        "../schedules/meshes/pod_lowres.stl")
+                        "../../meshes/pod_lowres.stl")
 
 PADDING = 0.01
 
@@ -62,7 +62,7 @@ def add_shelf(quality=Shelf.SIMPLE):
             mypose.pose.position.x += dx * PADDING
             mypose.pose.position.y += dy * PADDING
             scene.add_mesh(
-                name="shelf",
+                name="shelf"+str(dx)+str(dy),
                 pose=mypose,
                 filename=kiva_pod
             )
@@ -73,6 +73,8 @@ def add_shelf(quality=Shelf.SIMPLE):
 
 def remove_shelf():
     remove_object("shelf")
+    for dx, dy in [(0, 0), (1, 1), (1, -1), (-1, -1), (-1, 1)]:
+        remove_object("shelf"+str(dx)+str(dy))
 
 
 def get_shelf_pose(prefix="/shelf"):
