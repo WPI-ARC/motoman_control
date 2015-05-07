@@ -19,7 +19,7 @@ def goto_pose(group, pose, times=[5, 20, 40, 60], shelf=SIMPLE_SHELF):
     plan quickly if possible, but fall back on longer plans if
     necessary. If `add_shelf` is true, a box model of the shelf is
     added to the environment to avoid collisions."""
-    with Shelf(shelf):
+    with shelf:
         for t in times:
             group.set_planning_time(t)
             rospy.loginfo("Planning for "+str(t)+" seconds...")
