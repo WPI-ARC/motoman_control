@@ -16,11 +16,10 @@ if __name__ == '__main__':
 
     if not order_file.startswith("/"):
         order_file = os.path.join(os.path.dirname(__file__),
-                                     "../orders", order_file)
+                                  "../orders", order_file)
     print order_file
     with open(order_file) as file:
         raw_order = json.load(file)
-    print raw_order
 
     order = WorkOrder()
     for element in raw_order["work_order"]:

@@ -1,6 +1,7 @@
 items:
+  prob_catastrophic_failure: 0.2
   cheezit_big_original:
-    supported: false
+    supported: true
     bonus: 0
   genuine_joe_plastic_stir_sticks:
     supported: false
@@ -9,10 +10,10 @@ items:
     supported: true
     bonus: 0
   expo_dry_erase_board_eraser:
-    supported: false
+    supported: true
     bonus: 0
   elmers_washable_no_run_school_glue:
-    supported: false
+    supported: true
     bonus: 0
   kyjen_squeakin_eggs_plush_puppies:
     supported: false
@@ -48,7 +49,7 @@ items:
     supported: false
     bonus: 0
   feline_greenies_dental_treats:
-    supported: false
+    supported: true
     bonus: 0
   laugh_out_loud_joke_book:
     supported: false

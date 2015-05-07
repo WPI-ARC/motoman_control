@@ -5,8 +5,6 @@ from collections import defaultdict
 
 from genetic_algorithm import genetic_algorithm, mutate, random_sample
 
-APC_BINS = "ABCDEFGHIJKL"
-
 
 class APCScheduler(smach.State):
 
@@ -81,10 +79,15 @@ class APCScheduler(smach.State):
         print self.schedule
 
     def formulate_problem(self):
-        max_cost = 60*19 # Find a 19 minute plan
+        max_cost = 60*19  # Find a 19 minute plan
+
+        # TODO: Filter out unsupported items
 
         values = {}
         for item in self.order.items:
+            if not get_item_property(item.name, "supported", False):
+                rospy.logwarn("Item %s is not currently supported." % item.name)
+                continue
             values[item.key] = 0
             if len(item.contents) == 1:
                 values[item.key] += 10
@@ -92,17 +95,19 @@ class APCScheduler(smach.State):
                 values[item.key] += 15
             else:
                 values[item.key] += 20
-            # TODO: Verify bonuses are loading properly
-            values[item.key] += rospy.get_param("/items/"+item.name+"/bonus", 0)
+            values[item.key] += get_item_property(item.name, "bonus", 0)
 
         sets = defaultdict(lambda: [])
         nodes = []
         for item in self.order.items:
-            # TODO: Only grab + scoop?
+            if not get_item_property(item.name, "supported", False):
+                continue
             sets[item.key].append("grab")
-            sets[item.key].append("scoop")
             nodes.append((item.key, "grab"))
-            nodes.append((item.key, "scoop"))
+            # TODO: Add scooping back in
+            # sets[item.key].append("scoop")
+            # nodes.append((item.key, "scoop"))
+            # TODO: Add support for right hand grab?
 
         edges = {}
         for i in nodes:
@@ -111,15 +116,15 @@ class APCScheduler(smach.State):
                     continue
                 edges[(i, j)] = self.cost(i, j)
 
-        # from pprint import pprint
+        from pprint import pprint
         # pprint(max_cost)
-        # pprint(values)
+        pprint(values)
         # pprint(sets)
         # pprint(edges)
 
         return values, sets, edges, max_cost
 
-    def cost(self, start, end):
+    def cost(self, start, end):  # TODO: rename
         SCAN_TIME = 10  # TODO: measure
         time_to_bin = 10  # TODO: Use trajlib
         PICK_TIME = 25  # TODO: measure
@@ -128,16 +133,23 @@ class APCScheduler(smach.State):
         return SCAN_TIME + time_to_bin + PICK_TIME + time_to_drop + DROP_TIME
 
 
-def cost(values, edges, max_cost):
+def get_item_property(item, property, default):
+    return rospy.get_param("/items/"+item+"/"+property, default)
+
+
+# TODO: Load
+def cost(values, edges, max_cost, prob_catastrophic_failure=0.2):
     # TODO: Cost currently ignores the cost of the initial edge
     def real_cost(tour):
         score = values[tour[0][0]]
         cost = 0.0
+        prob_continue = 1
         for edge in zip(tour, tour[1:]):
             # print cost, score
             if (cost + edges[edge]) <= max_cost:
                 cost += edges[edge]
-                score += values[edge[1][0]]
+                score += prob_continue*values[edge[1][0]]
+                prob_continue *= (1. - prob_catastrophic_failure)
             else:
                 break
         # print cost, score
