@@ -4,9 +4,6 @@ import subprocess
 from geometry_msgs.msg import PoseStamped
 from collision import scene, remove_object
 
-NO_SHELF = 0
-SIMPLE_SHELF = 1
-FULL_SHELF = 2
 
 kiva_pod = subprocess.check_output("rospack find apc_models", shell=True)\
     .strip("\n") + "/meshes/pod_lowres.stl"
@@ -14,6 +11,9 @@ kiva_pod = subprocess.check_output("rospack find apc_models", shell=True)\
 
 class Shelf(object):
     """Add shelf collision object"""
+    NONE = 0
+    SIMPLE = 1
+    FULL = 2
 
     def __init__(self, quality):
         super(Shelf, self).__init__()
@@ -21,13 +21,17 @@ class Shelf(object):
 
     def __enter__(self):
         print "Entering shelf: ", self.quality
-        if self.quality != NO_SHELF:
+        if self.quality != Shelf.NONE:
             add_shelf(self.quality)
 
     def __exit__(self, type, value, tb):
         print "Exit shelf: ", self.quality
-        if self.quality != NO_SHELF:
+        if self.quality != Shelf.NONE:
             remove_shelf()
+
+NO_SHELF = Shelf(Shelf.NONE)
+SIMPLE_SHELF = Shelf(Shelf.SIMPLE)
+FULL_SHELF = Shelf(Shelf.FULL)
 
 
 def add_shelf(quality=SIMPLE_SHELF):
