@@ -1,0 +1,21 @@
+- action: grab
+  bin: !!python/unicode 'A'
+  item: !!python/unicode 'elmers_washable_no_run_school_glue'
+  others: [!!python/unicode 'elmers_washable_no_run_school_glue', !!python/unicode 'safety_works_safety_glasses']
+- action: grab
+  bin: !!python/unicode 'D'
+  item: !!python/unicode 'crayola_64_ct'
+  others: [!!python/unicode 'crayola_64_ct', !!python/unicode 'kyjen_squeakin_eggs_plush_puppies',
+    !!python/unicode 'kong_sitting_frog_dog_toy']
+- action: grab
+  bin: !!python/unicode 'B'
+  item: !!python/unicode 'feline_greenies_dental_treats'
+  others: [!!python/unicode 'feline_greenies_dental_treats']
+- action: grab
+  bin: !!python/unicode 'E'
+  item: !!python/unicode 'expo_dry_erase_board_eraser'
+  others: [!!python/unicode 'expo_dry_erase_board_eraser']
+- action: grab
+  bin: !!python/unicode 'C'
+  item: !!python/unicode 'cheezit_big_original'
+  others: [!!python/unicode 'cheezit_big_original']

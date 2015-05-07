@@ -73,6 +73,7 @@ class APCScheduler(smach.State):
                 "action": method,
                 "bin": mapping[key].bin,
                 "item": mapping[key].name,
+                "others": mapping[key].contents
             })
 
         print score, tour
