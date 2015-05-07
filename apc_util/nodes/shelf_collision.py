@@ -9,6 +9,7 @@ qualities = {
     "None": Shelf.NONE,
     "Simple": Shelf.SIMPLE,
     "Full": Shelf.FULL,
+    "Padded": Shelf.PADDED,
 }
 
 
@@ -19,8 +20,8 @@ if __name__ == '__main__':
     parser.add_argument("--remove", help="Remove the shelf",
                         action="store_true")
     parser.add_argument("--quality", default="Full",
-                        choices=["None", "Simple", "Full"],
-                        help="Shelf quality (None, Simple, Full)")
+                        choices=["None", "Simple", "Full", "Padded"],
+                        help="Shelf quality (None, Simple, Full, Padded)")
 
     args = parser.parse_args()
 
