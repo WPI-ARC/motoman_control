@@ -36,7 +36,7 @@ def follow_path(group, path, collision_checking=True):
     to check the path for collisions with the environment."""
     traj, success = group.compute_cartesian_path(
         path,
-        0.01,  # 1cm interpolation resolution
+        0.001,  # 1cm interpolation resolution
         0.0,  # jump_threshold disabled
         avoid_collisions=collision_checking,
     )
@@ -45,6 +45,6 @@ def follow_path(group, path, collision_checking=True):
             "Cartesian trajectory could not be completed. Only solved for: '"
             + str(success) + "'..."
         )
-        # return False
+        # TODO: return False
     print move(traj.joint_trajectory)
     return True

@@ -237,7 +237,7 @@ class Grasping:
         offset = numpy.true_divide(obj_depth, 2)
         if offset > self.fingerlength:
             offset = 0.06
-        return (edge_offset - self.fingerlength + offset) # the palm is located at min_x so move out till lenght of finger to place lenght of finger at min_x. Then move in 1/4 of the total depth of object
+        return (-edge_offset - self.fingerlength + offset) # the palm is located at min_x so move out till lenght of finger to place lenght of finger at min_x. Then move in 1/4 of the total depth of object
 
     def compute_height(self, bin_min_z):
         return bin_min_z + self.z_lowerboundoffset - 0.045  # minus 5cm height as magic number adjustment. Should have to do this if binmin z is correct
@@ -321,7 +321,7 @@ class Grasping:
         for theta in self.thetaList:
             Tbaseshelf = self.get_tf('/base_link', '/shelf')
 
-            select = True  # set to true to use the local boudindbox points. set to else for point cloud stuff
+            select = False  # set to true to use the local boudindbox points. set to else for point cloud stuff
             if select:
                 Tshelfobj = self.get_tf('/shelf', '/object')
                 pointcloud = self.get_obb_points(size)

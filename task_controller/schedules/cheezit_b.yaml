@@ -1,0 +1,4 @@
+- action: grab
+  bin: B
+  item: "cheezit_big_original"
+  others: []
