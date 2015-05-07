@@ -54,19 +54,19 @@ if __name__ == '__main__':
 
     robot = moveit_commander.RobotCommander()
 
-    print "Starting up"
+    rospy.loginfo("Starting up")
     skip = raw_input("Hit enter to move to initial pose or type skip to skip: ")
     if "s" not in skip:
-        print "Left: ", robot.arm_left.go(pose_left)
-        print "Right: ", robot.arm_right.go(pose_right)
-    print "Please jog until the palms touch the shelf"
+        rospy.loginfo("Left: %s" % robot.arm_left.go(pose_left))
+        rospy.loginfo("Right: %s" % robot.arm_right.go(pose_right))
+    rospy.loginfo("Please jog until the palms touch the shelf")
     raw_input("Hit enter to continue ")
     left = robot.arm_left.get_current_pose().pose
     right = robot.arm_right.get_current_pose().pose
     x = depth/2 + palm_offset + (left.position.x + right.position.x)/2
     y = (left.position.y + right.position.y)/2
-    print "X =", x
-    print "Y =", y
+    rospy.loginfo("X = %s" % x)
+    rospy.loginfo("Y = %s" % y)
 
     cfg = {
         "shelf": {
@@ -82,3 +82,4 @@ if __name__ == '__main__':
     filename = os.path.join(os.path.dirname(__file__), "../cfg/shelf.yaml")
     with open(filename, "w") as file:
         yaml.dump(cfg, file, default_flow_style=False)
+    rospy.loginfo("Wrote config to %s" % filename)
