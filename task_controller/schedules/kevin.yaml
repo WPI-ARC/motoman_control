@@ -1,8 +1,4 @@
 - action: grab-kevin
-  bin: B
-  item: "crayola_64_ct"
-  others: []
-- action: grab
-  bin: E
+  bin: A
   item: "feline_greenies_dental_treats"
-  others: ["elmers_washable_no_run_school_glue"]
+  others: []

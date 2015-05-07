@@ -240,12 +240,13 @@ class Grasping:
     def compute_width(self, min_y, max_y):
         return abs(max_y-min_y)
 
-    def compute_depth(self, min_x, max_x):
-        difference = abs(max_x-min_x)
-        offset = numpy.true_divide(difference, 4)
+    def compute_depth(self, min_x, max_x, object_xmid):
+        edge_offset = abs(object_xmid - min_x) # Distance from ymid of object to edge of object
+        obj_depth = abs(max_x-min_x)
+        offset = numpy.true_divide(obj_depth, 4)
         if offset > self.fingerlength:
             offset = 0.06
-        return min_x - self.fingerlength + offset  # the palm is located at min_x so move out till lenght of finger to place lenght of finger at min_x. Then move in 1/4 of the total depth of object
+        return (min_x-edge_offset-self.fingerlength + offset)  # the palm is located at min_x so move out till lenght of finger to place lenght of finger at min_x. Then move in 1/4 of the total depth of object
 
     def compute_height(self, bin_min_z):
         return bin_min_z + self.z_lowerboundoffset - 0.045  # minus 5cm height as magic number adjustment. Should have to do this if binmin z is correct
@@ -272,7 +273,7 @@ class Grasping:
     def compute_score(self, width, rotation):
         fscore = numpy.true_divide(width, self.gripperwidth)[0]
         gscore = abs(rotation)
-        weight = 0.7
+        weight = 0.6
         score = (1-weight)*fscore + weight*gscore
         # print "%s = 0.5*%s + 0.5*%s" % (score, fscore, gscore)
         return score
@@ -397,8 +398,9 @@ class Grasping:
 
             # Get hand pose
             if isSmaller:
+                object_xmid = Tshelfproj_new[0, 3]
                 score = self.compute_score(width, theta)
-                grasp_depth = self.compute_depth(min_x, max_x)  # set how far hand should go past front edge of object
+                grasp_depth = self.compute_depth(min_x, max_x, object_xmid)  # set how far hand should go past front edge of object
                 height = self.compute_height(bin_min_z)  # select the height so bottom of object and also hand won't collide wit shelf lip. may need to take into acount the max_z and objects height to see if object will hit top of shelf.
                 approach_offset = self.compute_approach_offset(grasp_depth, bin_min_x, min_x, max_x, theta)
                 if self.showOutput:
@@ -418,14 +420,14 @@ class Grasping:
                 Tshelfpregrasp = numpy.dot(Tshelfproj_update, Tprojpregrasp)
 
                 # Transform from pregrasp to approach pose
-                Trans_projapproach = numpy.array([approach_offset, 0, 0])
+                # Trans_projapproach = numpy.array([approach_offset, 0, 0])
                 Trans_projapproach = numpy.array([self.approachpose_offset, 0, 0])
                 Rot_projapproach = numpy.eye(3, 3)
                 Tprojapproach = self.construct_4Dmatrix(Trans_projapproach, Rot_projapproach)
 
                 # Generate and display TF
-                tf_shelfproj = self.generate_tf('/shelf', '/pregrasp', Tshelfpregrasp)
-                tf_projapproach = self.generate_tf('/pregrasp', '/approach', Tprojapproach)
+                self.generate_tf('/shelf', '/pregrasp', Tshelfpregrasp)
+                self.generate_tf('/pregrasp', '/approach', Tprojapproach)
 
                 # camera -15 deg offset about z-axis
                 camtheta = 0.261799
