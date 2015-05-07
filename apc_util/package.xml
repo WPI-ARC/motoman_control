@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<package>
+  <name>apc_util</name>
+  <version>0.1.0</version>
+  <description>Utilities for the Amazon Picking Challenge</description>
+  <license>BSD</license>
+
+  <author email="adhenning@thoriumrobotics.com">Alex Henning</author>
+  <maintainer email="adhenning@thoriumrobotics.com">Alex Henning</maintainer>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>st_msgsd</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>trajectory_msgs</build_depend>
+  <build_depend>actionlib</build_depend>
+  <build_depend>tf</build_depend>
+
+  <run_depend>rospy</run_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>st_msgsd</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>trajectory_msgs</run_depend>
+  <run_depend>actionlib</run_depend>
+  <run_depend>tf</run_depend>
+</package>
