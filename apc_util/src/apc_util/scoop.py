@@ -9,7 +9,7 @@ from moveit_msgs.msg import PlanningScene, PlanningSceneComponents
 from moveit_msgs.srv import GetPlanningScene
 
 pubPlanningScene = rospy.Publisher('planning_scene', PlanningScene)
-rospy.wait_for_service('/get_planning_scene', 10.0)
+# rospy.wait_for_service('/get_planning_scene', 10.0)
 get_planning_scene = rospy.ServiceProxy('/get_planning_scene', GetPlanningScene)
 
 SCOOP = 'Scoop'

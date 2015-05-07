@@ -1,19 +1,21 @@
 
 import rospy
-import subprocess
+import os
+from copy import deepcopy
 from geometry_msgs.msg import PoseStamped
 from collision import scene, remove_object
 
+kiva_pod = os.path.join(os.path.dirname(__file__),
+                        "../../meshes/pod_lowres.stl")
 
-kiva_pod = subprocess.check_output("rospack find apc_models", shell=True)\
-    .strip("\n") + "/meshes/pod_lowres.stl"
-
+PADDING = 0.01
 
 class Shelf(object):
     """Add shelf collision object"""
     NONE = 0
     SIMPLE = 1
     FULL = 2
+    PADDED = 3
 
     def __init__(self, quality):
         super(Shelf, self).__init__()
@@ -32,27 +34,38 @@ class Shelf(object):
 NO_SHELF = Shelf(Shelf.NONE)
 SIMPLE_SHELF = Shelf(Shelf.SIMPLE)
 FULL_SHELF = Shelf(Shelf.FULL)
+PADDED_SHELF = Shelf(Shelf.PADDED)
 
 
-def add_shelf(quality=SIMPLE_SHELF):
+def add_shelf(quality=Shelf.SIMPLE):
     pose = get_shelf_pose()
     print "Adding shelf", scene._pub_co.get_num_connections()
     while scene._pub_co.get_num_connections() == 0:
         rospy.sleep(0.01)
         print "Waiting..."
-    if quality == SIMPLE_SHELF:
+    if quality == Shelf.SIMPLE:
         pose.pose.position.z += 1.25
         scene.add_box(
             name="shelf",
             pose=pose,
             size=(0.96, 2.5, 0.96)
         )
-    elif quality == FULL_SHELF:
+    elif quality == Shelf.FULL:
         scene.add_mesh(
             name="shelf",
             pose=pose,
             filename=kiva_pod
         )
+    elif quality == Shelf.PADDED:
+        for dx, dy in [(0, 0), (1, 1), (1, -1), (-1, -1), (-1, 1)]:
+            mypose = deepcopy(pose)
+            mypose.pose.position.x += dx * PADDING
+            mypose.pose.position.y += dy * PADDING
+            scene.add_mesh(
+                name="shelf"+str(dx)+str(dy),
+                pose=mypose,
+                filename=kiva_pod
+            )
     else:
         rospy.logwarn("Unsupported quality %s" % quality)
     print "Added"
@@ -60,6 +73,8 @@ def add_shelf(quality=SIMPLE_SHELF):
 
 def remove_shelf():
     remove_object("shelf")
+    for dx, dy in [(0, 0), (1, 1), (1, -1), (-1, -1), (-1, 1)]:
+        remove_object("shelf"+str(dx)+str(dy))
 
 
 def get_shelf_pose(prefix="/shelf"):
