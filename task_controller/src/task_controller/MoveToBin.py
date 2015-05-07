@@ -10,6 +10,7 @@ from sensor_msgs.msg import JointState
 from motoman_moveit.srv import convert_trajectory_server
 from trajlib.srv import GetTrajectory
 from apc_util.moveit import goto_pose
+from apc_util.shelf import SIMPLE_SHELF
 from trajectory_verifier.srv import CheckTrajectoryValidity
 from trajectory_verifier.msg import CheckTrajectoryValidityQuery, CheckTrajectoryValidityResult
 
@@ -51,22 +52,16 @@ class MoveToBin(smach.State):
             if not goto_pose(self.arm, start, [1, 10, 30, 60, 120]):
                 return 'Failure'
 
-        display_trajectory_publisher = rospy.Publisher('/move_group/display_planned_path', moveit_msgs.msg.DisplayTrajectory)
-        display_trajectory = moveit_msgs.msg.DisplayTrajectory()
-        robot = moveit_commander.RobotCommander()
-        display_trajectory.trajectory_start = robot.get_current_state()
-        display_trajectory.trajectory.append(response.plan)
-        display_trajectory_publisher.publish(display_trajectory)
-
-        collisions = check_collisions(CheckTrajectoryValidityQuery(
-            initial_state=JointState(
-                header=Header(stamp=rospy.Time.now()),
-                name=self.robot.sda10f.get_joints(),
-                position=self.robot.sda10f.get_current_joint_values()
-            ),
-            trajectory=response.plan.joint_trajectory,
-            check_type=CheckTrajectoryValidityQuery.CHECK_ENVIRONMENT_COLLISION,
-        ))
+        with SIMPLE_SHELF:
+            collisions = check_collisions(CheckTrajectoryValidityQuery(
+                initial_state=JointState(
+                    header=Header(stamp=rospy.Time.now()),
+                    name=self.robot.sda10f.get_joints(),
+                    position=self.robot.sda10f.get_current_joint_values()
+                ),
+                trajectory=response.plan.joint_trajectory,
+                check_type=CheckTrajectoryValidityQuery.CHECK_ENVIRONMENT_COLLISION,
+            ))
 
         if collisions.result.status != CheckTrajectoryValidityResult.SUCCESS:
             rospy.logwarn("Can't execute path from trajectory library, status=%s" % collisions.result.status)
