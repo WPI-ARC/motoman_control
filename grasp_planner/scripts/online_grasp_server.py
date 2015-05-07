@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import roslib
 import Queue as Q
 import tf
 import tf2_ros
@@ -26,7 +25,7 @@ class Grasping:
         self.br = tf2_ros.TransformBroadcaster()
         self.rate = rospy.Rate(60.0)
         self.tfList = []
-        self.thetaList = numpy.linspace(-0.698131701, 0.698131701, num=51)
+        self.thetaList = numpy.linspace(-pi/4, pi/4, num=51)
         # self.thetaList = numpy.linspace(-pi/2, pi/2, num=51)
         # self.thetaList = numpy.linspace(-pi, pi, num=51)
 
@@ -57,14 +56,6 @@ class Grasping:
         quaternion = [quat.item(0), quat.item(1), quat.item(2), quat.item(3)]
         transform = BuildMatrix(translation, quaternion)
         return transform
-
-    def broadcast_tf(self, tfList):
-        rate = rospy.Rate(1000)
-        for time in range(0, 1000):
-            for t in tfList:
-                t.header.stamp = rospy.Time.now()
-                self.br.sendTransform(t)
-            rate.sleep()
 
     def broadcast_single_tf(self, t):
         rate = rospy.Rate(1000)
@@ -279,27 +270,19 @@ class Grasping:
         return score
 
     def compute_minmax(self, pointList):
-        # Loop through pointList to find the min & max for the x, y, and z
-        min_x = 999999999999999
-        min_y = 999999999999999
-        min_z = 999999999999999
-        max_x = -99999999999999
-        max_y = -99999999999999
-        max_z = -99999999999999
-
+        x = []
+        y = []
+        z = []
         for point in pointList:
-            if point[0] > max_x:  # if x point is larger than current max x then replace with new one
-                max_x = point[0]
-            if point[0] < min_x:  # if x point is smaller than current min x then replace with new one
-                min_x = point[0]
-            if point[1] > max_y:  # if y point is larger than current max y then replace with new one
-                max_y = point[1]
-            if point[1] < min_y:  # if y point is smaller than current min y then replace with new one
-                min_y = point[1]
-            if point[2] > max_z:  # if z point is larger than current max z then replace with new one
-                max_z = point[2]
-            if point[2] < min_z:  # if z point is smaller than current min z then replace with new one
-                min_z = point[2]
+            x.append(point[0])
+            y.append(point[1])
+            z.append(point[2])
+        min_x = min(x)
+        max_x = max(x)
+        min_y = min(y)
+        max_y = max(y)
+        min_z = min(z)
+        max_z = max(z)
         min_max = numpy.array([min_x, max_x, min_y, max_y, min_z, max_z])
         return min_max
 
@@ -313,7 +296,9 @@ class Grasping:
         approach.orientation.y = quat[1]
         approach.orientation.z = quat[2]
         approach.orientation.w = quat[3]
-        print name + " is unit quaternion: " + str((approach.orientation.x)**2 + (approach.orientation.y)**2 + (approach.orientation.z)**2 + (approach.orientation.w)**2)
+        unit_quat = str((approach.orientation.x)**2 + (approach.orientation.y)**2 + (approach.orientation.z)**2 + (approach.orientation.w)**2)
+        if unit_quat != 1:
+            print name + " is unit quaternion: " + str(unit_quat)
 
     def get_grasp_cb(self, req):
 
@@ -335,21 +320,21 @@ class Grasping:
         # Generate TFs to project onto
         for theta in self.thetaList:
             Tbaseshelf = self.get_tf('/base_link', '/shelf')
-            
+
             select = False  # set to true to use the local boudindbox points. set to else for point cloud stuff
             if select:
                 Tshelfobj = self.get_tf('/shelf', '/object')
                 pointcloud = self.get_obb_points(size)
-                
+
             else:
                 # for ptcloud
                 Tbaseobj = PoseToMatrix(req.object_pose)  # same Trob_obj request from offline planner
                 Tshelfobj = numpy.dot(inv(Tbaseshelf), Tbaseobj)
                 pointcloud = list(pc2.read_points(req.object_points, skip_nans=True,
-                                  field_names=("x", "y", "z")))    
+                                  field_names=("x", "y", "z")))
 
             if self.showOutput:
-                print "************************************************** Start loop **************************************************"
+                print "********************************************** Start loop ********************************************"
                 print "OBBPoints: ", pointcloud
                 print "Transform from base to shelf: ", Tbaseshelf
                 print "Transform from shelf to obj: ", Tshelfobj
@@ -361,7 +346,6 @@ class Grasping:
 
             if self.showOutput:
                 print "Transform from shelf to proj: ", Tshelfproj, type(Tshelfproj)
-                # print "Transform from base to proj", Tbaseproj, type(Tbaseproj)
 
             # Extract Translation component of Tshelfobj
             Trans_shelfobj = Tshelfobj[0:3, 3]
@@ -394,9 +378,9 @@ class Grasping:
                 print "projection width: " + str(width)
                 print "min_y: " + str(min_y)
                 print "max_y: " + str(max_y)
-            isSmaller = self.check_width(width)
-
+            
             # Get hand pose
+            isSmaller = self.check_width(width)
             if isSmaller:
                 object_xmid = Tshelfproj_new[0, 3]
                 score = self.compute_score(width, theta)
@@ -482,7 +466,7 @@ class Grasping:
             grasps=graspList
         )
         print "************************************************** end loop **************************************************"
-        print "************************************************** Request end **************************************************"
+        print "************************************************** Request end ***********************************************"
         return apcGraspDBResponse(status=True, grasps=grasps)
 
 
