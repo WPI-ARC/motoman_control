@@ -1,10 +1,6 @@
-#!/usr/bin/python
-
-import roslib; roslib.load_manifest('task_controller')
 import rospy
 import smach
 import smach_ros
-import moveit_commander
 
 from task_controller.PickAndPlaceItem import PickAndPlaceItem
 from task_controller.ScoopAndPickItem import ScoopAndPickItem
@@ -12,6 +8,7 @@ from task_controller.PickScoop import PickScoop
 from task_controller.FinishTask import FinishTask
 from task_controller.SafeMode import SafeMode
 from task_controller.ErrorHandler import ErrorHandler
+from apc_utils.moveit import robot
 
 
 class MotomanController:
@@ -22,7 +19,6 @@ class MotomanController:
         # Initialize the state machine
         self.running = False
         self.safed = False
-        self.robot = moveit_commander.RobotCommander()
 
         self.sm = smach.StateMachine(outcomes=['DONE', 'FAILED', 'SAFE'])
 
@@ -38,19 +34,19 @@ class MotomanController:
 
             smach.StateMachine.add(
                 'PickAndPlaceItem',
-                PickAndPlaceItem(self.robot),
+                PickAndPlaceItem(robot),
                 transitions={'Success': 'Scheduler', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
             )
 
             smach.StateMachine.add(
                 'ScoopAndPickItem',
-                ScoopAndPickItem(self.robot),
+                ScoopAndPickItem(robot),
                 transitions={'Success': 'Scheduler', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
             )
 
             smach.StateMachine.add(
                 'PickScoop',
-                PickScoop(self.robot),
+                PickScoop(robot),
                 transitions={'Success': 'Scheduler', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
             )
 
