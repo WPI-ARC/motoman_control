@@ -56,6 +56,6 @@
 
   <!-- Environment models -->
   <rosparam command="load" file="$(find task_controller)/cfg/shelf.yaml" />
-  <node pkg="task_controller" type="publish_shelf_tf.py" name="publish_shelf_tf" />
+  <node pkg="apc_util" type="publish_shelf_tf.py" name="publish_shelf_tf" />
   <node pkg="apc_models" type="publish_lab.py" name="publish_lab" />
 </launch>

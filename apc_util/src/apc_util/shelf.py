@@ -1,12 +1,11 @@
 
 import rospy
-import subprocess
+import os
 from geometry_msgs.msg import PoseStamped
 from collision import scene, remove_object
 
-
-kiva_pod = subprocess.check_output("rospack find apc_models", shell=True)\
-    .strip("\n") + "/meshes/pod_lowres.stl"
+kiva_pod = os.path.join(os.path.dirname(__file__),
+                        "../schedules/meshes/pod_lowres.stl")
 
 
 class Shelf(object):
