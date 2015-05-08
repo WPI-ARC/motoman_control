@@ -264,13 +264,10 @@ class Grasping:
             isSmaller = False
         return isSmaller
 
-    # def compute_approach_offset(self, projection_x, bin_min_x):
-    #     dist = projection_x - bin_min_x
-        
-    #     item_depth = abs(max_x - min_x)
-    #     offset = numpy.cos(abs(theta)) * (grasp_depth - bin_min_x + self.fingerlength + item_depth + self.approachpose_offset)
-    #     offset =  bin_min_x
-    #     return -offset
+    def compute_approach_offset(self, projection_x, bin_min_x, theta):
+        dist = projection_x - bin_min_x
+        offset = (dist - self.approachpose_offset) * numpy.cos(abs(theta))
+        return dist - self.approachpose_offset
 
     def compute_score(self, width, rotation):
         fscore = numpy.true_divide(width, self.gripperwidth)[0]
@@ -386,7 +383,7 @@ class Grasping:
                 score = self.compute_score(width, theta)
                 grasp_depth = self.compute_depth(min_x, max_x)  # set how far hand should go past front edge of object
                 height = self.compute_height(bin_min_z)  # select the height so bottom of object and also hand won't collide wit shelf lip. may need to take into acount the max_z and objects height to see if object will hit top of shelf.
-                approach_offset = self.compute_approach_offset(Trans_shelfobj[0], bin_min_x)
+                approach_offset = self.compute_approach_offset(Trans_shelfobj[0], bin_min_x, theta)
 
                 rospy.logdebug( "score: "+str(score))
                 rospy.logdebug( "x grasp depth value "+str(grasp_depth))
@@ -399,8 +396,8 @@ class Grasping:
                 Tshelfpregrasp = numpy.dot(Tshelfproj, Tprojpregrasp)
 
                 # Transform from pregrasp to approach pose
-                # Trans_projapproach = numpy.array([approach_offset, 0, 0])
-                Trans_projapproach = numpy.array([-self.approachpose_offset, 0, 0])
+                Trans_projapproach = numpy.array([-approach_offset, 0, 0])
+                # Trans_projapproach = numpy.array([-self.approachpose_offset, 0, 0])
                 Rot_projapproach = numpy.eye(3, 3)
                 Tpregraspapproach = self.construct_4Dmatrix(Trans_projapproach, Rot_projapproach)
 
