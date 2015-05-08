@@ -50,7 +50,7 @@ def follow_path(group, path, collision_checking=True):
             "Cartesian trajectory could not be completed. Only solved for: '"
             + str(success) + "'..."
         )
-        # return False
+        # TODO: return False
     print move(traj.joint_trajectory)
     return True
 

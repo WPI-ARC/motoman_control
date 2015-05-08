@@ -47,7 +47,7 @@ def add_shelf(quality=Shelf.SIMPLE):
         scene.add_box(
             name="shelf",
             pose=pose,
-            size=(0.96, 2.5, 0.96)
+            size=(0.92, 2.5, 0.92)
         )
     elif quality == Shelf.FULL:
         scene.add_mesh(
