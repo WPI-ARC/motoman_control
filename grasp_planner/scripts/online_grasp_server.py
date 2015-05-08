@@ -326,7 +326,7 @@ class Grasping:
         for theta in self.thetaList:
             Tbaseshelf = self.get_tf('/base_link', '/shelf')
 
-            select = True  # set to true to use the local boudindbox points. set to else for point cloud stuff
+            select = False  # set to true to use the local boudindbox points. set to else for point cloud stuff
             if select:
                 Tshelfobj = self.get_tf('/shelf', '/object')
                 pointcloud = self.get_obb_points(size)
