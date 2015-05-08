@@ -42,7 +42,6 @@ def add_shelf(quality=Shelf.SIMPLE):
     print "Adding shelf", scene._pub_co.get_num_connections()
     while scene._pub_co.get_num_connections() == 0:
         rospy.sleep(0.01)
-        print "Waiting..."
     if quality == Shelf.SIMPLE:
         pose.pose.position.z += 1.25
         scene.add_box(
