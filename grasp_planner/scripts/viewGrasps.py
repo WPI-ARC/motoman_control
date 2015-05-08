@@ -22,12 +22,7 @@ if __name__ == "__main__":
     env.Reset()
     #RaveSetDebugLevel(DebugLevel.Verbose)
 
-    ''' current objects that have strange no point error.
-    ['env/cheezit.env.xml', 'env/dentaltreat.env.xml', 'env/outletplugs.env.xml', 'env/pencilcup.env.xml', 'env/sparkplug.env.xml', 'env/stickynotes.env.xml', 'env/strawcups.env.xml']
-    '''
-
     # Load Scene
-
     cheezit = '../env/cheezit.env.xml'
     colorballs = '../env/colorballs.env.xml'
     crayon = '../env/crayon.env.xml'

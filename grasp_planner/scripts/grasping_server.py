@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-
-import tf
 import math
 import rospy
 import numpy
@@ -11,19 +9,11 @@ import traceback
 import time
 import os
 import csv
-import json
 import cPickle as pickle
-#from itertools import izip
-"""OpenRave dependencies"""
-import openravepy
 from std_msgs.msg import Header
 from geometry_msgs.msg import PoseArray, PoseStamped, Pose, Point, Quaternion
 from grasp_planner.msg import apcGraspPose, apcGraspArray
 from grasp_planner.srv import apcGraspDB, apcGraspDBResponse
-if not __openravepy_build_doc__:
-    from openravepy import *
-    from numpy import *
-
 
 def genAPCGraspPose(grasp, object):    
     showOutput = False # If set to true, will show all print statments
@@ -96,145 +86,13 @@ def quatToMatrix(quat):
         print Trobobj
     return Trobobj
     
-#def genTargetPose(graspPoseMsg, graspPoseReq):
-    # take pose of multiply together to get trasnfrom of robot frame to grasping frame.
-    # Outputs transform from grasping frame wrt to base frame to use for arm code.    
-
-def initialize():
-    global graspDict
-    objectlist = ['../env/cheezit.env.xml',
-                    '../env/colorballs.env.xml',
-                    '../env/crayon.env.xml',
-                    '../env/dentaltreat.env.xml',
-                    '../env/eraser.env.xml',
-                    '../env/glue.env.xml',
-                    '../env/highlighters.env.xml',
-                    '../env/huckfinn.env.xml',
-                    '../env/indexcards.env.xml',
-                    '../env/oreo.env.xml',
-                    '../env/outletplugs.env.xml',
-                    '../env/pencil.env.xml',
-                    '../env/pencilcup.env.xml',
-                    '../env/plushduck.env.xml',
-                    '../env/plushfrog.env.xml',
-                    '../env/rubberduck.env.xml',
-                    '../env/safetyglasses.env.xml',
-                    '../env/screwdrivers.env.xml',
-                    '../env/sparkplug.env.xml',
-                    '../env/stickynotes.env.xml',
-                    '../env/stirsticks.env.xml',
-                    '../env/strawcups.env.xml',
-                    '../env/tennisball.env.xml']
-    objectlist = ['../env/crayon.env.xml']
-
-    # Program options that can be set
-    showGUI = False # If set to true, will show openRave qtcoin GUI
-    showOutput = False # If set to true, will show all print statments
-    #Debug level, one of (fatal,error,warn,info,debug,verbose,verifyplans)
-    #RaveSetDebugLevel(DebugLevel.Verbose)
-
-    # Create dictionary from grasp library
-    graspDict = {}
-    for item in objectlist:
-        try:
-            grasplist = []
-            #Initialize OpenRave
-            env = Environment()
-            if showGUI:
-                env.SetViewer('qtcoin')
-            env.Reset()
-
-            #Load item
-            item = os.path.join(os.path.dirname(__file__), item)
-            env.Load(item)
-            print "loading object XML: "+ item
-
-            # Find bodies
-            bodies = [b for b in env.GetBodies() if not b.IsRobot() and linalg.norm(b.ComputeAABB().extents()) < 0.2]
-            target = bodies[random.randint(len(bodies))]
-            if showOutput:
-                print 'choosing target %s'%target
-
-            # Get robot from environment
-            time.sleep(0.1)
-            robot = env.GetRobots()[0]
-
-            # Set manipulator
-            robot.SetActiveManipulator('hand')
-
-            # Load database
-            gmodel = openravepy.databases.grasping.GraspingModel(robot,target)
-            gmodel.load()
-            validgrasps,validindices = gmodel.computeValidGrasps(returnnum=inf, checkik=False)
-            print "Number of good grasps found: " + str(len(validgrasps))
-
-            if showGUI:
-                raw_input("Press enter to show grasp")
-
-            # Show grasps
-            for index in range(0, len(validgrasps)):
-                if showOutput:
-                    print "Showing grasp #: " + str(index)
-                validgrasp=validgrasps[index] # choose grasp based on index number
-                if showGUI:
-                    gmodel.showgrasp(validgrasp) # show the grasp
-                # It says global but the object is at (0,0,0) so this is actually object frame.
-                approach = gmodel.getGlobalApproachDir(validgrasp)
-                if showOutput:
-                    print "Global approach vector: "+str(approach)
-                    print "Global grasp transform: "
-                transform = gmodel.getGlobalGraspTransform(validgrasp)
-                if showOutput:
-                    print "Transfrom from library: %i"%index
-                    print transform
-                approachVector = numpy.array([approach.item(0), approach.item(1), approach.item(2)])
-                Tobjgrasp = numpy.matrix([[transform.item(0,0), transform.item(0,1), transform.item(0,2), transform.item(0,3)],
-                                        [transform.item(1,0), transform.item(1,1), transform.item(1,2), transform.item(1,3)],
-                                        [transform.item(2,0), transform.item(2,1), transform.item(2,2), transform.item(2,3)],
-                                        [transform.item(3,0), transform.item(3,1), transform.item(3,2), transform.item(3,3)]])             
-                if showOutput:
-                    print "Transform from library after conversion to numpy matrix. should be same as above"
-                # print Tobjgrasp
-                grasplist.append(Tobjgrasp)
-
-        except:     
-            print "Failed to load grasp from database for object: " + item
-            print "Traceback of error:"
-            print traceback.format_exc()
-        # Dictionary of grasps for each object
-        if showOutput:
-            print "Adding grasps for " + item + " to dictionary"
-        item =os.path.basename(item)
-        graspDict[item] = grasplist
-        #print graspDict
-
-    print "Finish dictionary generation"
-    print len(graspDict)
-    RaveDestroy() # destroys all environments and loaded plugins
-
-    # Write graspDict to a csv file
-    with open(os.path.join(os.path.dirname(__file__), "graspDict.csv"), "w") as file:
-        # w = csv.writer(file)
-        # for key, val in graspDict.items():
-        #     w.writerow([key,val])
-        pickle.dump(graspDict, file)
-    # with open(os.path.join(os.path.dirname(__file__), "graspDict.json"), "w") as file:
-    #     json.dump(graspDict, file)
-
-    return graspDict
-
 def CB_getGrasp(req):
         global graspDict
         showOutput = False # If set to true, will show all print statments
-        # Initilaztion stuff
-        #global graspDict
-        # Read graspDict from csv file
-        # with open(os.path.join(os.path.dirname(__file__), "graspDict.json")) as file:
-        #     graspDict = json.dump(file)
-
 
         if showOutput:
             print graspDict
+
         graspList=[]
         poseList=[]
         Tobjgrasp=[]
@@ -313,11 +171,8 @@ def CB_getGrasp(req):
                 Tobjgrasp = grasp
                 if showOutput:
                     print Tobjgrasp
-                TgraspIK = numpy.matrix([[1, 0, 0, 0],
-                                        [0, 0, -1, -0.17],
-                                        [0, 1, 0, 0],
-                                        [0, 0, 0, 1]])
-                TgraspIK = numpy.matrix([[1, 0, 0, 0],
+
+                TgraspIK = numpy.array([[1, 0, 0, 0],
                                         [0, 0, 1, -0.17],
                                         [0, -1, 0, 0],
                                         [0, 0, 0, 1]])
@@ -325,11 +180,8 @@ def CB_getGrasp(req):
                 Trobgrasp = Trobobj * Tobjgrasp
                 TrobIK = Trobgrasp * TgraspIK 
 
-                #print "Concatenated Transform Trobgrasp:"
-                #print Trobgrasp
                 if showOutput:
                     print "Converted Trobgrasp into APCGraspPose msg"
-                #Trobgrasp_msg = genAPCGraspPose(Trobgrasp,approachVector) # This is a pose msg
                 Trobgrasp_msg = genAPCGraspPose(TrobIK, Trobobj)
                 if showOutput:
                     print Trobgrasp_msg
@@ -346,21 +198,11 @@ def CB_getGrasp(req):
                     poseList.append(Trobgrasp_msg) # append pose to poselist                
                 else:
                     print "Nan/inf value detected. Not appending pose to pose list"
-
-
-
-                #print poseList                
-                # append approach and pose to list  
-                #approachList.append = approach
-                #poseList.append = Trobgrasp_msg
         except:
             print "Failed : " + item
             print "Traceback of error:"
             print traceback.format_exc()
-
-
-        # temp = []
-        
+      
         if showOutput:
             print "PoseList:"
         grasps = apcGraspArray(
@@ -368,32 +210,19 @@ def CB_getGrasp(req):
             )
         if showOutput:
             print grasps
-        # res.status=True
-        # res.Trobgrasp=poseArrayList
-
         
         return apcGraspDBResponse(status=True,apcGraspArray=grasps)
     
 def publisher():
     global graspDict
-    # Main loop which requests validgrasps from database and returns it
-    # Valid grasps should be in object frame I think
     # global graspDict
     rospy.init_node('graspDatabase_service')
     rate = rospy.Rate(10.0)
     graspDict = initialize()
-    #print graspDict
-    # graspDict = {}
-    # for key, val in csv.reader(open(os.path.join(os.path.dirname(__file__), "graspDict.csv"))):
-    #     key, val = os.path.basename(key), eval(val)
-    #     print key, type(val)
-    #     from numpy import matrix
-    #     graspDict[key] = val
+
     with open(os.path.join(os.path.dirname(__file__), "graspDict.csv")) as file:
         graspDict = pickle.load(file)
     while not rospy.is_shutdown():
-        #t.header.stamp = rospy.Time.now()
-        #br.sendTransform(t)
         s = rospy.Service('getGrasps', apcGraspDB, CB_getGrasp)
         print "Ready to retrieve grasps from database"
         rate.sleep()
