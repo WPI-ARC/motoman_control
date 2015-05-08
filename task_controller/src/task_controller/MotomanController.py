@@ -8,7 +8,7 @@ from task_controller.PickScoop import PickScoop
 from task_controller.FinishTask import FinishTask
 from task_controller.SafeMode import SafeMode
 from task_controller.ErrorHandler import ErrorHandler
-from apc_utils.moveit import robot
+from apc_util.moveit import robot
 
 
 class MotomanController:
