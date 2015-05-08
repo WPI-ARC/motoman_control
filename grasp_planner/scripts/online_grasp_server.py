@@ -241,12 +241,13 @@ class Grasping:
         return abs(max_y-min_y)
 
     def compute_depth(self, min_x, max_x):
-        edge_offset = min_x # Distance from ymid of object to edge of object
         obj_depth = abs(max_x-min_x)
-        offset = numpy.true_divide(obj_depth, 2)
+        edge_offset = min_x
+        offset = numpy.true_divide(obj_depth, 3)
         if offset > self.fingerlength:
-            offset = 0.03
+            offset = 0.08
         return (edge_offset - self.fingerlength + offset) # the palm is located at min_x so move out till lenght of finger to place lenght of finger at min_x. Then move in 1/4 of the total depth of object
+
 
     def compute_height(self, bin_min_z):
         return bin_min_z + self.z_lowerboundoffset - 0.045  # minus 5cm height as magic number adjustment. Should have to do this if binmin z is correct
@@ -330,7 +331,7 @@ class Grasping:
         for theta in self.thetaList:
             Tbaseshelf = self.get_tf('/base_link', '/shelf')
 
-            use_local_points = True  # set to true to use the local boudindbox points. set to else for point cloud stuff
+            use_local_points = False  # set to true to use the local boudindbox points. set to else for point cloud stuff
             if use_local_points:
                 Tshelfobj = self.get_tf('/shelf', '/object')
                 pointcloud = self.get_obb_points(size)
@@ -396,8 +397,8 @@ class Grasping:
                 Tshelfpregrasp = numpy.dot(Tshelfproj, Tprojpregrasp)
 
                 # Transform from pregrasp to approach pose
-                Trans_projapproach = numpy.array([-approach_offset, 0, 0])
-                # Trans_projapproach = numpy.array([-self.approachpose_offset, 0, 0])
+                # Trans_projapproach = numpy.array([-approach_offset, 0, 0])
+                Trans_projapproach = numpy.array([-self.approachpose_offset, 0, 0])
                 Rot_projapproach = numpy.eye(3, 3)
                 Tpregraspapproach = self.construct_4Dmatrix(Trans_projapproach, Rot_projapproach)
 
