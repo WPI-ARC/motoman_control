@@ -55,6 +55,10 @@ class Grasping:
         rospy.logdebug("theta range list")
         rospy.logdebug(str(self.thetaList))            
 
+        if self.showOutput:
+            rospy.logdebug("theta range list")
+            rospy.logdebug(str(self.thetaList))
+
         rospy.sleep(rospy.Duration(1.0))  # Wait for network timing to load TFs
 
     def get_tf(self, parent, child):
@@ -254,15 +258,8 @@ class Grasping:
             offset = 0.08
         return (edge_offset - self.fingerlength - extensions + offset) # the palm is located at min_x so move out till lenght of finger to place lenght of finger at min_x. Then move in 1/4 of the total depth of object
 
-
     def compute_height(self, bin_min_z):
         return bin_min_z + self.z_lowerboundoffset - 0.03  # minus 5cm height as magic number adjustment. Should have to do this if binmin z is correct
-
-    # def compute_midpt(self, points):
-    #     avg = numpy.array([0, 0, 0])
-    #     for point in points:
-    #         avg = numpy.array([avg[0]+point[0], avg[1]+point[1], avg[2]+point[2]])
-    #     return avg/len(points)
 
     def check_width(self, width):
         if width <= self.gripperwidth:
@@ -385,7 +382,7 @@ class Grasping:
             rospy.logdebug( "projection width: " + str(width))
             rospy.logdebug( "min_y: " + str(min_y))
             rospy.logdebug( "max_y: " + str(max_y))
-            
+
             # Get hand pose
             isSmaller = self.check_width(width)
             if isSmaller:
@@ -393,6 +390,7 @@ class Grasping:
                 grasp_depth = self.compute_depth(min_x, max_x)  # set how far hand should go past front edge of object
                 height = self.compute_height(bin_min_z)  # select the height so bottom of object and also hand won't collide wit shelf lip. may need to take into acount the max_z and objects height to see if object will hit top of shelf.
                 approach_offset = self.compute_approach_offset(Trans_shelfobj[0], bin_min_x, theta)
+
 
                 rospy.logdebug( "score: "+str(score))
                 rospy.logdebug( "x grasp depth value "+str(grasp_depth))
@@ -442,7 +440,7 @@ class Grasping:
                 countbad += 1
 
         rospy.logdebug( "number of bad approach directions: " + str(countbad))
-        
+
         while not q_proj_msg.empty():
             projectionList.append(q_proj_msg.get()[1])
         while not q_approach_msg.empty():
