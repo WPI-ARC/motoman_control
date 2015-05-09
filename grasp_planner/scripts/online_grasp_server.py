@@ -27,7 +27,7 @@ class Grasping:
         self.br = tf2_ros.TransformBroadcaster()
         self.rate = rospy.Rate(60.0)
         self.tfList = []
-        
+
         # Adjustable variables in planner
         self.thetaList = numpy.linspace(-pi/4, pi/4, num=51) # Rotation of generated projection frames
         self.padding = 0.015  # Extra padding between object and gripper is 1 cm.
@@ -53,11 +53,7 @@ class Grasping:
                                        [-numpy.sin(self.shelfpitch), 0, numpy.cos(self.shelfpitch)]])
 
         rospy.logdebug("theta range list")
-        rospy.logdebug(str(self.thetaList))            
-
-        if self.showOutput:
-            rospy.logdebug("theta range list")
-            rospy.logdebug(str(self.thetaList))
+        rospy.logdebug(str(self.thetaList))
 
         rospy.sleep(rospy.Duration(1.0))  # Wait for network timing to load TFs
 

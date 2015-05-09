@@ -94,6 +94,7 @@ def add_shelf(quality=Shelf.SIMPLE):
         add_bin(quality)
     else:
         rospy.logwarn("Unsupported quality %s" % quality)
+    rospy.sleep(1)
     print "Added"
 
 def add_bin(bin, prefix="/shelf"):
