@@ -17,6 +17,7 @@ class MoveToBin(smach.State):
     def execute(self, userdata):
         rospy.loginfo("Trying to move to bin '"+userdata.bin+"'...")
 
+        from apc_util.moveit import goto_pose
         from apc_util.shelf import bin_pose
         self.arm.set_planner_id("RRTstarkConfigDefault")
         self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
