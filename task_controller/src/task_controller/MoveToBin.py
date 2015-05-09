@@ -33,39 +33,49 @@ class MoveToBin(smach.State):
     def execute(self, userdata):
         rospy.loginfo("Trying to move to bin '"+userdata.bin+"'...")
 
-        response = self.trajlib(task="Forward", bin_num=userdata.bin)
-        # plan = self.trajlib(task="Drop", bin_num="A")
-        print self.arm.get_active_joints()
-        print response.plan.joint_trajectory.joint_names
-        print self.arm.get_current_joint_values()
-        response.plan.joint_trajectory.points.pop(0)
-        print response.plan.joint_trajectory.points[0].positions
-        print response.plan.joint_trajectory.points[1].positions
-        print response.plan.joint_trajectory.points[2].positions
+        # response = self.trajlib(task="Forward", bin_num=userdata.bin)
+        # # plan = self.trajlib(task="Drop", bin_num="A")
+        # print self.arm.get_active_joints()
+        # print response.plan.joint_trajectory.joint_names
+        # print self.arm.get_current_joint_values()
+        # response.plan.joint_trajectory.points.pop(0)
+        # print response.plan.joint_trajectory.points[0].positions
+        # print response.plan.joint_trajectory.points[1].positions
+        # print response.plan.joint_trajectory.points[2].positions
 
-        start = list(response.plan.joint_trajectory.points[0].positions)
-        print start
+        # start = list(response.plan.joint_trajectory.points[0].positions)
+        # print start
 
-        if self.arm.get_current_joint_values() != start:
-            self.arm.set_planner_id("RRTstarkConfigDefault")
-            self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
-            if not goto_pose(self.arm, start, [1, 10, 30, 60, 120]):
-                return 'Failure'
+        # if self.arm.get_current_joint_values() != start:
+        #     self.arm.set_planner_id("RRTstarkConfigDefault")
+        #     self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
+        #     if not goto_pose(self.arm, start, [1, 10, 30, 60, 120]):
+        #         return 'Failure'
 
-        with SIMPLE_SHELF:
-            collisions = check_collisions(CheckTrajectoryValidityQuery(
-                initial_state=JointState(
-                    header=Header(stamp=rospy.Time.now()),
-                    name=self.robot.sda10f.get_joints(),
-                    position=self.robot.sda10f.get_current_joint_values()
-                ),
-                trajectory=response.plan.joint_trajectory,
-                check_type=CheckTrajectoryValidityQuery.CHECK_ENVIRONMENT_COLLISION,
-            ))
+        # with SIMPLE_SHELF:
+        #     collisions = check_collisions(CheckTrajectoryValidityQuery(
+        #         initial_state=JointState(
+        #             header=Header(stamp=rospy.Time.now()),
+        #             name=self.robot.sda10f.get_joints(),
+        #             position=self.robot.sda10f.get_current_joint_values()
+        #         ),
+        #         trajectory=response.plan.joint_trajectory,
+        #         check_type=CheckTrajectoryValidityQuery.CHECK_ENVIRONMENT_COLLISION,
+        #     ))
 
-        if collisions.result.status != CheckTrajectoryValidityResult.SUCCESS:
-            rospy.logwarn("Can't execute path from trajectory library, status=%s" % collisions.result.status)
+        # if collisions.result.status != CheckTrajectoryValidityResult.SUCCESS:
+        #     rospy.logwarn("Can't execute path from trajectory library, status=%s" % collisions.result.status)
+        #     return 'Failure'
+
+        # print move(response.plan.joint_trajectory)
+
+        from apc_util.shelf import bin_pose
+        self.arm.set_planner_id("RRTstarkConfigDefault")
+        self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
+        target = bin_pose(userdata.bin).pose
+        target.position.x -= 0.15
+        target.position.z += 0.1
+        if not goto_pose(self.arm, target, [1, 10, 30, 60, 120]):
             return 'Failure'
 
-        print move(response.plan.joint_trajectory)
         return 'Success'

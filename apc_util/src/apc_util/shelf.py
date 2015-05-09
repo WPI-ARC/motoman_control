@@ -98,6 +98,9 @@ def bin_pose(bin, bin_x=1.32, bin_y=0, bin_z=-0.01):
     # 	G		H		I
     # 	J		K		L
     # 		   Base
+    shelf = get_shelf_pose().pose
+
+    bin_x, bin_y, bin_z = shelf.position.x, shelf.position.y, shelf.position.z
 
     # Gripper dimension
     GripperLength = 0.2

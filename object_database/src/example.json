@@ -1,0 +1,61 @@
+{
+  "bin_contents":
+  {
+    "bin_A":
+    [
+      "books","highlighters","Dove Soap"
+    ],
+    "bin_B":
+    [
+      "posit it notes"
+    ],
+    "bin_C":
+    [
+      "dead sea soap","Crayon"
+    ],
+    "bin_D":
+    [
+      "tennis ball"
+    ],
+    "bin_E":
+    [
+      "fuzzy squeak toy","dental treats"
+    ],
+    "bin_F":
+    [
+      "safety glasses"
+    ],
+    "bin_G":
+    [
+      "Bottle brush","cheezits"
+    ],
+    "bin_H":
+    [
+      "outlet plugs","straw box"
+    ]
+  },
+
+  "work_order":
+  [
+    {
+      "bin": "bin_A",
+      "item": "highlighters"
+    },
+    {
+      "bin": "bin_B",
+      "item": "post it notes"
+    },
+    {
+      "bin": "bin_C",
+      "item": "dead sea soap"
+    },
+    {
+      "bin": "bin_D",
+      "item": "tennis ball"
+    },
+    {
+      "bin": "bin_E",
+      "item": "fuzzy squeak toy"
+    }
+  ]
+}

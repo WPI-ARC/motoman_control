@@ -45,8 +45,8 @@ def execute_grasp(group, grasp, object_pose, shelf=FULL_SHELF):
     if not follow_path(group, [group.get_current_pose().pose, grasp.pregrasp]):
         return False
 
-    request = gripperRequest(command="pinch")
-    print "Change to pinch mode:", gripper_control(request)
+    # request = gripperRequest(command="pinch")
+    # print "Change to pinch mode:", gripper_control(request)
 
     request = gripperRequest(command="close")
     print "Grabbing:", gripper_control(request)

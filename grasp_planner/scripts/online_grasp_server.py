@@ -37,6 +37,7 @@ class Grasping:
         self.approachpose_offset = 0.3  # Set aproach pose to be 30cm back from the front of the bin
         # camera -15 deg offset about z-axis
         self.camtheta = 0.261799
+        self.shelfpitch = pi/12
         self.Tcamera = numpy.array([[1, 0, 0, 0],
                                     [0, numpy.cos(self.camtheta), -numpy.sin(self.camtheta), 0],
                                     [0, numpy.sin(self.camtheta), numpy.cos(self.camtheta), 0],
@@ -46,6 +47,10 @@ class Grasping:
                                      [-1, 0, 0, 0],
                                      [0, 1, 0, 0],
                                      [0, 0, 0, 1]])
+
+        self.Tshelfpitch = numpy.array([[numpy.cos(self.shelfpitch), 0, numpy.sin(self.shelfpitch)],
+                                       [0, 1, 0],
+                                       [-numpy.sin(self.shelfpitch), 0, numpy.cos(self.shelfpitch)]])
 
         rospy.logdebug("theta range list")
         rospy.logdebug(str(self.thetaList))            
@@ -243,14 +248,15 @@ class Grasping:
     def compute_depth(self, min_x, max_x):
         obj_depth = abs(max_x-min_x)
         edge_offset = min_x
+        extensions = 0.15 # 15cm finger extensions
         offset = numpy.true_divide(obj_depth, 3)
         if offset > self.fingerlength:
             offset = 0.08
-        return (edge_offset - self.fingerlength + offset) # the palm is located at min_x so move out till lenght of finger to place lenght of finger at min_x. Then move in 1/4 of the total depth of object
+        return (edge_offset - self.fingerlength - extensions + offset) # the palm is located at min_x so move out till lenght of finger to place lenght of finger at min_x. Then move in 1/4 of the total depth of object
 
 
     def compute_height(self, bin_min_z):
-        return bin_min_z + self.z_lowerboundoffset - 0.045  # minus 5cm height as magic number adjustment. Should have to do this if binmin z is correct
+        return bin_min_z + self.z_lowerboundoffset - 0.03  # minus 5cm height as magic number adjustment. Should have to do this if binmin z is correct
 
     # def compute_midpt(self, points):
     #     avg = numpy.array([0, 0, 0])
@@ -350,8 +356,10 @@ class Grasping:
 
             # Construction projection frames
             Rot_shelfproj = self.generate_rotation_matrix(theta)
+            Rot_shelfproj_new = numpy.dot(Rot_shelfproj, self.Tshelfpitch)
             Trans_shelfobj = Tshelfobj[0:3, 3]
-            Tshelfproj = self.construct_4Dmatrix(Trans_shelfobj, Rot_shelfproj)
+            # Tshelfproj = self.construct_4Dmatrix(Trans_shelfobj, Rot_shelfproj)
+            Tshelfproj = self.construct_4Dmatrix(Trans_shelfobj, Rot_shelfproj_new)
 
             rospy.logdebug( str(Tshelfproj))
 
@@ -393,6 +401,7 @@ class Grasping:
                 # Transform from projection to pregrasp pose
                 Trans_projpregrasp = numpy.array([grasp_depth, 0, 0])
                 Rot_projpregrasp = numpy.eye(3, 3)
+                # Rot_projpregrasp = self.Tshelfpitch
                 Tprojpregrasp = self.construct_4Dmatrix(Trans_projpregrasp, Rot_projpregrasp)
                 Tshelfpregrasp = numpy.dot(Tshelfproj, Tprojpregrasp)
 
@@ -420,9 +429,9 @@ class Grasping:
 
                 # Construct msg. Then appened to queue with score as the priority in queue. This will put lowest score msg first in list.
                 proj_msg = PoseFromMatrix(TbaseIK_pregrasp)
-                proj_msg.position.z = height
+                # proj_msg.position.z = height
                 approach_msg = PoseFromMatrix(TbaseIK_approach)
-                approach_msg.position.z = height
+                # approach_msg.position.z = height
                 q_proj_msg.put((score, proj_msg))
                 q_approach_msg.put((score, approach_msg))
 
