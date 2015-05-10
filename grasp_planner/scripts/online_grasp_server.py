@@ -8,6 +8,7 @@ import numpy
 import traceback
 import geometry_msgs.msg
 import sensor_msgs.point_cloud2 as pc2
+from copy import deepcopy
 
 from math import pi
 from numpy.linalg import inv
@@ -30,6 +31,7 @@ class Grasping:
         
         # Adjustable variables in planner
         self.thetaList = numpy.linspace(-pi/4, pi/4, num=51) # Rotation of generated projection frames
+        self.thetaList = [0]
         self.padding = 0.015  # Extra padding between object and gripper is 1 cm.
         self.fingerlength = 0.115  # palm to finger tip offset is 11.5 cm
         self.gripperwidth = 0.155 - self.padding  # gripper width is 15.5 cm
@@ -142,72 +144,95 @@ class Grasping:
         if req.item == 'cheezit_big_original':
             item = '../env/cheezit.env.xml'
             size = [0.062, 0.16, 0.226]
+            self.objectheightoffset = 0
         elif req.item == 'kyjen_squeakin_eggs_plush_puppies':
             item = '../env/colorballs.env.xml'
             size = [0.06, 0.121, 0.18]
+            self.objectheightoffset = 0
         elif req.item == 'crayola_64_ct':
             item = '../env/crayon.env.xml'
             size = [0.037, 0.125, 0.145]
+            self.objectheightoffset = 0
         elif req.item == 'feline_greenies_dental_treats':
             item = '../env/dentaltreat.env.xml'
             size = [0.04, 0.175, 0.21]
+            self.objectheightoffset = 0
         elif req.item == 'expo_dry_erase_board_eraser':
             item = '../env/eraser.env.xml'
             size = [0.035, 0.055, 0.13]
+            self.objectheightoffset = 0
         elif req.item == 'elmers_washable_no_run_school_glue':
             item = '../env/glue.env.xml'
             size = [0.025, 0.06, 0.145]
+            self.objectheightoffset = 0
         elif req.item == 'sharpie_accent_tank_style_highlighters':
             item = '../env/highlighters.env.xml'
             size = [0.023, 0.116, 0.125]
+            self.objectheightoffset = 0
         elif req.item == 'mark_twain_huckleberry_finn':
             item = '../env/huckfinn.env.xml'
             size = [0.012, 0.132, 0.21]
+            self.objectheightoffset = 0
         elif req.item == 'mead_index_cards':
             item = '../env/indexcards.env.xml'
             size = [0.02, 0.076, 0.127]
+            self.objectheightoffset = 0
         elif req.item == 'oreo_mega_stuf':
             item = '../env/oreo.env.xml'
             size = [0.06, 0.155, 0.2]
+            self.objectheightoffset = 0
         elif req.item == 'mommys_helper_outlet_plugs':
             item = '../env/outletplugs.env.xml'
             size = [0.055, 0.09, 0.19]
+            self.objectheightoffset = 0
         elif req.item == 'paper_mate_12_count_mirado_black_warrior':
             item = '../env/pencil.env.xml'
             size = [0.016, 0.05, 0.195]
+            self.objectheightoffset = 0
         elif req.item == 'rolodex_jumbo_pencil_cup':
             item = '../env/pencilcup.env.xml'
             size = [0.107, 0.14, 0.107]
+            self.objectheightoffset = 0
         elif req.item == 'kong_duck_dog_toy':
             item = '../env/plushduck.env.xml'
             size = [0.05, 0.09, 0.18]
+            self.objectheightoffset = 0
         elif req.item == 'kong_sitting_frog_dog_toy':
             item = '../env/plushfrog.env.xml'
             size = [0.045, 0.09, 0.21]
+            self.objectheightoffset = 0
         elif req.item == 'munchkin_white_hot_duck_bath_toy':
             item = '../env/rubberduck.env.xml'
             size = [0.065, 0.095, 0.13]
+            self.objectheightoffset = 0
         elif req.item == 'safety_works_safety_glasses':
             item = '../env/safetyglasses.env.xml'
             size = [0.05, 0.07, 0.2]
+            self.objectheightoffset = 0
         elif req.item == 'stanley_66_052':
             item = '../env/screwdrivers.env.xml'
             size = [0.02, 0.1, 0.195]
+            self.objectheightoffset = 0
         elif req.item == 'champion_copper_plus_spark_plug':
             item = '../env/sparkplug.env.xml'
             size = [0.02, 0.025, 0.095]
+            self.objectheightoffset = 0
         elif req.item == 'highland_6539_self_stick_notes':
             item = '../env/stickynotes.env.xml'
             size = [0.05, 0.04, 0.115]
+            self.objectheightoffset = 0
         elif req.item == 'genuine_joe_plastic_stir_sticks':
             item = '../env/stirsticks.env.xml'
             size = [0.095, 0.107, 0.145]
+            self.objectheightoffset = 0
         elif req.item == 'first_years_take_and_toss_straw_cup':
             item = '../env/strawcups.env.xml'
             size = [0.08, 0.09, 0.17]
+            self.objectheightoffset = 0
         elif req.item == 'kong_air_dog_squeakair_tennis_ball':
             item = '../env/tennisball.env.xml'
             size = [0.07, 0.108, 0.19]
+            self.objectheightoffset = 0
         else:
             rospy.logerr("could not find scene xml for object: %s", req.item)
             self.status = False
@@ -256,7 +281,7 @@ class Grasping:
 
 
     def compute_height(self, bin_min_z):
-        return bin_min_z + self.z_lowerboundoffset - 0.03  # minus 5cm height as magic number adjustment. Should have to do this if binmin z is correct
+        return bin_min_z + self.z_lowerboundoffset - 0.03  + self.objectheightoffset  # minus 5cm height as magic number adjustment. Should have to do this if binmin z is correct
 
     # def compute_midpt(self, points):
     #     avg = numpy.array([0, 0, 0])
@@ -316,6 +341,41 @@ class Grasping:
             rospy.logerr(name + " is unit quaternion: " + str(unit_quat))
             self.status = False
 
+    def compute_wallgrasps(self, bin_min_y, bin_max_y, min_y, max_y, Tshelfproj, proj_msg, approach_msg):
+        poseList = []
+        offset = self.gripperwidth/2
+        
+        # transfrom miny/maxy that are in project frame to be wrt to shelf frame
+        y_max_pt = numpy.dot(Tshelfproj, numpy.array([ [0], [max_y], [0], [1] ]))
+        y_min_pt = numpy.dot(Tshelfproj, numpy.array([ [0], [min_y], [0], [1] ]))
+        
+        # Clamp y for appraoch to be either left or right of bin so the finger is right up against the bin divider
+        y_left = bin_max_y - offset
+        y_right = bin_min_y + offset
+        print "y_left: " + str(y_left)
+        print "y_right: " + str(y_right)
+
+        # Check if finger away from wall will hit object. I don't think this is necessary since we already check object width        
+        
+        # Consturct msg for pregrasp and approach pose
+        pregrasp_left = deepcopy(proj_msg)
+        approach_left = deepcopy(approach_msg)
+        pregrasp_right = deepcopy(proj_msg)
+        approach_right = deepcopy(approach_msg)
+
+        pregrasp_left.position.y = y_left
+        approach_left.position.y = y_left
+        pregrasp_right.position.y = y_right        
+        approach_right.position.y = y_right
+
+        print pregrasp_left
+        print pregrasp_right
+
+        poseList.append((pregrasp_left, approach_left))
+        poseList.append((pregrasp_right, approach_right))
+
+        return poseList
+
     def get_grasp_cb(self, req):
 
         q_proj_msg = Q.PriorityQueue()
@@ -337,7 +397,7 @@ class Grasping:
         for theta in self.thetaList:
             Tbaseshelf = self.get_tf('/base_link', '/shelf')
 
-            use_local_points = False  # set to true to use the local boudindbox points. set to else for point cloud stuff
+            use_local_points = True  # set to true to use the local boudindbox points. set to else for point cloud stuff
             if use_local_points:
                 Tshelfobj = self.get_tf('/shelf', '/object')
                 pointcloud = self.get_obb_points(size)
@@ -435,6 +495,17 @@ class Grasping:
                 q_proj_msg.put((score, proj_msg))
                 q_approach_msg.put((score, approach_msg))
 
+                if theta == 0:                    
+                    # Compute wall grasps for theta = 0
+                    rospy.logdebug("creating two wall graps")
+                    wallgrasp_list = self.compute_wallgrasps(bin_min_y, bin_max_y, min_y, max_y, Tshelfproj, proj_msg, approach_msg)
+                    wallgrasp_left = wallgrasp_list[0]
+                    wallgrasp_right = wallgrasp_list[1]
+                    q_proj_msg.put((99, wallgrasp_left[0]))
+                    q_approach_msg.put((99, wallgrasp_left[1]))
+                    q_proj_msg.put((99, wallgrasp_right[0]))
+                    q_approach_msg.put((99, wallgrasp_right[1]))
+
                 rospy.logdebug( "score is %f. Good approach direction. Gripper is wide enough", score)
             else:
                 score = self.compute_score(width, theta)
@@ -442,9 +513,10 @@ class Grasping:
                 countbad += 1
 
         rospy.logdebug( "number of bad approach directions: " + str(countbad))
-        
+
         while not q_proj_msg.empty():
             projectionList.append(q_proj_msg.get()[1])
+            print "poping pose"
         while not q_approach_msg.empty():
             approachList.append(q_approach_msg.get()[1])
 
