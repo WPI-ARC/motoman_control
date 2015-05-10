@@ -30,7 +30,9 @@ class Grasping:
         self.tfList = []
 
         # Adjustable variables in planner
-        self.thetaList = numpy.linspace(-pi/4, pi/4, num=51) # Rotation of generated projection frames
+        # self.pitchList = numpy.linspace(0, pi/12, num=4)
+        self.pitchList = [pi/12]
+        self.thetaList = numpy.linspace(-pi/4, pi/4, num=31) # Rotation of generated projection frames
         # self.thetaList = [0]
         self.padding = 0.015  # Extra padding between object and gripper is 1 cm.
         self.fingerlength = 0.115  # palm to finger tip offset is 11.5 cm
@@ -40,6 +42,7 @@ class Grasping:
         # camera -15 deg offset about z-axis
         self.camtheta = 0.261799
         self.shelfpitch = pi/12
+
         self.Tcamera = numpy.array([[1, 0, 0, 0],
                                     [0, numpy.cos(self.camtheta), -numpy.sin(self.camtheta), 0],
                                     [0, numpy.sin(self.camtheta), numpy.cos(self.camtheta), 0],
@@ -50,9 +53,9 @@ class Grasping:
                                      [0, 1, 0, 0],
                                      [0, 0, 0, 1]])
 
-        self.Tshelfpitch = numpy.array([[numpy.cos(self.shelfpitch), 0, numpy.sin(self.shelfpitch)],
-                                       [0, 1, 0],
-                                       [-numpy.sin(self.shelfpitch), 0, numpy.cos(self.shelfpitch)]])
+        # self.Tshelfpitch = numpy.array([[numpy.cos(self.shelfpitch), 0, numpy.sin(self.shelfpitch)],
+        #                                [0, 1, 0],
+        #                                [-numpy.sin(self.shelfpitch), 0, numpy.cos(self.shelfpitch)]])
 
         rospy.logdebug("theta range list")
         rospy.logdebug(str(self.thetaList))
@@ -103,11 +106,15 @@ class Grasping:
         transform[3, 3] = 1
         return transform
 
-    def generate_rotation_matrix(self, theta):
+    def generate_rotation_matrix(self, theta, pitch):
         # Generate matrix to rotation about the z-axis of shelf frame to get bunch of new transforms to use for projection
-        transform = numpy.array([[numpy.cos(theta), numpy.sin(theta), 0],
+        rotation = numpy.array([[numpy.cos(theta), numpy.sin(theta), 0],
                                 [-numpy.sin(theta), numpy.cos(theta), 0],
                                 [0, 0, 1]])
+        pitch = numpy.array([[numpy.cos(pitch), 0, numpy.sin(pitch)],
+                                        [0, 1, 0],
+                                        [-numpy.sin(pitch), 0, numpy.cos(pitch)]])
+        transform = numpy.dot(rotation, pitch)
         return transform
 
     def get_shelf_bounds(self, req):
@@ -144,95 +151,95 @@ class Grasping:
         if req.item == 'cheezit_big_original':
             item = '../env/cheezit.env.xml'
             size = [0.062, 0.16, 0.226]
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.05
         elif req.item == 'kyjen_squeakin_eggs_plush_puppies':
             item = '../env/colorballs.env.xml'
             size = [0.06, 0.121, 0.18]
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.05
         elif req.item == 'crayola_64_ct':
             item = '../env/crayon.env.xml'
             size = [0.037, 0.125, 0.145]
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.05
         elif req.item == 'feline_greenies_dental_treats':
             item = '../env/dentaltreat.env.xml'
             size = [0.04, 0.175, 0.21]
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.05
         elif req.item == 'expo_dry_erase_board_eraser':
             item = '../env/eraser.env.xml'
             size = [0.035, 0.055, 0.13]
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.05
         elif req.item == 'elmers_washable_no_run_school_glue':
             item = '../env/glue.env.xml'
             size = [0.025, 0.06, 0.145]
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.05
         elif req.item == 'sharpie_accent_tank_style_highlighters':
             item = '../env/highlighters.env.xml'
             size = [0.023, 0.116, 0.125]
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.05
         elif req.item == 'mark_twain_huckleberry_finn':
             item = '../env/huckfinn.env.xml'
             size = [0.012, 0.132, 0.21]
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.05
         elif req.item == 'mead_index_cards':
             item = '../env/indexcards.env.xml'
             size = [0.02, 0.076, 0.127]
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.05
         elif req.item == 'oreo_mega_stuf':
             item = '../env/oreo.env.xml'
             size = [0.06, 0.155, 0.2]
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.05
         elif req.item == 'mommys_helper_outlet_plugs':
             item = '../env/outletplugs.env.xml'
             size = [0.055, 0.09, 0.19]
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.05
         elif req.item == 'paper_mate_12_count_mirado_black_warrior':
             item = '../env/pencil.env.xml'
             size = [0.016, 0.05, 0.195]
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.05
         elif req.item == 'rolodex_jumbo_pencil_cup':
             item = '../env/pencilcup.env.xml'
             size = [0.107, 0.14, 0.107]
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.05
         elif req.item == 'kong_duck_dog_toy':
             item = '../env/plushduck.env.xml'
             size = [0.05, 0.09, 0.18]
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.05
         elif req.item == 'kong_sitting_frog_dog_toy':
             item = '../env/plushfrog.env.xml'
             size = [0.045, 0.09, 0.21]
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.05
         elif req.item == 'munchkin_white_hot_duck_bath_toy':
             item = '../env/rubberduck.env.xml'
             size = [0.065, 0.095, 0.13]
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.05
         elif req.item == 'safety_works_safety_glasses':
             item = '../env/safetyglasses.env.xml'
             size = [0.05, 0.07, 0.2]
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.05
         elif req.item == 'stanley_66_052':
             item = '../env/screwdrivers.env.xml'
             size = [0.02, 0.1, 0.195]
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.05
         elif req.item == 'champion_copper_plus_spark_plug':
             item = '../env/sparkplug.env.xml'
             size = [0.02, 0.025, 0.095]
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.05
         elif req.item == 'highland_6539_self_stick_notes':
             item = '../env/stickynotes.env.xml'
             size = [0.05, 0.04, 0.115]
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.05
         elif req.item == 'genuine_joe_plastic_stir_sticks':
             item = '../env/stirsticks.env.xml'
             size = [0.095, 0.107, 0.145]
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.05
         elif req.item == 'first_years_take_and_toss_straw_cup':
             item = '../env/strawcups.env.xml'
             size = [0.08, 0.09, 0.17]
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.05
         elif req.item == 'kong_air_dog_squeakair_tennis_ball':
             item = '../env/tennisball.env.xml'
             size = [0.07, 0.108, 0.19]
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.05
         else:
             rospy.logerr("could not find scene xml for object: %s", req.item)
             self.status = False
@@ -274,13 +281,15 @@ class Grasping:
         obj_depth = abs(max_x-min_x)
         edge_offset = min_x
         extensions = 0.15 # 15cm finger extensions
-        offset = numpy.true_divide(obj_depth, 3)
+        offset = numpy.true_divide(obj_depth, 2)
         if offset > self.fingerlength:
             offset = 0.08
+        if offset < 0.06:
+            offset = 0.06
         return (edge_offset - self.fingerlength - extensions + offset) # the palm is located at min_x so move out till lenght of finger to place lenght of finger at min_x. Then move in 1/4 of the total depth of object
 
     def compute_height(self, bin_min_z):
-        return bin_min_z + self.z_lowerboundoffset - 0.03  + self.objectheightoffset  # minus 5cm height as magic number adjustment. Should have to do this if binmin z is correct
+        return bin_min_z + self.z_lowerboundoffset + self.objectheightoffset  # minus 5cm height as magic number adjustment. Should have to do this if binmin z is correct
 
     def check_width(self, width):
         if width <= self.gripperwidth:
@@ -406,133 +415,133 @@ class Grasping:
         rospy.logdebug( "bin min z: " + str(bin_min_z))
 
         # Generate TFs to project onto
-        for theta in self.thetaList:
-            Tbaseshelf = self.get_tf('/base_link', '/shelf')
+        for pitch in self.pitchList:
+            for theta in self.thetaList:
+                Tbaseshelf = self.get_tf('/base_link', '/shelf')
 
-            use_local_points = False  # set to true to use the local boudindbox points. set to else for point cloud stuff
-            if use_local_points:
-                Tshelfobj = self.get_tf('/shelf', '/object')
-                pointcloud = self.get_obb_points(size)
+                use_local_points = False  # set to true to use the local boudindbox points. set to else for point cloud stuff
+                if use_local_points:
+                    Tshelfobj = self.get_tf('/shelf', '/object')
+                    pointcloud = self.get_obb_points(size)
 
-            else:
-                # use point cloud
-                Tbaseobj = PoseToMatrix(req.object_pose)  # same Trob_obj request from offline planner
-                Tshelfobj = numpy.dot(inv(Tbaseshelf), Tbaseobj)
-                pointcloud = list(pc2.read_points(req.object_points, skip_nans=True,
-                                  field_names=("x", "y", "z")))
+                else:
+                    # use point cloud
+                    Tbaseobj = PoseToMatrix(req.object_pose)  # same Trob_obj request from offline planner
+                    Tshelfobj = numpy.dot(inv(Tbaseshelf), Tbaseobj)
+                    pointcloud = list(pc2.read_points(req.object_points, skip_nans=True,
+                                      field_names=("x", "y", "z")))
 
-            rospy.logdebug( "********************************************** Start loop ********************************************")
-            rospy.logdebug( "OBBPoints: "+ str(pointcloud))
-            rospy.logdebug( "Transform from base to shelf: " + str(Tbaseshelf))
-            rospy.logdebug( "Transform from shelf to obj: " + str(Tshelfobj))
+                rospy.logdebug( "********************************************** Start loop ********************************************")
+                rospy.logdebug( "OBBPoints: "+ str(pointcloud))
+                rospy.logdebug( "Transform from base to shelf: " + str(Tbaseshelf))
+                rospy.logdebug( "Transform from shelf to obj: " + str(Tshelfobj))
 
-            # Construction projection frames
-            Rot_shelfproj = self.generate_rotation_matrix(theta)
-            Rot_shelfproj_new = numpy.dot(Rot_shelfproj, self.Tshelfpitch)
-            Trans_shelfobj = Tshelfobj[0:3, 3]
-            # Tshelfproj = self.construct_4Dmatrix(Trans_shelfobj, Rot_shelfproj)
-            Tshelfproj = self.construct_4Dmatrix(Trans_shelfobj, Rot_shelfproj_new)
+                # Construction projection frames
+                Rot_shelfproj = self.generate_rotation_matrix(theta, pitch)
+                # Rot_shelfproj_new = numpy.dot(Rot_shelfproj, self.Tshelfpitch)
+                Trans_shelfobj = numpy.array([Tshelfobj[0, 3], Tshelfobj[1, 3], bin_min_z ])
+                # Trans_shelfobj = Tshelfobj[0:3,3]
+                Tshelfproj = self.construct_4Dmatrix(Trans_shelfobj, Rot_shelfproj)
+                # Tshelfproj = self.construct_4Dmatrix(Trans_shelfobj, Rot_shelfproj_new)
 
-            rospy.logdebug( str(Tshelfproj))
+                rospy.logdebug( str(Tshelfproj))
 
-            # Transform from projection to object
-            Tprojshelf = inv(Tshelfproj)
+                # Transform from projection to object
+                Tprojshelf = inv(Tshelfproj)
 
-            # Loop through object points in shelf frame and transform them to be wrt to the target projection frame 
-            points = []
-            for point in pointcloud:
-                oldpt = numpy.array([[point[0]], [point[1]], [point[2]], [1]])
-                projected_point = numpy.dot(Tprojshelf, oldpt)
-                points.append(projected_point)
+                # Loop through object points in shelf frame and transform them to be wrt to the target projection frame 
+                points = []
+                for point in pointcloud:
+                    oldpt = numpy.array([[point[0]], [point[1]], [point[2]], [1]])
+                    projected_point = numpy.dot(Tprojshelf, oldpt)
+                    points.append(projected_point)
 
-            rospy.logdebug( "List of transformed object points after projection to target projection frame")
-            rospy.logdebug( str(points))
+                rospy.logdebug( "List of transformed object points after projection to target projection frame")
+                rospy.logdebug( str(points))
 
-            # Get min max points. Pass in transformed points list to get min max for target frame. Compute width of projection shadow. Width is the y axis because shelf frame is set that way with y axis as width. Check if width of shadow projection can fit inside gripper width
-            min_max = self.compute_minmax(points)
-            min_x, max_x, min_y, max_y, min_z, max_z = min_max
-            filtered_min_max = self.compute_minmax_filtered(points)
-            f_min_x, f_max_x, f_min_y, f_max_y, f_min_z, f_max_z = filtered_min_max
-            # width = self.compute_width(min_y, max_y)
-            width = self.compute_width(f_min_y, f_max_y)
-            
-            rospy.logdebug( "Min-max values [minx,maxx,miny,maxy,minz,maxz]: " + str(min_max))
-            rospy.logdebug( "projection width: " + str(width))
-            rospy.logdebug( "min_y: " + str(min_y))
-            rospy.logdebug( "max_y: " + str(max_y))
+                # Get min max points. Pass in transformed points list to get min max for target frame. Compute width of projection shadow. Width is the y axis because shelf frame is set that way with y axis as width. Check if width of shadow projection can fit inside gripper width
+                min_max = self.compute_minmax(points)
+                min_x, max_x, min_y, max_y, min_z, max_z = min_max
+                filtered_min_max = self.compute_minmax_filtered(points)
+                f_min_x, f_max_x, f_min_y, f_max_y, f_min_z, f_max_z = filtered_min_max
+                # width = self.compute_width(min_y, max_y)
+                width = self.compute_width(f_min_y, f_max_y)
 
-            # Get hand pose
-            isSmaller = self.check_width(width)
-            if isSmaller:
-                score = self.compute_score(width, theta)
-                grasp_depth = self.compute_depth(min_x, max_x)  # set how far hand should go past front edge of object
-                height = self.compute_height(bin_min_z)  # select the height so bottom of object and also hand won't collide wit shelf lip. may need to take into acount the max_z and objects height to see if object will hit top of shelf.
-                approach_offset = self.compute_approach_offset(Trans_shelfobj[0], bin_min_x, theta)
+                rospy.logdebug("Min-max values [minx,maxx,miny,maxy,minz,maxz]: " + str(min_max))
+                rospy.logdebug("projection width: " + str(width))
+                rospy.logdebug("min_y: " + str(min_y))
+                rospy.logdebug("max_y: " + str(max_y))
 
+                # Get hand pose
+                isSmaller = self.check_width(width)
+                if isSmaller:
+                    score = self.compute_score(width, theta)
+                    grasp_depth = self.compute_depth(min_x, max_x)  # set how far hand should go past front edge of object
+                    height = self.compute_height(bin_min_z)  # select the height so bottom of object and also hand won't collide wit shelf lip. may need to take into acount the max_z and objects height to see if object will hit top of shelf.
+                    approach_offset = self.compute_approach_offset(Trans_shelfobj[0], bin_min_x, theta)
 
-                rospy.logdebug( "score: "+str(score))
-                rospy.logdebug( "x grasp depth value "+str(grasp_depth))
-                rospy.logdebug( "x height value "+str(height))
+                    rospy.logdebug("score: "+str(score))
+                    rospy.logdebug("x grasp depth value "+str(grasp_depth))
+                    rospy.logdebug("x height value "+str(height))
 
-                # Transform from projection to pregrasp pose
-                Trans_projpregrasp = numpy.array([grasp_depth, 0, 0])
-                Rot_projpregrasp = numpy.eye(3, 3)
-                # Rot_projpregrasp = self.Tshelfpitch
-                Tprojpregrasp = self.construct_4Dmatrix(Trans_projpregrasp, Rot_projpregrasp)
-                Tshelfpregrasp = numpy.dot(Tshelfproj, Tprojpregrasp)
+                    # Transform from projection to pregrasp pose
+                    Trans_projpregrasp = numpy.array([grasp_depth, 0, 0])
+                    Rot_projpregrasp = numpy.eye(3, 3)
+                    Tprojpregrasp = self.construct_4Dmatrix(Trans_projpregrasp, Rot_projpregrasp)
+                    Tshelfpregrasp = numpy.dot(Tshelfproj, Tprojpregrasp)
 
-                # Transform from pregrasp to approach pose
-                # Trans_projapproach = numpy.array([-approach_offset, 0, 0])
-                Trans_projapproach = numpy.array([-self.approachpose_offset, 0, 0])
-                Rot_projapproach = numpy.eye(3, 3)
-                Tpregraspapproach = self.construct_4Dmatrix(Trans_projapproach, Rot_projapproach)
+                    # Transform from pregrasp to approach pose
+                    # Trans_projapproach = numpy.array([-approach_offset, 0, 0])
+                    Trans_projapproach = numpy.array([-self.approachpose_offset, 0, 0])
+                    Rot_projapproach = numpy.eye(3, 3)
+                    Tpregraspapproach = self.construct_4Dmatrix(Trans_projapproach, Rot_projapproach)
 
-                # Generate and display TF in Rviz
-                self.generate_tf('/shelf', '/pregrasp', Tshelfpregrasp)
-                self.generate_tf('/pregrasp', '/approach', Tpregraspapproach)
+                    # Generate and display TF in Rviz
+                    self.generate_tf('/shelf', '/pregrasp', Tshelfpregrasp)
+                    self.generate_tf('/pregrasp', '/approach', Tpregraspapproach)
 
-                # Transform of grasp wrt to camera frame
-                TgraspIK = numpy.dot(self.Tcamera, self.Tcamgrasp)
+                    # Transform of grasp wrt to camera frame
+                    TgraspIK = numpy.dot(self.Tcamera, self.Tcamgrasp)
 
-                # Transform from arm solved from IK to handpose for pregrasp
-                Tbasepregrasp = numpy.dot(Tbaseshelf, Tshelfpregrasp)
-                TbaseIK_pregrasp = numpy.dot(Tbasepregrasp, TgraspIK)
+                    # Transform from arm solved from IK to handpose for pregrasp
+                    Tbasepregrasp = numpy.dot(Tbaseshelf, Tshelfpregrasp)
+                    TbaseIK_pregrasp = numpy.dot(Tbasepregrasp, TgraspIK)
 
-                # Transform from arm solved from IK to handpose for approach
-                Tshelfapproach = numpy.dot(Tshelfpregrasp, Tpregraspapproach)
-                Tbaseapproach = numpy.dot(Tbaseshelf, Tshelfapproach)
-                TbaseIK_approach = numpy.dot(Tbaseapproach, TgraspIK)
+                    # Transform from arm solved from IK to handpose for approach
+                    Tshelfapproach = numpy.dot(Tshelfpregrasp, Tpregraspapproach)
+                    Tbaseapproach = numpy.dot(Tbaseshelf, Tshelfapproach)
+                    TbaseIK_approach = numpy.dot(Tbaseapproach, TgraspIK)
 
-                # Construct msg. Then appened to queue with score as the priority in queue. This will put lowest score msg first in list.
-                proj_msg = PoseFromMatrix(TbaseIK_pregrasp)
-                # proj_msg.position.z = height
-                approach_msg = PoseFromMatrix(TbaseIK_approach)
-                # approach_msg.position.z = height
-                q_proj_msg.put((score, proj_msg))
-                q_approach_msg.put((score, approach_msg))
+                    # Construct msg. Then appened to queue with score as the priority in queue. This will put lowest score msg first in list.
+                    proj_msg = PoseFromMatrix(TbaseIK_pregrasp)
+                    proj_msg.position.z = height
+                    approach_msg = PoseFromMatrix(TbaseIK_approach)
+                    approach_height_extra = abs(self.approachpose_offset) * numpy.tan(pitch)
+                    approach_msg.position.z = height + approach_height_extra
+                    q_proj_msg.put((score, proj_msg))
+                    q_approach_msg.put((score, approach_msg))
 
-                if theta == 0:                    
-                    # Compute wall grasps for theta = 0
-                    rospy.logdebug("creating two wall graps")
-                    wallgrasp_list = self.compute_wallgrasps(bin_min_y, bin_max_y, min_y, max_y, Tshelfproj, proj_msg, approach_msg)
-                    wallgrasp_left = wallgrasp_list[0]
-                    wallgrasp_right = wallgrasp_list[1]
-                    q_proj_msg.put((99, wallgrasp_left[0]))
-                    q_approach_msg.put((99, wallgrasp_left[1]))
-                    q_proj_msg.put((99, wallgrasp_right[0]))
-                    q_approach_msg.put((99, wallgrasp_right[1]))
+                    if theta == 0:           
+                        # Compute wall grasps for theta = 0
+                        rospy.logdebug("creating two wall graps")
+                        wallgrasp_list = self.compute_wallgrasps(bin_min_y, bin_max_y, min_y, max_y, Tshelfproj, proj_msg, approach_msg)
+                        wallgrasp_left = wallgrasp_list[0]
+                        wallgrasp_right = wallgrasp_list[1]
+                        q_proj_msg.put((99, wallgrasp_left[0]))
+                        q_approach_msg.put((99, wallgrasp_left[1]))
+                        q_proj_msg.put((99, wallgrasp_right[0]))
+                        q_approach_msg.put((99, wallgrasp_right[1]))
 
-                rospy.logdebug( "score is %f. Good approach direction. Gripper is wide enough", score)
-            else:
-                score = self.compute_score(width, theta)
-                rospy.logdebug( "score is %f. Bad approach direction. Gripper not wide enough", score)
-                countbad += 1
+                    rospy.logdebug("score is %f. Good approach direction. Gripper is wide enough", score)
+                else:
+                    score = self.compute_score(width, theta)
+                    rospy.logdebug("score is %f. Bad approach direction. Gripper not wide enough", score)
+                    countbad += 1
 
-        rospy.logdebug( "number of bad approach directions: " + str(countbad))
+        rospy.logdebug("number of bad approach directions: " + str(countbad))
 
         while not q_proj_msg.empty():
             projectionList.append(q_proj_msg.get()[1])
-            print "poping pose"
         while not q_approach_msg.empty():
             approachList.append(q_approach_msg.get()[1])
 
@@ -541,13 +550,14 @@ class Grasping:
         grasps = apcGraspArray(
             grasps=graspList
         )
-        rospy.logdebug( "************************************************** end loop **************************************************")
-        rospy.logdebug( "************************************************** Request end ***********************************************")
+        rospy.logdebug("************************************************** end loop **************************************************")
+        rospy.logdebug("************************************************** Request end ***********************************************")
         return apcGraspDBResponse(status=self.status, grasps=grasps)
 
 
 def publisher():
-    rospy.init_node('online_grasp_server', log_level=rospy.DEBUG)
+    # rospy.init_node('online_grasp_server', log_level=rospy.DEBUG)
+    rospy.init_node('online_grasp_server')
 
     grasp = Grasping()
     while not rospy.is_shutdown():

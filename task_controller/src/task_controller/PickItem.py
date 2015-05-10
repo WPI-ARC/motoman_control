@@ -46,12 +46,13 @@ class PickItem(smach.State):
         # random.shuffle(response.grasps.grasps)
 
         # for showing TF
-        if True:    
+        if False:    
             import tf2_ros
             from geometry_msgs.msg import TransformStamped
             grasps = response.grasps.grasps
             # with PADDED_SHELF:
-            #     grasps = list(filterGrasps(self.arm, response.grasps.grasps))
+            with BIN(userdata.bin):
+                grasps = list(filterGrasps(self.arm, response.grasps.grasps))
             print "Grasp:", grasps[0]
             tfs = []
             for i in range(len(grasps)):
@@ -90,6 +91,7 @@ class PickItem(smach.State):
             grasps = [grasp]
             print "Grasp:", grasps[0]
 
+            response = self.gripper_control.call(command="open")
             self.arm.set_planner_id("RRTstarkConfigDefault")
             self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
 
