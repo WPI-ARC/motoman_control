@@ -1,13 +1,12 @@
 #!/usr/bin/python
 
-import roslib; roslib.load_manifest('task_controller')
 import rospy
 import json
 import os
 
 from task_controller.MotomanController import MotomanController
 from task_controller.Scheduler import APCScheduler
-from task_controller.msg import WorkOrder, APCItem
+from apc_msgs.msg import WorkOrder, APCItem
 
 if __name__ == '__main__':
     rospy.init_node("motoman_apc_controller")

@@ -2,17 +2,17 @@ import rospy
 import smach
 import numpy
 from math import cos, sin, pi
-from tf import TransformListener
 from apc_util.transformation_helpers import PoseToMatrix, PoseFromMatrix
 
 from apc_vision.srv import *
 from apc_vision.msg import *
 from apc_util.moveit import follow_path
+from apc_util.shelf import bin_pose
 
 
-class ScanForItem(smach.State):
+class ScanAllBins(smach.State):
     """
-    Scan the bin to find the items it contains.
+    Scan all of the bins to find the items they contain.
     """
 
     def __init__(self, robot):
@@ -21,35 +21,28 @@ class ScanForItem(smach.State):
                              output_keys=['pose', 'points'])
         self.arm = robot.arm_left_torso
         self.sample = rospy.ServiceProxy("sample_vision", SampleVision)
-        self.process = rospy.ServiceProxy("process_vision", ProcessVision)
-        self.tf = TransformListener(True, rospy.Duration(10.0))
-        rospy.sleep(rospy.Duration(1.0))  # Wait for network timting
 
     def execute(self, userdata):
         rospy.loginfo("Trying to find "+userdata.item+"...")
 
-        from gripper_srv.srv import gripper
-        self.gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
-        response = self.gripper_control.call(command="close")
-        print "Activate Gripper:", response
-
-        poses = self.get_poses()
-        for i in range(5):
+        for bin in "ABCDEFGHIJKL":
+            if not self.goto_bin(bin):
+                return 'Failure'
+            poses = self.get_poses()
             try:
-                self.sample_bin(userdata.bin, poses)
-                response = self.process(
-                    bin=userdata.bin,
-                    target=APCObject(name=userdata.item, number=1),
-                    objects=[],
-                )
-                userdata.pose = self.tf.transformPose("/base_link", response.pose)
-                userdata.points = response.object_points
-                print "Pose:", self.tf.transformPose("/base_link", response.pose)
-                return 'Success'
+                if not self.sample_bin(bin, poses):
+                    return 'Failure'
             except rospy.ServiceException as e:
                 rospy.logwarn("Error process: "+str(e))
-        rospy.logwarn("Can't find "+userdata.item+"...")
-        return 'Failure'
+                return 'Failure'
+        return 'Success'
+
+    def goto_bin(self, bin, poses):
+        for pose in poses:
+            current_pose = self.arm.get_current_pose().pose
+            if not follow_path(self.arm, [current_pose, bin_pose(bin)]):
+                return False
+        return True
 
     def get_poses(self):
         center_pose = self.arm.get_current_pose().pose
@@ -64,14 +57,11 @@ class ScanForItem(smach.State):
                                   [-sin(angle), 0, cos(angle),      0],
                                   [          0, 0,          0,      1]])
 
-        # return [center_pose,
-        #         PoseFromMatrix(numpy.dot(center_matrix, move_left)),
-        #         PoseFromMatrix(numpy.dot(center_matrix, move_right))]
-
-        return [center_pose]
+        return [center_pose,
+                PoseFromMatrix(numpy.dot(center_matrix, move_left)),
+                PoseFromMatrix(numpy.dot(center_matrix, move_right))]
 
     def sample_bin(self, bin, poses):
-        print "Reset:", self.sample(command="reset")
         for pose in poses:
             current_pose = self.arm.get_current_pose().pose
             print current_pose, pose

@@ -7,7 +7,7 @@ import yaml
 import os
 
 from geometry_msgs.msg import Pose, Point, Quaternion
-from apc_util.shelf import SIMPLE_SHELF
+from apc_util.shelf import PADDED_SHELF
 
 depth = 0.87  # Depth of shelf
 palm_offset = 0.165  # Offset from tool to palm
@@ -53,13 +53,13 @@ if __name__ == '__main__':
     rospy.init_node("motoman_apc_controller")
 
     robot = moveit_commander.RobotCommander()
-    robot.arm_left_torso.set_planning_time(10)
+    robot.arm_left_torso.set_planning_time(20)
 
     rospy.loginfo("Starting up")
     skip = raw_input("Hit enter to move to initial pose or type skip to skip: ")
     if "s" not in skip:
-        with SIMPLE_SHELF:
-            rospy.loginfo("Left: %s" % robot.arm_left_torso.go(pose_left))
+        with PADDED_SHELF:
+            rospy.loginfo("Left: %s" % robot.arm_left.go(pose_left))
         # rospy.loginfo("Right: %s" % robot.arm_right.go(pose_right))
     rospy.loginfo("Please jog until the palms touch the shelf")
     raw_input("Hit enter to continue ")
@@ -68,8 +68,8 @@ if __name__ == '__main__':
 
     skip = raw_input("Hit enter to move to initial pose or type skip to skip: ")
     if "s" not in skip:
-        with SIMPLE_SHELF:
-            rospy.loginfo("Right: %s" % robot.arm_left_torso.go(pose_right))
+        with PADDED_SHELF:
+            rospy.loginfo("Right: %s" % robot.arm_left.go(pose_right))
     rospy.loginfo("Please jog until the palms touch the shelf")
     raw_input("Hit enter to continue ")
     right = robot.arm_left.get_current_pose().pose

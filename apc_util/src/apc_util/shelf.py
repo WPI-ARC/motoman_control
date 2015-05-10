@@ -4,11 +4,20 @@ import os
 from copy import deepcopy
 from geometry_msgs.msg import PoseStamped
 from collision import scene, remove_object
+from moveit_msgs.msg import CollisionObject
+from shape_msgs.msg import SolidPrimitive
+from geometry_msgs.msg import Pose, Point, Quaternion
 
 kiva_pod = os.path.join(os.path.dirname(__file__),
                         "../../meshes/pod_lowres.stl")
 
+APC_BINS = "ABCDEFGHIJKL"
+
 PADDING = 0.01
+HEIGHT = 2.5
+WIDTH = 0.92
+DEPTH = 0.92
+
 
 class Shelf(object):
     """Add shelf collision object"""
@@ -16,6 +25,18 @@ class Shelf(object):
     SIMPLE = 1
     FULL = 2
     PADDED = 3
+    BIN_A = "A"
+    BIN_B = "B"
+    BIN_C = "C"
+    BIN_D = "D"
+    BIN_E = "E"
+    BIN_F = "F"
+    BIN_G = "G"
+    BIN_H = "H"
+    BIN_I = "I"
+    BIN_J = "J"
+    BIN_K = "K"
+    BIN_L = "L"
 
     def __init__(self, quality):
         super(Shelf, self).__init__()
@@ -37,18 +58,21 @@ FULL_SHELF = Shelf(Shelf.FULL)
 PADDED_SHELF = Shelf(Shelf.PADDED)
 
 
+def BIN(bin):
+    return Shelf(bin)
+
+
 def add_shelf(quality=Shelf.SIMPLE):
     pose = get_shelf_pose()
     print "Adding shelf", scene._pub_co.get_num_connections()
     while scene._pub_co.get_num_connections() == 0:
         rospy.sleep(0.01)
-        print "Waiting..."
     if quality == Shelf.SIMPLE:
-        pose.pose.position.z += 1.25
+        pose.pose.position.z += HEIGHT/2
         scene.add_box(
             name="shelf",
             pose=pose,
-            size=(0.96, 2.5, 0.96)
+            size=(DEPTH, HEIGHT, WIDTH)
         )
     elif quality == Shelf.FULL:
         scene.add_mesh(
@@ -66,9 +90,83 @@ def add_shelf(quality=Shelf.SIMPLE):
                 pose=mypose,
                 filename=kiva_pod
             )
+    elif quality in APC_BINS:
+        add_bin(quality)
     else:
         rospy.logwarn("Unsupported quality %s" % quality)
+    rospy.sleep(1)
     print "Added"
+
+def add_bin(bin, prefix="/shelf"):
+    # Necessary parameters
+    _, max_x, min_y, max_y, min_z, max_z = rospy.get_param(prefix+"/bins/"+bin)
+    shelf_max_x = DEPTH/2
+    shelf_min_y, shelf_max_y = -WIDTH/2, WIDTH/2
+    shelf_min_z, shelf_max_z = 0, HEIGHT
+    pose = get_shelf_pose()
+    objects = []
+    poses = []
+
+    # Create left side
+    objects.append(SolidPrimitive(
+        type=SolidPrimitive.BOX,
+        dimensions=[DEPTH, abs(shelf_min_y-min_y), HEIGHT],
+    ))
+    poses.append(Pose(
+        position=Point(x=0, y=(shelf_min_y+min_y)/2, z=HEIGHT/2),
+        orientation=Quaternion(x=0, y=0, z=0, w=1),
+    ))
+
+    # Create right side
+    objects.append(SolidPrimitive(
+        type=SolidPrimitive.BOX,
+        dimensions=[DEPTH, abs(shelf_max_y-max_y), HEIGHT],
+    ))
+    poses.append(Pose(
+        position=Point(x=0, y=(shelf_max_y+max_y)/2, z=HEIGHT/2),
+        orientation=Quaternion(x=0, y=0, z=0, w=1),
+    ))
+
+    # Create top
+    objects.append(SolidPrimitive(
+        type=SolidPrimitive.BOX,
+        dimensions=[DEPTH, abs(max_y-min_y), abs(shelf_max_z-max_z)],
+    ))
+    poses.append(Pose(
+        position=Point(x=0, y=(max_y+min_y)/2, z=(shelf_max_z+max_z)/2),
+        orientation=Quaternion(x=0, y=0, z=0, w=1),
+    ))
+
+    # Create bottom
+    objects.append(SolidPrimitive(
+        type=SolidPrimitive.BOX,
+        dimensions=[DEPTH, abs(max_y-min_y), abs(shelf_min_z-min_z)],
+    ))
+    poses.append(Pose(
+        position=Point(x=0, y=(max_y+min_y)/2, z=(shelf_min_z+min_z)/2),
+        orientation=Quaternion(x=0, y=0, z=0, w=1),
+    ))
+
+    # Create back
+    objects.append(SolidPrimitive(
+        type=SolidPrimitive.BOX,
+        dimensions=[DEPTH/2, abs(max_y-min_y), abs(max_z-min_z)],
+    ))
+    poses.append(Pose(
+        position=Point(x=shelf_max_x/2, y=(max_y+min_y)/2, z=(min_z+max_z)/2),
+        orientation=Quaternion(x=0, y=0, z=0, w=1),
+    ))
+
+    co = CollisionObject()
+    co.operation = CollisionObject.ADD
+    co.id = "shelf"
+    co.header.frame_id = "/shelf"
+    co.header.stamp = rospy.Time.now()
+    co.primitives = objects
+    co.primitive_poses = poses
+
+    scene._pub_co.publish(co)
+    print "Published:", co
 
 
 def remove_shelf():

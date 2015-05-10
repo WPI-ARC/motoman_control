@@ -1,6 +1,7 @@
 - action: grab-kevin
   bin: B
-  item: munchkin_white_hot_duck_bath_toy
+  item: first_years_take_and_toss_straw_cup
+  # item: munchkin_white_hot_duck_bath_toy
   # item: kong_duck_dog_toy
   # item: champion_copper_plus_spark_plug
   # item: kyjen_squeakin_eggs_plush_puppies

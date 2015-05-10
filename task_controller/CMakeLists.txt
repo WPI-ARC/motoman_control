@@ -14,18 +14,18 @@ find_package(catkin REQUIRED COMPONENTS
   apc_util
 )
 
-add_message_files(
-  FILES
-  APCItem.msg
-  WorkOrder.msg
-  )
+# add_message_files(
+#   FILES
+#   APCItem.msg
+#   WorkOrder.msg
+#   )
 
 catkin_python_setup()
 
-generate_messages(
-  DEPENDENCIES
-  std_msgs  # Or other packages containing msgs
-)
+# generate_messages(
+#   DEPENDENCIES
+#   std_msgs  # Or other packages containing msgs
+# )
 
 catkin_package(
   # LIBRARIES

@@ -28,7 +28,7 @@ class Grasping:
         self.br = tf2_ros.TransformBroadcaster()
         self.rate = rospy.Rate(60.0)
         self.tfList = []
-        
+
         # Adjustable variables in planner
         self.thetaList = numpy.linspace(-pi/4, pi/4, num=51) # Rotation of generated projection frames
         self.thetaList = [0]
@@ -55,7 +55,7 @@ class Grasping:
                                        [-numpy.sin(self.shelfpitch), 0, numpy.cos(self.shelfpitch)]])
 
         rospy.logdebug("theta range list")
-        rospy.logdebug(str(self.thetaList))            
+        rospy.logdebug(str(self.thetaList))
 
         rospy.sleep(rospy.Duration(1.0))  # Wait for network timing to load TFs
 
@@ -279,15 +279,8 @@ class Grasping:
             offset = 0.08
         return (edge_offset - self.fingerlength - extensions + offset) # the palm is located at min_x so move out till lenght of finger to place lenght of finger at min_x. Then move in 1/4 of the total depth of object
 
-
     def compute_height(self, bin_min_z):
         return bin_min_z + self.z_lowerboundoffset - 0.03  + self.objectheightoffset  # minus 5cm height as magic number adjustment. Should have to do this if binmin z is correct
-
-    # def compute_midpt(self, points):
-    #     avg = numpy.array([0, 0, 0])
-    #     for point in points:
-    #         avg = numpy.array([avg[0]+point[0], avg[1]+point[1], avg[2]+point[2]])
-    #     return avg/len(points)
 
     def check_width(self, width):
         if width <= self.gripperwidth:
@@ -314,6 +307,25 @@ class Grasping:
         y = []
         z = []
         for point in pointList:
+            x.append(point[0])
+            y.append(point[1])
+            z.append(point[2])
+        min_x = min(x)
+        max_x = max(x)
+        min_y = min(y)
+        max_y = max(y)
+        min_z = min(z)
+        max_z = max(z)
+        min_max = numpy.array([min_x, max_x, min_y, max_y, min_z, max_z])
+        return min_max
+
+    def compute_minmax_filtered(self, pointList):
+        x = []
+        y = []
+        z = []
+        for point in pointList:
+            if point[0] > 0:
+                continue
             x.append(point[0])
             y.append(point[1])
             z.append(point[2])
@@ -439,13 +451,16 @@ class Grasping:
             # Get min max points. Pass in transformed points list to get min max for target frame. Compute width of projection shadow. Width is the y axis because shelf frame is set that way with y axis as width. Check if width of shadow projection can fit inside gripper width
             min_max = self.compute_minmax(points)
             min_x, max_x, min_y, max_y, min_z, max_z = min_max
-            width = self.compute_width(min_y, max_y)
+            filtered_min_max = self.compute_minmax_filtered(points)
+            f_min_x, f_max_x, f_min_y, f_max_y, f_min_z, f_max_z = filtered_min_max
+            # width = self.compute_width(min_y, max_y)
+            width = self.compute_width(f_min_y, f_max_y)
             
             rospy.logdebug( "Min-max values [minx,maxx,miny,maxy,minz,maxz]: " + str(min_max))
             rospy.logdebug( "projection width: " + str(width))
             rospy.logdebug( "min_y: " + str(min_y))
             rospy.logdebug( "max_y: " + str(max_y))
-            
+
             # Get hand pose
             isSmaller = self.check_width(width)
             if isSmaller:
@@ -453,6 +468,7 @@ class Grasping:
                 grasp_depth = self.compute_depth(min_x, max_x)  # set how far hand should go past front edge of object
                 height = self.compute_height(bin_min_z)  # select the height so bottom of object and also hand won't collide wit shelf lip. may need to take into acount the max_z and objects height to see if object will hit top of shelf.
                 approach_offset = self.compute_approach_offset(Trans_shelfobj[0], bin_min_x, theta)
+
 
                 rospy.logdebug( "score: "+str(score))
                 rospy.logdebug( "x grasp depth value "+str(grasp_depth))

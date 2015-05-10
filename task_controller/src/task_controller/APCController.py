@@ -2,6 +2,7 @@ import rospy
 import smach
 import smach_ros
 
+from task_controller.ScanAllBins import ScanAllBins
 from task_controller.PickAndPlaceItem import PickAndPlaceItem
 from task_controller.ScoopAndPickItem import ScoopAndPickItem
 from task_controller.PickScoop import PickScoop
@@ -11,10 +12,10 @@ from task_controller.ErrorHandler import ErrorHandler
 from apc_util.moveit import robot
 
 
-class MotomanController:
+class APCController:
 
     def __init__(self, scheduler):
-        rospy.loginfo("Starting APC task controller...")
+        rospy.loginfo("Starting APC Controller...")
         rospy.on_shutdown(self.cleanup)
         # Initialize the state machine
         self.running = False
@@ -25,6 +26,11 @@ class MotomanController:
         # Populate the state machine from the modules
         with self.sm:
             self.safemode = SafeMode()
+
+            smach.StateMachine.add(
+                'ScanAllBins', ScanAllBins,
+                transitions={'Success': 'Scheduler', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
+            )
 
             smach.StateMachine.add(
                 'Scheduler', scheduler,
