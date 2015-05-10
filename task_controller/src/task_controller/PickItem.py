@@ -46,7 +46,7 @@ class PickItem(smach.State):
         # random.shuffle(response.grasps.grasps)
 
         # for showing TF
-        if False:    
+        if True:    
             import tf2_ros
             from geometry_msgs.msg import TransformStamped
             grasps = response.grasps.grasps

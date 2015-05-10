@@ -31,7 +31,7 @@ class Grasping:
 
         # Adjustable variables in planner
         self.thetaList = numpy.linspace(-pi/4, pi/4, num=51) # Rotation of generated projection frames
-        self.thetaList = [0]
+        # self.thetaList = [0]
         self.padding = 0.015  # Extra padding between object and gripper is 1 cm.
         self.fingerlength = 0.115  # palm to finger tip offset is 11.5 cm
         self.gripperwidth = 0.155 - self.padding  # gripper width is 15.5 cm
@@ -409,7 +409,7 @@ class Grasping:
         for theta in self.thetaList:
             Tbaseshelf = self.get_tf('/base_link', '/shelf')
 
-            use_local_points = True  # set to true to use the local boudindbox points. set to else for point cloud stuff
+            use_local_points = False  # set to true to use the local boudindbox points. set to else for point cloud stuff
             if use_local_points:
                 Tshelfobj = self.get_tf('/shelf', '/object')
                 pointcloud = self.get_obb_points(size)
