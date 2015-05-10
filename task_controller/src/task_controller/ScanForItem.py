@@ -28,6 +28,11 @@ class ScanForItem(smach.State):
     def execute(self, userdata):
         rospy.loginfo("Trying to find "+userdata.item+"...")
 
+        from gripper_srv.srv import gripper
+        self.gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
+        response = self.gripper_control.call(command="close")
+        print "Activate Gripper:", response
+
         poses = self.get_poses()
         for i in range(5):
             try:

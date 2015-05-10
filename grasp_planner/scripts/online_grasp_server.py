@@ -294,6 +294,25 @@ class Grasping:
         min_max = numpy.array([min_x, max_x, min_y, max_y, min_z, max_z])
         return min_max
 
+    def compute_minmax_filtered(self, pointList):
+        x = []
+        y = []
+        z = []
+        for point in pointList:
+            if point[0] > 0:
+                continue
+            x.append(point[0])
+            y.append(point[1])
+            z.append(point[2])
+        min_x = min(x)
+        max_x = max(x)
+        min_y = min(y)
+        max_y = max(y)
+        min_z = min(z)
+        max_z = max(z)
+        min_max = numpy.array([min_x, max_x, min_y, max_y, min_z, max_z])
+        return min_max
+
     def checkquaternion(self, transform, name):
         approach = geometry_msgs.msg.Pose()
         [trans, quat] = ExtractFromMatrix(transform)
@@ -372,7 +391,10 @@ class Grasping:
             # Get min max points. Pass in transformed points list to get min max for target frame. Compute width of projection shadow. Width is the y axis because shelf frame is set that way with y axis as width. Check if width of shadow projection can fit inside gripper width
             min_max = self.compute_minmax(points)
             min_x, max_x, min_y, max_y, min_z, max_z = min_max
-            width = self.compute_width(min_y, max_y)
+            filtered_min_max = self.compute_minmax_filtered(points)
+            f_min_x, f_max_x, f_min_y, f_max_y, f_min_z, f_max_z = filtered_min_max
+            # width = self.compute_width(min_y, max_y)
+            width = self.compute_width(f_min_y, f_max_y)
             
             rospy.logdebug( "Min-max values [minx,maxx,miny,maxy,minz,maxz]: " + str(min_max))
             rospy.logdebug( "projection width: " + str(width))

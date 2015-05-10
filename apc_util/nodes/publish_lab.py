@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import roslib; roslib.load_manifest('apc_models')
+
 import sys
 import rospy
 
@@ -33,6 +35,24 @@ if __name__=='__main__':
         pose=pose,
         size=(0.01, 6, 3)
     )
+
+    pose = PoseStamped()
+    pose.header.frame_id = "/base_link"
+    pose.header.stamp = rospy.Time.now()
+    pose.pose.position.x = 0
+    pose.pose.position.y = 0
+    pose.pose.position.z = -0.051
+    pose.pose.orientation.x = 0
+    pose.pose.orientation.y = 0
+    pose.pose.orientation.z = 0
+    pose.pose.orientation.w = 1
+
+    scene.add_box(
+        name="floor",
+        pose=pose,
+        size=(6, 6, 0.1)
+    )
+
     print "Published lab"
     # rospy.spin()
     moveit_commander.roscpp_shutdown()
