@@ -36,7 +36,7 @@ class PickItem(smach.State):
         # TODO: Handle response error
         response = self.grasp_generator(
             item=userdata.item,
-            object_pose=userdata.pose.pose,
+            object_pose=userdata.pose,
             object_points=userdata.points,
             bin=userdata.bin,
         )
@@ -94,7 +94,7 @@ class PickItem(smach.State):
             self.arm.set_planner_id("RRTstarkConfigDefault")
             self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
 
-            if not execute_grasp(self.arm, grasps[0], userdata.pose.pose, shelf=NO_SHELF):
+            if not execute_grasp(self.arm, grasps[0], userdata.pose, shelf=NO_SHELF):
                 return "Failure"
 
             return 'Success'
