@@ -13,10 +13,10 @@
 
   <!-- If needed, broadcast static tf for robot root -->
   <node name="base_shelf_tf" pkg="tf" type="static_transform_publisher"
-          args="0.885315 0.413907 0.787417 0 0 0 /base_link /shelf 100"/>
+          args="1 0 0 0 0 0 /base_link /shelf 100"/>
 
   <node name="object" pkg="tf" type="static_transform_publisher"  
-          args="0 0 0.8 0 0 0 /shelf /object 100"/>
+          args="-0.021 -0.14331 1.6 0 0 0 /shelf /object 100"/>
   <!--args="0 0 0.8 0 0 0 /shelf /object 100"/>-->
   <!--args="0 0 0.8 0 0 1.570796327 /shelf /object 100"/>-->
 
