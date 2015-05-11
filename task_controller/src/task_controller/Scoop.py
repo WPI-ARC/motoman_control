@@ -173,19 +173,27 @@ class Scoop(smach.State):
         # else:
         #     return Failure
 
-        pose = bin_pose(userdata.bin).pose
-        pose.position.x += -0.3009
-        pose.position.y += 0.03
-        pose.position.z += 0.0619
-        pose.orientation.x = -0.26656
-        pose.orientation.y = -0.47462
-        pose.orientation.z =  0.41851
-        pose.orientation.w =  0.727
+
+        pose = [self.arm.get_current_pose().pose]
+        # TODO: MAKE THIS BASED ON CALIBRATION VALUES AND NOT HARD-CODED
+        pose[-1].position.x += -1.4026
+        pose[-1].position.y += -0.0797
+        pose[-1].position.z +=  0.045
+
+        pose.append(deepcopy(pose[-1]))
+        pose[-1] = bin_pose(userdata.bin).pose
+        pose[-1].position.x += -0.3009
+        pose[-1].position.y += 0.03
+        pose[-1].position.z += 0.0619
+        pose[-1].orientation.x = -0.26656
+        pose[-1].orientation.y = -0.47462
+        pose[-1].orientation.z =  0.41851
+        pose[-1].orientation.w =  0.727
 
         # convert to shelf frame coords
-        pose.position.x += -1.4026
-        pose.position.y += -0.0797
-        pose.position.z +=  0.045
+        pose[-1].position.x += -1.4026
+        pose[-1].position.y += -0.0797
+        pose[-1].position.z +=  0.045
 
 
         # if left section specified, adjust pose in positive Y direction
@@ -212,9 +220,9 @@ class Scoop(smach.State):
         #         pose.position.y += -sectionOffsetOutside
         #         outsideRight = True
 
-        self.arm.set_planning_time(20)
-        plan = self.arm.plan()
-        self.move(plan.joint_trajectory)
+
+
+        follow_path(self.arm, pose)
 
         # print "Pose: ", pose
         # if not goto_pose(self.arm, pose, [1, 5, 30, 60]):
