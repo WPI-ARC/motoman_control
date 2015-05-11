@@ -78,7 +78,7 @@ def main():
 
         points = sensor_msgs.msg.PointCloud2()
         points.data = pts
-        binnum = "A"
+        binnum = "B"
 
         response = client(item, binnum, msg, points)
         print "returned pose"
