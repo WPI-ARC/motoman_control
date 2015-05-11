@@ -51,6 +51,9 @@ add_message_files(
   FILES
   APCItem.msg
   WorkOrder.msg
+  Sample.msg
+  SampleArray.msg
+  ProcessedObject.msg
 )
 
 ## Generate services in the 'srv' folder
