@@ -7,7 +7,7 @@ from grasp_planner.srv import apcGraspDB
 from sensor_msgs.msg import PointCloud2
 
 from apc_util.grasping import filterGrasps, execute_grasp
-from apc_util.shelf import NO_SHELF, BIN
+from apc_util.shelf import NO_SHELF, BIN, PADDED_SHELF
 
 
 class PickItem(smach.State):
@@ -50,8 +50,7 @@ class PickItem(smach.State):
             import tf2_ros
             from geometry_msgs.msg import TransformStamped
             grasps = response.grasps.grasps
-            # with PADDED_SHELF:
-            with BIN(userdata.bin):
+            with PADDED_SHELF:
                 grasps = list(filterGrasps(self.arm, response.grasps.grasps))
             print "Grasp:", grasps[0]
             tfs = []
