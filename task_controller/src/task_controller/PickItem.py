@@ -1,4 +1,3 @@
-import roslib; roslib.load_manifest('task_controller')
 import rospy
 import smach
 
@@ -6,7 +5,7 @@ from gripper_srv.srv import gripper
 from grasp_planner.srv import apcGraspDB
 from sensor_msgs.msg import PointCloud2
 
-from apc_util.grasping import filterGrasps, execute_grasp
+from apc_util.grasping import plan_grasps, execute_grasp
 from apc_util.shelf import NO_SHELF, BIN, PADDED_SHELF
 
 
@@ -46,12 +45,12 @@ class PickItem(smach.State):
         # random.shuffle(response.grasps.grasps)
 
         # for showing TF
-        if False:    
+        if False:
             import tf2_ros
             from geometry_msgs.msg import TransformStamped
             grasps = response.grasps.grasps
             with PADDED_SHELF:
-                grasps = list(filterGrasps(self.arm, response.grasps.grasps))
+                grasps = list(grasp for grasp, _ in plan_grasps(self.arm, response.grasps.grasps))
             print "Grasp:", grasps[0]
             tfs = []
             for i in range(len(grasps)):
@@ -81,9 +80,10 @@ class PickItem(smach.State):
                 rate.sleep()
 
         with BIN(userdata.bin):
-            grasps = filterGrasps(self.arm, response.grasps.grasps)
+            grasps = plan_grasps(self.arm, response.grasps.grasps)
+
             try:
-                grasp = grasps.next()
+                grasp, plan = grasps.next()
             except StopIteration:
                 rospy.logwarn("No online grasps found.")
                 return "Failure"
@@ -94,7 +94,7 @@ class PickItem(smach.State):
             self.arm.set_planner_id("RRTstarkConfigDefault")
             self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
 
-            if not execute_grasp(self.arm, grasps[0], userdata.pose, shelf=NO_SHELF):
+            if not execute_grasp(self.arm, grasps[0], plan, shelf=NO_SHELF):
                 return "Failure"
 
             return 'Success'
