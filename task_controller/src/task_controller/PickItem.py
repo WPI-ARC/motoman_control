@@ -109,6 +109,9 @@ class PickItem(smach.State):
         pose.pose.orientation.y = 0
         pose.pose.orientation.z = 0
         pose.pose.orientation.w = 1
-        attach_sphere("arm_left_link_7_t", "Object", pose, 0.17, ["hand_left_finger_1_link_2", "hand_left_finger_1_link_3", "hand_left_finger_1_link_3_tip", "hand_left_finger_2_link_2", "hand_left_finger_2_link_3", "hand_left_finger_2_link_3_tip", "hand_left_finger_middle_link_2", "hand_left_finger_middle_link_3", "hand_left_finger_middle_link_3_tip"])
+        attach_sphere("arm_left_link_7_t", "Object", pose, 0.17, 
+            ["hand_left_finger_1_link_1", "hand_left_finger_1_link_2", "hand_left_finger_1_link_3", "hand_left_finger_1_link_3_tip",
+             "hand_left_finger_2_link_1", "hand_left_finger_2_link_2", "hand_left_finger_2_link_3", "hand_left_finger_2_link_3_tip",
+             "hand_left_finger_middle_link_1", "hand_left_finger_middle_link_2", "hand_left_finger_middle_link_3", "hand_left_finger_middle_link_3_tip"])
 
         return 'Success'

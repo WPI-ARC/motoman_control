@@ -26,9 +26,12 @@ gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
 
 
 def execute_grasp(group, grasp, plan, shelf=FULL_SHELF):
+    rospy.sleep(1)
     start = plan.joint_trajectory.points[0].positions
     if not goto_pose(group, start, [1, 5, 30, 60], shelf=shelf):
         return False
+    print plan.joint_trajectory.points[0].positions
+    print group.get_current_joint_values()
     print move(plan.joint_trajectory)  # TODO: Error check
 
     # request = gripperRequest(command="pinch")
@@ -37,6 +40,7 @@ def execute_grasp(group, grasp, plan, shelf=FULL_SHELF):
     request = gripperRequest(command="close")
     print "Grabbing:", gripper_control(request)
 
+    rospy.sleep(1)
     poses = [group.get_current_pose().pose]
     poses.append(deepcopy(poses[-1]))
     poses[-1].position.z += 0.032

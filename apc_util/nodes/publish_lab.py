@@ -70,6 +70,24 @@ if __name__=='__main__':
         size=(6, 6, 0.1)
     )
 
+    pose = PoseStamped()
+    pose.header.frame_id = "/base_link"
+    pose.header.stamp = rospy.Time.now()
+    pose.pose.position.x = 0.5
+    pose.pose.position.y = 0
+    pose.pose.position.z = 0.265
+    pose.pose.orientation.x = 0
+    pose.pose.orientation.y = 0
+    pose.pose.orientation.z = 0
+    pose.pose.orientation.w = 1
+
+    scene.add_box(
+        name="dropoff",
+        pose=pose,
+        size=(0.4, 0.65, 0.53)
+    )
+
+
     print "Published lab"
     # rospy.spin()
     moveit_commander.roscpp_shutdown()

@@ -166,7 +166,6 @@ def add_bin(bin, prefix="/shelf"):
     co.primitive_poses = poses
 
     scene._pub_co.publish(co)
-    print "Published:", co
 
 
 def remove_shelf():

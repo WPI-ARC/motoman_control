@@ -54,10 +54,6 @@ class Grasping:
                                      [0, 1, 0, 0],
                                      [0, 0, 0, 1]])
 
-        # self.Tshelfpitch = numpy.array([[numpy.cos(self.shelfpitch), 0, numpy.sin(self.shelfpitch)],
-        #                                [0, 1, 0],
-        #                                [-numpy.sin(self.shelfpitch), 0, numpy.cos(self.shelfpitch)]])
-
         rospy.logdebug("theta range list")
         rospy.logdebug(str(self.thetaList))
 
@@ -292,13 +288,6 @@ class Grasping:
     def compute_height(self, bin_min_z):
         return bin_min_z + self.z_lowerboundoffset + self.objectheightoffset  # minus 5cm height as magic number adjustment. Should have to do this if binmin z is correct
 
-    def check_width(self, width):
-        if width <= self.gripperwidth:
-            isSmaller = True
-        else:
-            isSmaller = False
-        return isSmaller
-
     def compute_approach_offset(self, projection_x, bin_min_x, theta):
         dist = projection_x - bin_min_x
         offset = (dist - self.approachpose_offset) * numpy.cos(abs(theta))
@@ -366,11 +355,11 @@ class Grasping:
     def compute_wallgrasps(self, bin_min_y, bin_max_y, min_y, max_y, Tshelfproj, proj_msg, approach_msg, Tbaseshelf):
         poseList = []
         offset = self.gripperwidth/2
-        
+
         # transfrom miny/maxy that are in project frame to be wrt to shelf frame
         y_max_pt = numpy.dot(Tshelfproj, numpy.array([ [0], [max_y], [0], [1] ]))
         y_min_pt = numpy.dot(Tshelfproj, numpy.array([ [0], [min_y], [0], [1] ]))
-        
+
 
         # transfrom bin min/max that are in shelf frame to be wrt to base frame
         bin_max_y_pt = numpy.dot(Tbaseshelf, numpy.array([ [0], [bin_max_y], [0], [1] ]))
@@ -386,7 +375,7 @@ class Grasping:
         print "y_right: " + str(y_right)
 
         # Check if finger away from wall will hit object. I don't think this is necessary since we already check object width        
-        
+
         # Consturct msg for pregrasp and approach pose
         pregrasp_left = deepcopy(proj_msg)
         approach_left = deepcopy(approach_msg)
@@ -395,7 +384,7 @@ class Grasping:
 
         pregrasp_left.position.y = y_left
         approach_left.position.y = y_left
-        pregrasp_right.position.y = y_right        
+        pregrasp_right.position.y = y_right
         approach_right.position.y = y_right
 
         print pregrasp_left
@@ -423,37 +412,40 @@ class Grasping:
         bin_min_x, bin_max_x, bin_min_y, bin_max_y, bin_min_z, bin_max_z = binbounds
         rospy.logdebug( "bin min z: " + str(bin_min_z))
 
+        Tbaseshelf = self.get_tf('/base_link', '/shelf')
+
+        use_local_points = False  # set to true to use the local boudindbox points. set to else for point cloud stuff
+        if use_local_points:
+            Tshelfobj = self.get_tf('/shelf', '/object')
+            pointcloud = self.get_obb_points(size)
+
+        else:
+            # use point cloud
+            Tbaseobj = PoseToMatrix(req.object_pose)  # same Trob_obj request from offline planner
+            Tshelfobj = numpy.dot(inv(Tbaseshelf), Tbaseobj)
+            pointcloud = list(pc2.read_points(req.object_points, skip_nans=True,
+                              field_names=("x", "y", "z")))
+
+        rospy.logdebug("OBBPoints: "+ str(pointcloud))
+        rospy.logdebug("Transform from base to shelf: " + str(Tbaseshelf))
+        rospy.logdebug("Transform from shelf to obj: " + str(Tshelfobj))
+
+        rospy.logdebug("********************************************** Start loop ********************************************")
+
+
         # Generate TFs to project onto
         for pitch in self.pitchList:
             for theta in self.thetaList:
-                Tbaseshelf = self.get_tf('/base_link', '/shelf')
-
-                use_local_points = False  # set to true to use the local boudindbox points. set to else for point cloud stuff
-                if use_local_points:
-                    Tshelfobj = self.get_tf('/shelf', '/object')
-                    pointcloud = self.get_obb_points(size)
-
-                else:
-                    # use point cloud
-                    Tbaseobj = PoseToMatrix(req.object_pose)  # same Trob_obj request from offline planner
-                    Tshelfobj = numpy.dot(inv(Tbaseshelf), Tbaseobj)
-                    pointcloud = list(pc2.read_points(req.object_points, skip_nans=True,
-                                      field_names=("x", "y", "z")))
-
-                rospy.logdebug( "********************************************** Start loop ********************************************")
-                rospy.logdebug( "OBBPoints: "+ str(pointcloud))
-                rospy.logdebug( "Transform from base to shelf: " + str(Tbaseshelf))
-                rospy.logdebug( "Transform from shelf to obj: " + str(Tshelfobj))
 
                 # Construction projection frames
                 Rot_shelfproj = self.generate_rotation_matrix(theta, pitch)
                 # Rot_shelfproj_new = numpy.dot(Rot_shelfproj, self.Tshelfpitch)
-                Trans_shelfobj = numpy.array([Tshelfobj[0, 3], Tshelfobj[1, 3], bin_min_z ])
+                Trans_shelfobj = numpy.array([Tshelfobj[0, 3], Tshelfobj[1, 3], bin_min_z])
                 # Trans_shelfobj = Tshelfobj[0:3,3]
                 Tshelfproj = self.construct_4Dmatrix(Trans_shelfobj, Rot_shelfproj)
                 # Tshelfproj = self.construct_4Dmatrix(Trans_shelfobj, Rot_shelfproj_new)
 
-                rospy.logdebug( str(Tshelfproj))
+                rospy.logdebug(str(Tshelfproj))
 
                 # Transform from projection to object
                 Tprojshelf = inv(Tshelfproj)
@@ -465,8 +457,8 @@ class Grasping:
                     projected_point = numpy.dot(Tprojshelf, oldpt)
                     points.append(projected_point)
 
-                rospy.logdebug( "List of transformed object points after projection to target projection frame")
-                rospy.logdebug( str(points))
+                rospy.logdebug("List of transformed object points after projection to target projection frame")
+                rospy.logdebug(str(points))
 
                 # Get min max points. Pass in transformed points list to get min max for target frame. Compute width of projection shadow. Width is the y axis because shelf frame is set that way with y axis as width. Check if width of shadow projection can fit inside gripper width
                 min_max = self.compute_minmax(points)
@@ -485,8 +477,7 @@ class Grasping:
                 rospy.logdebug("max_y: " + str(max_y))
 
                 # Get hand pose
-                isSmaller = self.check_width(width)
-                if isSmaller:
+                if width <= self.gripperwidth:
                     score = self.compute_score(width, theta)
                     grasp_depth = self.compute_depth(min_x, max_x)  # set how far hand should go past front edge of object
                     height = self.compute_height(bin_min_z)  # select the height so bottom of object and also hand won't collide wit shelf lip. may need to take into acount the max_z and objects height to see if object will hit top of shelf.
@@ -536,8 +527,8 @@ class Grasping:
                     q_proj_msg.put((score, proj_msg))
                     q_approach_msg.put((score, approach_msg))
 
-                    if theta == 0:           
-                        # Compute wall grasps for theta = 0
+                    # Compute wall grasps for theta = 0
+                    if theta == 0:  
                         rospy.logdebug("creating two wall graps")
                         wallgrasp_list = self.compute_wallgrasps(bin_min_y, bin_max_y, min_y, max_y, Tshelfproj, proj_msg, approach_msg, Tbaseshelf)
                         wallgrasp_left = wallgrasp_list[0]
