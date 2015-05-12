@@ -94,16 +94,17 @@
     <resolution>2</resolution>
     <maxtorque>5.2</maxtorque>
   </Joint>
-  
-  <Body name="Finger0-2" type="dynamic" >
+
+  <Body name="Extension1" type="dynamic" >
     <offsetfrom>Finger0-1</offsetfrom>
-    <Translation>0 0 0</Translation>
-	<diffuseColor>0 0.5 0.05</diffuseColor>
+    <Translation>0.015 0.095 0.017</Translation>
+    <rotationaxis>0 -1 0 90</rotationaxis>
+  <diffuseColor>0 0.5 0.05</diffuseColor>
     <Geom type="trimesh" modifiable="false">
       <Translation>0 0 0</Translation>
-      <data>../../apc_models_stl/models/Robotiq/finger-dist-1.iv 0.01</data>
-      <collision>../../apc_models_stl/models/Robotiq/finger-dist-1.iv 0.01</collision>
-	  <diffuseColor>0 1 0</diffuseColor>
+      <data>../../apc_models_stl/models/Robotiq/extensions.wrl 0.8</data>
+      <collision>../../apc_models_stl/models/Robotiq/extensions.wrl 0.8</collision>
+    <diffuseColor>0 1 0</diffuseColor>
     </Geom>
     <mass type="custom">
       <!-- approximate as box -->
@@ -112,24 +113,56 @@
       <inertia>0.000009 0 0 0 0.000074 0 0 0 0.000514</inertia>
     </mass>
   </Body>
-  
+
   <Joint name="JF3" type="hinge" enable="false">
     <Body>Finger0-1</Body>
-	<Body>Finger0-2</Body>
-	<offsetfrom>handbase</offsetfrom>
-	<weight>0.03846</weight>
-	<axis>0 0 1</axis>
-	<anchor>-0.01742 0.1466 0.09</anchor>
-	<limitsdeg>38 -60</limitsdeg>
-    <maxvel>2</maxvel>
-    <resolution>2</resolution>
-    <maxtorque>2</maxtorque>
+    <Body>Extension1</Body>
+    <offsetfrom>handbase</offsetfrom>
+    <weight>0.03846</weight>
+    <axis>0 0 1</axis>
+    <anchor>-0.01742 0.1466 0.09</anchor>
+    <limitsdeg>38 -60</limitsdeg>
+      <maxvel>2</maxvel>
+      <resolution>2</resolution>
+      <maxtorque>2</maxtorque>
+  </Joint>
+
+  <Body name="Finger0-2" type="dynamic" >
+    <offsetfrom>Extension1</offsetfrom>
+    <Translation>-0.017 0.02 0.018</Translation>
+    <rotationaxis>0 1 0 90</rotationaxis>
+    <diffuseColor>0 0.5 0.05</diffuseColor>
+    <Geom type="trimesh" modifiable="false">
+      <Translation>0 0 0</Translation>
+      <data>../../apc_models_stl/models/Robotiq/finger-dist-1.iv 0.01</data>
+      <collision>../../apc_models_stl/models/Robotiq/finger-dist-1.iv 0.01</collision>
+      <diffuseColor>0 1 0</diffuseColor>
+    </Geom>
+    <mass type="custom">
+      <!-- approximate as box -->
+      <total>0.1</total>
+      <com>0 0 1</com>
+      <inertia>0.000009 0 0 0 0.000074 0 0 0 0.000514</inertia>
+    </mass>
+  </Body>
+
+  <Joint name="fake1" type="hinge" enable="false">
+    <body>Extension1</body>
+    <body>Finger0-2</body>
+    <offsetfrom>handbase</offsetfrom>
+    <weight>0.03846</weight>
+    <axis>0 0 1</axis>
+    <anchor>-0.01742 0.1466 0.09</anchor>
+    <limitsdeg>38 -60</limitsdeg>
+      <maxvel>2</maxvel>
+      <resolution>2</resolution>
+      <maxtorque>2</maxtorque>
   </Joint>
 
 <!--Finger 2-->
   <Body name="Finger1-0" type="dynamic">
     <offsetfrom>handbase</offsetfrom>
-    <Translation>-0.04 0.045 -0.0055</Translation>	
+    <Translation>-0.04 0.045 -0.0055</Translation>
     <Geom type="trimesh" modifiable="false">
       <data>../../apc_models_stl/models/Robotiq/finger-prox-1.iv 0.01</data>
       <collision>../../apc_models_stl/models/Robotiq/finger-prox-1.iv 0.01</collision>
@@ -185,16 +218,17 @@
     <resolution>2</resolution>
     <maxtorque>5.2</maxtorque>
   </Joint>
-  
-  <Body name="Finger1-2" type="dynamic" >
+
+  <Body name="Extension2" type="dynamic" >
     <offsetfrom>Finger1-1</offsetfrom>
-    <Translation>0 0 0</Translation>
-	<diffuseColor>0 0.5 0.05</diffuseColor>
+    <Translation>0.015 0.095 0.017</Translation>
+    <rotationaxis>0 -1 0 90</rotationaxis>
+  <diffuseColor>0 0.5 0.05</diffuseColor>
     <Geom type="trimesh" modifiable="false">
       <Translation>0 0 0</Translation>
-      <data>../../apc_models_stl/models/Robotiq/finger-dist-1.iv 0.01</data>
-      <collision>../../apc_models_stl/models/Robotiq/finger-dist-1.iv 0.01</collision>
-	  <diffuseColor>0 1 0</diffuseColor>
+      <data>../../apc_models_stl/models/Robotiq/extensions.wrl 0.8</data>
+      <collision>../../apc_models_stl/models/Robotiq/extensions.wrl 0.8</collision>
+    <diffuseColor>0 1 0</diffuseColor>
     </Geom>
     <mass type="custom">
       <!-- approximate as box -->
@@ -202,20 +236,55 @@
       <com>0 0 1</com>
       <inertia>0.000009 0 0 0 0.000074 0 0 0 0.000514</inertia>
     </mass>
-  </Body> 
-  
-  <Joint name="JF6" type="hinge" enable="false">
+  </Body>
+
+  <Joint name="JF3" type="hinge" enable="false">
     <Body>Finger1-1</Body>
-	<Body>Finger1-2</Body>
-	<offsetfrom>handbase</offsetfrom>
-	<weight>0.03846</weight>
-	<anchor>-0.01742 0.1466 0.09</anchor>
-	<axis>0 0 1</axis>
-	<limitsdeg>38 -60</limitsdeg>
-    <maxvel>2</maxvel>
-    <resolution>2</resolution>
-    <maxtorque>2</maxtorque>
-  </Joint> 
+    <Body>Extension2</Body>
+    <offsetfrom>handbase</offsetfrom>
+    <weight>0.03846</weight>
+    <axis>0 0 1</axis>
+    <anchor>-0.01742 0.1466 0.09</anchor>
+    <limitsdeg>38 -60</limitsdeg>
+      <maxvel>2</maxvel>
+      <resolution>2</resolution>
+      <maxtorque>2</maxtorque>
+  </Joint>
+
+  <Body name="Finger1-2" type="dynamic" >
+    <offsetfrom>Extension2</offsetfrom>
+    <Translation>-0.017 0.02 0.018</Translation>
+    <rotationaxis>0 1 0 90</rotationaxis>
+    <diffuseColor>0 0.5 0.05</diffuseColor>
+    <Geom type="trimesh" modifiable="false">
+      <Translation>0 0 0</Translation>
+      <data>../../apc_models_stl/models/Robotiq/finger-dist-1.iv 0.01</data>
+      <collision>../../apc_models_stl/models/Robotiq/finger-dist-1.iv 0.01</collision>
+      <diffuseColor>0 1 0</diffuseColor>
+    </Geom>
+    <mass type="custom">
+      <!-- approximate as box -->
+      <total>0.1</total>
+      <com>0 0 1</com>
+      <inertia>0.000009 0 0 0 0.000074 0 0 0 0.000514</inertia>
+    </mass>
+  </Body>
+
+  <Joint name="fake2" type="hinge" enable="false">
+    <body>Extension2</body>
+    <body>Finger1-2</body>
+    <offsetfrom>handbase</offsetfrom>
+    <weight>0.03846</weight>
+    <axis>0 0 1</axis>
+    <anchor>-0.01742 0.1466 0.09</anchor>
+    <limitsdeg>38 -60</limitsdeg>
+      <maxvel>2</maxvel>
+      <resolution>2</resolution>
+      <maxtorque>2</maxtorque>
+  </Joint>
+
+  
+
   
   <!--Finger 3-->
 
@@ -281,16 +350,16 @@
     <maxtorque>5.2</maxtorque>
   </Joint>  
   
-  <Body name="Finger2-2" type="dynamic" >
+  <Body name="Extension3" type="dynamic" >
     <offsetfrom>Finger2-1</offsetfrom>
-    <Translation>0 0 0</Translation>
-	<RotationMat>1 0 0 0 1 0 0 0 1 </RotationMat>
-	<diffuseColor>0 0.5 0.05</diffuseColor>
+    <Translation>0.015 0.095 0.017</Translation>
+    <rotationaxis>0 -1 0 90</rotationaxis>
+  <diffuseColor>0 0.5 0.05</diffuseColor>
     <Geom type="trimesh" modifiable="false">
       <Translation>0 0 0</Translation>
-      <data>../../apc_models_stl/models/Robotiq/finger-dist-1.iv 0.01</data>
-      <collision>../../apc_models_stl/models/Robotiq/finger-dist-1.iv 0.01</collision>
-	  <diffuseColor>0 1 0</diffuseColor>
+      <data>../../apc_models_stl/models/Robotiq/extensions.wrl 0.8</data>
+      <collision>../../apc_models_stl/models/Robotiq/extensions.wrl 0.8</collision>
+    <diffuseColor>0 1 0</diffuseColor>
     </Geom>
     <mass type="custom">
       <!-- approximate as box -->
@@ -300,17 +369,49 @@
     </mass>
   </Body>
 
-  <Joint name="JF9" type="hinge" enable="false">
-	<Body>Finger2-1</Body>
-	<Body>Finger2-2</Body>
-	<offsetfrom>handbase</offsetfrom>
-	<weight>0.03846</weight>
-	<anchor>0.14 0.14 0.09</anchor>
-	<axis>0 0 1</axis>
-	<limitsdeg>43.39 -54.61</limitsdeg>
-    <maxvel>2</maxvel>
-    <resolution>2</resolution>
-    <maxtorque>2</maxtorque>
+  <Joint name="JF3" type="hinge" enable="false">
+    <Body>Finger2-1</Body>
+    <Body>Extension3</Body>
+    <offsetfrom>handbase</offsetfrom>
+    <weight>0.03846</weight>
+    <axis>0 0 1</axis>
+    <anchor>-0.01742 0.1466 0.09</anchor>
+    <limitsdeg>38 -60</limitsdeg>
+      <maxvel>2</maxvel>
+      <resolution>2</resolution>
+      <maxtorque>2</maxtorque>
+  </Joint>
+
+  <Body name="Finger2-2" type="dynamic" >
+    <offsetfrom>Extension3</offsetfrom>
+    <Translation>-0.017 0.02 0.018</Translation>
+    <rotationaxis>0 1 0 90</rotationaxis>
+    <diffuseColor>0 0.5 0.05</diffuseColor>
+    <Geom type="trimesh" modifiable="false">
+      <Translation>0 0 0</Translation>
+      <data>../../apc_models_stl/models/Robotiq/finger-dist-1.iv 0.01</data>
+      <collision>../../apc_models_stl/models/Robotiq/finger-dist-1.iv 0.01</collision>
+      <diffuseColor>0 1 0</diffuseColor>
+    </Geom>
+    <mass type="custom">
+      <!-- approximate as box -->
+      <total>0.1</total>
+      <com>0 0 1</com>
+      <inertia>0.000009 0 0 0 0.000074 0 0 0 0.000514</inertia>
+    </mass>
+  </Body>
+
+  <Joint name="fake3" type="hinge" enable="false">
+    <body>Extension3</body>
+    <body>Finger2-2</body>
+    <offsetfrom>handbase</offsetfrom>
+    <weight>0.03846</weight>
+    <axis>0 0 1</axis>
+    <anchor>-0.01742 0.1466 0.09</anchor>
+    <limitsdeg>38 -60</limitsdeg>
+      <maxvel>2</maxvel>
+      <resolution>2</resolution>
+      <maxtorque>2</maxtorque>
   </Joint>
   
   <!-- spread -->

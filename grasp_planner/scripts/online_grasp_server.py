@@ -42,7 +42,7 @@ class Grasping:
         self.approachpose_offset = 0.3  # Set aproach pose to be 30cm back from the front of the bin
         # camera -15 deg offset about z-axis
         self.camtheta = 0.261799
-        self.shelfpitch = pi/12
+        self.shelfpitch = pi/12mapp
 
         self.Tcamera = numpy.array([[1, 0, 0, 0],
                                     [0, numpy.cos(self.camtheta), -numpy.sin(self.camtheta), 0],
@@ -406,6 +406,11 @@ class Grasping:
 
         return poseList
 
+    def compute_jaw_separation(self, width):
+        padding = 0.02 # 2cm padding. 1cm on each side of jaw
+        gpos = (-6.245 * width + 109.06) + padding
+        return gpos
+
     def get_grasp_cb(self, req):
 
         q_proj_msg = Q.PriorityQueue()
@@ -478,6 +483,8 @@ class Grasping:
                     filtered_min_max = self.compute_minmax_filtered(points)
                     f_min_x, f_max_x, f_min_y, f_max_y, f_min_z, f_max_z = filtered_min_max                
                     width = self.compute_width(f_min_y, f_max_y)
+
+                jaw_separation = compute_jaw_separation(width)
 
                 rospy.logdebug("Min-max values [minx,maxx,miny,maxy,minz,maxz]: " + str(min_max))
                 rospy.logdebug("projection width: " + str(width))
@@ -567,7 +574,7 @@ class Grasping:
         )
         rospy.logdebug("************************************************** end loop **************************************************")
         rospy.logdebug("************************************************** Request end ***********************************************")
-        return apcGraspDBResponse(status=self.status, grasps=grasps)
+        return apcGraspDBResponse(status=self.status, grasps=grasps, preshape = jaw_separation)
 
 
 def publisher():
