@@ -31,7 +31,7 @@ class Grasping:
 
         # Adjustable variables in planner
         self.pitchList = numpy.linspace(0 , pi/12, num=3)
-        self.pitchList = [pi/12]
+        # self.pitchList = [pi/12]
         # self.pitchList = [0]
         self.thetaList = numpy.linspace(-pi/6, pi/6, num=101) # Rotation of generated projection frames
         # self.thetaList = [0]
@@ -160,7 +160,7 @@ class Grasping:
         elif req.item == 'crayola_64_ct':
             item = '../env/crayon.env.xml'
             size = [0.037, 0.125, 0.145]
-            self.objectheightoffset = -0.02
+            self.objectheightoffset = -0.05
         elif req.item == 'feline_greenies_dental_treats':
             item = '../env/dentaltreat.env.xml'
             size = [0.04, 0.175, 0.21]
@@ -511,8 +511,8 @@ class Grasping:
                     Tpregraspapproach = self.construct_4Dmatrix(Trans_projapproach, Rot_projapproach)
 
                     # Generate and display TF in Rviz
-                    self.generate_tf('/shelf', '/pregrasp', Tshelfpregrasp)
-                    self.generate_tf('/pregrasp', '/approach', Tpregraspapproach)
+                    # self.generate_tf('/shelf', '/pregrasp', Tshelfpregrasp)
+                    # self.generate_tf('/pregrasp', '/approach', Tpregraspapproach)
 
                     # Transform of grasp wrt to camera frame
                     TgraspIK = numpy.dot(self.Tcamera, self.Tcamgrasp)

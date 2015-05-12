@@ -6,7 +6,7 @@ from copy import deepcopy
 from geometry_msgs.msg import Pose, Point, Quaternion
 
 from apc_util.moveit import follow_path, goto_pose, execute_known_trajectory
-from apc_util.shelf import bin_pose
+from apc_util.shelf import bin_pose, add_shelf, remove_shelf
 from motoman_moveit.srv import convert_trajectory_server
 
 class Scoop(smach.State):
@@ -21,6 +21,7 @@ class Scoop(smach.State):
 
         self.arm = robot.arm_right_torso
         self.move = rospy.ServiceProxy("/convert_trajectory_service", convert_trajectory_server)
+        add_shelf()
 
     def execute(self, userdata):
         outsideRight = False
@@ -173,38 +174,36 @@ class Scoop(smach.State):
         # else:
         #     return Failure
 
+        # pose = [self.arm.get_current_pose().pose]
+        # # TODO: MAKE THIS BASED ON CALIBRATION VALUES AND NOT HARD-CODED
+        # pose[-1].position.x += -1.4026
+        # pose[-1].position.y += -0.0797
+        # pose[-1].position.z +=  0.045
 
-        pose = [self.arm.get_current_pose().pose]
-        # TODO: MAKE THIS BASED ON CALIBRATION VALUES AND NOT HARD-CODED
-        pose[-1].position.x += -1.4026
-        pose[-1].position.y += -0.0797
-        pose[-1].position.z +=  0.045
+        # pose.append(deepcopy(pose[-1]))
+        # pose[-1] = bin_pose(userdata.bin).pose
+        # pose[-1].position.x += -0.3009
+        # pose[-1].position.y += 0.03
+        # pose[-1].position.z += 0.0619
+        # pose[-1].orientation.x = -0.26656
+        # pose[-1].orientation.y = -0.47462
+        # pose[-1].orientation.z = 0.41851
+        # pose[-1].orientation.w = 0.727
 
-        pose.append(deepcopy(pose[-1]))
-        pose[-1] = bin_pose(userdata.bin).pose
-        pose[-1].position.x += -0.3009
-        pose[-1].position.y += 0.03
-        pose[-1].position.z += 0.0619
-        pose[-1].orientation.x = -0.26656
-        pose[-1].orientation.y = -0.47462
-        pose[-1].orientation.z =  0.41851
-        pose[-1].orientation.w =  0.727
-
-        # convert to shelf frame coords
-        pose[-1].position.x += -1.4026
-        pose[-1].position.y += -0.0797
-        pose[-1].position.z +=  0.045
-
+        # # convert to shelf frame coords
+        # pose[-1].position.x += -1.4026
+        # pose[-1].position.y += -0.0797
+        # pose[-1].position.z += 0.045
 
         # if left section specified, adjust pose in positive Y direction
         # if userdata.section == "section1":
         #     if userdata.bin == "A" | "D" | "G" | "J":
         #         pose.position.y += sectionOffsetOutside
         #         outsideLeft = True
-            
+
         #     if userdata.bin == "B" | "E" | "H" | "I":
         #         pose.position.y += sectionOffsetMiddle
-            
+
         #     if userdata.bin == "C" | "F" | "I" | "K":
         #         pose.position.y += sectionOffsetInside
 
@@ -212,62 +211,68 @@ class Scoop(smach.State):
         # if userdata.section == "section3":
         #     if userdata.bin == "A" | "D" | "G" | "J":
         #         pose.position.y += -sectionOffsetInside
-            
+
         #     if userdata.bin == "B" | "E" | "H" | "I":
         #         pose.position.y += -sectionOffsetMiddle
-            
+
         #     if userdata.bin == "C" | "F" | "I" | "K":
         #         pose.position.y += -sectionOffsetOutside
         #         outsideRight = True
 
+        # follow_path(self.arm, pose)
 
+        jointValues = self.arm.get_current_joint_values()
 
-        follow_path(self.arm, pose)
+        jointValues[0] = 0.000   # TORSO
+        jointValues[1] = -1.557   # S
+        jointValues[2] = 1.032   # L
+        jointValues[3] = 0.000   # E
+        jointValues[4] = -1.448   # U
+        jointValues[5] = -1.238   # R
+        jointValues[6] = -1.808   # B
+        jointValues[7] = -0.087   # T
 
-        # print "Pose: ", pose
-        # if not goto_pose(self.arm, pose, [1, 5, 30, 60]):
-        #     return 'Failure'
+        self.arm.set_joint_value_target(jointValues)
+        self.arm.set_planning_time(10)
+        plan = self.arm.plan()
+        self.move(plan.joint_trajectory)
 
-
-        # self.arm.set_joint_value_target(jointValues)
-        # self.arm.set_planning_time(5)
-        # plan = self.arm.plan()
-        # self.move(plan.joint_trajectory)
+        remove_shelf()
 
         print "Executing scoop"
         poses = [self.arm.get_current_pose().pose]
         # TODO: MAKE THIS BASED ON CALIBRATION VALUES AND NOT HARD-CODED
         poses[-1].position.x += -1.4026
-        poses[-1].position.y += -0.0797
-        poses[-1].position.z +=  0.045
+        poses[-1].position.y += -0.09
+        poses[-1].position.z += 0.045
 
-        # # START (currently for bin C)
-        # poses.append(deepcopy(poses[-1]))
-        # poses[-1].position.x = -1.0659
-        # poses[-1].position.y = -0.2400
-        # poses[-1].position.z =  1.6919
-        # poses[-1].orientation.x = -0.26656
-        # poses[-1].orientation.y = -0.47462
-        # poses[-1].orientation.z =  0.41851
-        # poses[-1].orientation.w =  0.727
-        # # TODO: maybe calibrate pose orientation
-        
+        # START (currently for bin C)
+        poses.append(deepcopy(poses[-1]))
+        poses[-1].position.x = -1.0659
+        poses[-1].position.y = -0.2400
+        poses[-1].position.z = 1.7019
+        poses[-1].orientation.x = -0.26656
+        poses[-1].orientation.y = -0.47462
+        poses[-1].orientation.z = 0.41851
+        poses[-1].orientation.w = 0.727
+        # TODO: maybe calibrate pose orientation
+
         # IN
         poses.append(deepcopy(poses[-1]))
-        poses[-1].position.x +=  0.1133
+        poses[-1].position.x += 0.125
 
         # DOWN
         poses.append(deepcopy(poses[-1]))
         poses[-1].position.z += -0.0555
-        
+
         # IN + DOWN
         poses.append(deepcopy(poses[-1]))
-        poses[-1].position.x +=  0.1861
+        poses[-1].position.x += 0.174
         poses[-1].position.z += -0.0810
-        
+
         # IN
         poses.append(deepcopy(poses[-1]))
-        poses[-1].position.x +=  0.1323
+        poses[-1].position.x += 0.1323
 
         # DOWN
         poses.append(deepcopy(poses[-1]))
@@ -275,13 +280,13 @@ class Scoop(smach.State):
 
         # ROTATE BACK/LIFT UP
         poses.append(deepcopy(poses[-1]))
-        poses[-1].position.x +=  0.0059
-        poses[-1].position.y +=  0.0155
+        poses[-1].position.x += 0.0059
+        poses[-1].position.y += 0.0155
         poses[-1].position.z += -0.0370
         poses[-1].orientation.x = -0.36665
         poses[-1].orientation.y = -0.64811
-        poses[-1].orientation.z =  0.33362
-        poses[-1].orientation.w =  0.57811
+        poses[-1].orientation.z = 0.33362
+        poses[-1].orientation.w = 0.57811
         # TODO: maybe calibrate pose orientation
 
         # if scooping outer section of outer column, move tray inward before
@@ -298,12 +303,89 @@ class Scoop(smach.State):
         poses.append(deepcopy(poses[-1]))
         poses[-1].position.z += 0.05
 
-        # OUT
+        # OUT + UP
         poses.append(deepcopy(poses[-1]))
         poses[-1].position.x += -0.4086
+        poses[-1].position.z += 0.05
 
-        if not follow_path(self.arm, poses):
-            return 'Failure'
+        follow_path(self.arm, poses)
+
+        add_shelf()
+
+        print "Dumping"
+        poses = [self.arm.get_current_pose().pose]
+        # TODO: MAKE THIS BASED ON CALIBRATION VALUES AND NOT HARD-CODED
+        poses[-1].position.x += -1.4026
+        poses[-1].position.y += -0.09   # UNCALIBRATED SHELF, THIS IS A GUESS
+        poses[-1].position.z += 0.045
+
+        # UP
+        poses.append(deepcopy(poses[-1]))
+        poses[-1].position.z += 0.15
+
+        # ROTATE
+        poses.append(deepcopy(poses[-1]))
+        poses[-1].position.y += -0.10
+        poses[-1].orientation.x = -0.19625
+        poses[-1].orientation.y = 0.71656
+        poses[-1].orientation.z = -0.64673
+        poses[-1].orientation.w = -0.17254
+
+        # FORWARD
+        poses.append(deepcopy(poses[-1]))
+        poses[-1].position.x += 0.20
+
+        traj, success = self.arm.compute_cartesian_path(poses, 0.01, 0.0)
+        if success < 1:
+            rospy.logwarn("Cartesian trajectory could not be completed. Only solved for: '" + str(success) + "'...")
+        for point in traj.joint_trajectory.points:
+            for vel in point.velocities:
+                vel *= 1/1.2
+            for accel in point.accelerations:
+                accel = 0.0
+            point.time_from_start *= 1.2
+        self.move(traj.joint_trajectory)
+
+        poses = [self.arm.get_current_pose().pose]
+        # TODO: MAKE THIS BASED ON CALIBRATION VALUES AND NOT HARD-CODED
+        poses[-1].position.x += -1.4026
+        poses[-1].position.y += -0.09   # UNCALIBRATED SHELF, THIS IS A GUESS
+        poses[-1].position.z += 0.045
+
+        # DOWN
+        poses.append(deepcopy(poses[-1]))
+        poses[-1].position.z += -0.75
+
+        # DUMP
+        poses.append(deepcopy(poses[-1]))
+        poses[-1].position.z += -0.20
+        poses[-1].orientation.x = 0.12539
+        poses[-1].orientation.y = -0.46229
+        poses[-1].orientation.z = 0.84801
+        poses[-1].orientation.w = 0.22679
+
+        # UP
+        poses.append(deepcopy(poses[-1]))
+        poses[-1].position.z += 0.20
+
+        # OVER
+        poses.append(deepcopy(poses[-1]))
+        poses[-1].position.y += 0.30
+
+        follow_path(self.arm, poses)
+
+        jointValues[0] = 0.000   # TORSO
+        jointValues[1] = 1.612   # S
+        jointValues[2] = 1.391   # L
+        jointValues[3] = 0.000   # E
+        jointValues[4] = 1.466   # U
+        jointValues[5] = 0.111   # R
+        jointValues[6] = 1.711   # B
+        jointValues[7] = -1.167   # T
+
+        self.arm.set_joint_value_target(jointValues)
+        plan = self.arm.plan()
+        self.move(plan.joint_trajectory)
 
         return 'Success'
 

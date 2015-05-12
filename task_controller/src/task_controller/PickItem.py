@@ -4,7 +4,9 @@ import smach
 from gripper_srv.srv import gripper
 from grasp_planner.srv import apcGraspDB
 from sensor_msgs.msg import PointCloud2
+from geometry_msgs.msg import PoseStamped
 
+from apc_util.collision import attach_sphere
 from apc_util.grasping import plan_grasps, execute_grasp
 from apc_util.shelf import NO_SHELF, BIN, PADDED_SHELF
 
@@ -49,8 +51,8 @@ class PickItem(smach.State):
             import tf2_ros
             from geometry_msgs.msg import TransformStamped
             grasps = response.grasps.grasps
-            with PADDED_SHELF:
-                grasps = list(grasp for grasp, _ in plan_grasps(self.arm, response.grasps.grasps))
+            # with PADDED_SHELF:
+            #     grasps = list(grasp for grasp, _ in plan_grasps(self.arm, response.grasps.grasps))
             print "Grasp:", grasps[0]
             tfs = []
             for i in range(len(grasps)):
@@ -97,4 +99,16 @@ class PickItem(smach.State):
             if not execute_grasp(self.arm, grasps[0], plan, shelf=NO_SHELF):
                 return "Failure"
 
-            return 'Success'
+        pose = PoseStamped()
+        pose.header.frame_id = "/arm_left_link_7_t"
+        pose.header.stamp = rospy.Time.now()
+        pose.pose.position.x = 0
+        pose.pose.position.y = 0
+        pose.pose.position.z = -0.35
+        pose.pose.orientation.x = 0
+        pose.pose.orientation.y = 0
+        pose.pose.orientation.z = 0
+        pose.pose.orientation.w = 1
+        attach_sphere("arm_left_link_7_t", "Object", pose, 0.17, ["hand_left_finger_1_link_2", "hand_left_finger_1_link_3", "hand_left_finger_1_link_3_tip", "hand_left_finger_2_link_2", "hand_left_finger_2_link_3", "hand_left_finger_2_link_3_tip", "hand_left_finger_middle_link_2", "hand_left_finger_middle_link_3", "hand_left_finger_middle_link_3_tip"])
+
+        return 'Success'

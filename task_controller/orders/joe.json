@@ -1,0 +1,57 @@
+{
+  "bin_contents":
+  {
+    "bin_A":
+    [
+      "elmers_washable_no_run_school_glue", "safety_works_safety_glasses"
+    ],
+    "bin_B":
+    [
+      "feline_greenies_dental_treats"
+    ],
+    "bin_C":
+    [
+      "champion_copper_plus_spark_plug"
+    ],
+    "bin_D":
+    [
+      "crayola_64_ct", "kyjen_squeakin_eggs_plush_puppies", "kong_sitting_frog_dog_toy"
+    ],
+    "bin_E":
+    [
+      "expo_dry_erase_board_eraser"
+    ],
+    "bin_F":
+    [
+      "cheezit_big_original"
+    ]
+  },
+
+  "work_order":
+  [
+    {
+      "bin": "bin_A",
+      "item": "elmers_washable_no_run_school_glue"
+    },
+    {
+      "bin": "bin_B",
+      "item": "feline_greenies_dental_treats"
+    },
+    {
+      "bin": "bin_C",
+      "item": "champion_copper_plus_spark_plug"
+    },
+    {
+      "bin": "bin_D",
+      "item": "crayola_64_ct"
+    },
+    {
+      "bin": "bin_E",
+      "item": "expo_dry_erase_board_eraser"
+    },
+    {
+      "bin": "bin_F",
+      "item": "cheezit_big_original"
+    }
+  ]
+}

@@ -4,9 +4,33 @@ import rospy
 import moveit_commander
 
 from geometry_msgs.msg import PoseStamped
-from moveit_msgs.msg import CollisionObject
+from moveit_msgs.msg import CollisionObject, AttachedCollisionObject
+from shape_msgs.msg import SolidPrimitive
 
 scene = moveit_commander.PlanningSceneInterface()
+
+
+def attach_sphere(link, name, pose, radius, touch_links=[]):
+    aco = AttachedCollisionObject()
+
+    co = CollisionObject()
+    co.operation = CollisionObject.ADD
+    co.id = name
+    co.header = pose.header
+    sphere = SolidPrimitive()
+    sphere.type = SolidPrimitive.SPHERE
+    sphere.dimensions = [radius]
+    co.primitives = [sphere]
+    co.primitive_poses = [pose.pose]
+    aco.object = co
+
+    aco.link_name = link
+    if len(touch_links) > 0:
+        aco.touch_links = touch_links
+    else:
+        aco.touch_links = [link]
+    print aco
+    scene._pub_aco.publish(aco)
 
 
 def add_object(center, name="Object", radius=0.17):
