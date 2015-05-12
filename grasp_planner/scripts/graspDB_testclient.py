@@ -1,18 +1,23 @@
 #!/usr/bin/env python
 
+import tf
+import tf2_ros
 import math
 import rospy
 import sys
 import traceback
 import time
 import openravepy
-
+import geometry_msgs.msg
+import sensor_msgs.msg
+import moveit_commander
 from numpy import *
 from grasp_planner.srv import apcGraspDB, apcGraspDBResponse
-#from itertools import izip
 from std_msgs.msg import Header
 from geometry_msgs.msg import PoseArray, PoseStamped, Pose, Point, Quaternion
 from grasp_planner.msg import apcGraspPose, apcGraspArray
+from sensor_msgs.msg import PointCloud2
+
 
 if not __openravepy_build_doc__:
     from openravepy import *
@@ -22,43 +27,31 @@ if not __openravepy_build_doc__:
 def main():
     try:
         client = rospy.ServiceProxy('getGrasps', apcGraspDB)
-        item = 'cheezit_big_original' # Set response item
-        """
-        Trob_obj = PoseStamped(
-            header='base',
-            pose=Pose(
-                position=Point(
-                    x=1,
-                    y=1,
-                    z=1,
-                ),
-                orientation=Quaternion(
-                    x=1,
-                    y=1,
-                    z=1,
-                    w=1,
-                ),
-            ),
-        )
-        """
-        Trobobj = pose=Pose(
-                position=Point(
-                    x=1,
-                    y=1,
-                    z=1,
-                ),
-                orientation=Quaternion(
-                    x=0.5,
-                    y=0.5,
-                    z=0.5,
-                    w=0.5,
-                )
-            )
+        item = 'expo_dry_erase_board_eraser' # Set response item
+        item = 'cheezit_big_original'
+        tfs = []
+        pts = []
 
-        pose = client(item, Trobobj)
+        msg = geometry_msgs.msg.Pose()
+        msg.position.x = 0.885315
+        msg.position.y = 0.413907
+        msg.position.z = 0.787417
+        msg.orientation.x = 0
+        msg.orientation.y = 0
+        msg.orientation.z = 0
+        msg.orientation.w = 1
+
+
+
+        points = sensor_msgs.msg.PointCloud2()
+        points.data = pts
+        binnum = "B"
+
+        response = client(item, binnum, msg, points)
         print "returned pose"
-        print pose.status
-        print pose.apcGraspArray
+        print response.status
+        print response.grasps
+
 
     except rospy.ServiceException, e:
         print "Service call failed: %s"%e

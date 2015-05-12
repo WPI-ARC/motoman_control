@@ -84,8 +84,7 @@ if __name__ == "__main__":
             if True or not gmodel.load():
                 print 'Generating grasp database'
                 gmodel.init(friction=0.4,avoidlinks=[])
-                gmodel.generate(approachrays=gmodel.computeBoxApproachRays(delta=0.06,normalanglerange=0))
-                #gmodel.generate(approachrays=gmodel.computeSphereApproachRays(delta=0.2,normalanglerange=0))
+                gmodel.generate(approachrays=gmodel.computeBoxApproachRays(delta=0.2,normalanglerange=0.17), graspingnoise = 0.0)
                 gmodel.save()
 
             # Load grasps
@@ -129,7 +128,7 @@ if __name__ == "__main__":
     RaveDestroy() # destroys all environments and loaded plugins
 
     # Write graspDict to a csv file using pickle
-    with open(os.path.join(os.path.dirname(__file__), "graspDict.csv"), "w") as file:
+    with open(os.path.join(os.path.dirname(__file__), "graspDict_new.csv"), "w") as file:
         pickle.dump(graspDict, file)
 
     print "Finished generating grasp database"
