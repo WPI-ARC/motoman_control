@@ -8,6 +8,7 @@ from apc_util.transformation_helpers import PoseToMatrix, PoseFromMatrix
 from apc_vision.srv import *
 from apc_vision.msg import *
 from apc_msgs.msg import *
+from apc_util.srv import *
 from apc_util.moveit import follow_path
 
 
@@ -24,6 +25,7 @@ class ScanForItem(smach.State):
         self.take_sample = rospy.ServiceProxy("take_sample", TakeSample)
         self.get_samples = rospy.ServiceProxy("get_samples", GetSamples)
         self.process_samples = rospy.ServiceProxy("process_samples", ProcessSamples)
+        self.publish_pointcloud_collision = rospy.ServiceProxy("publish_pointcloud_collision", PublishPointcloudCollision)
         self.tf = TransformListener(True, rospy.Duration(10.0))
         rospy.sleep(rospy.Duration(1.0))  # Wait for network timting
 
@@ -54,6 +56,7 @@ class ScanForItem(smach.State):
                     return 'Failure'
                 userdata.pose = response.result.pose
                 userdata.points = response.result.pointcloud
+                self.publish_pointcloud_collision(response.result.collision_cloud)
                 return 'Success'
             except rospy.ServiceException as e:
                 rospy.logwarn("Error process: "+str(e))

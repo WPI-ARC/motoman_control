@@ -30,11 +30,11 @@ def goto_pose(group, pose, times=[5, 20, 40, 60], shelf=SIMPLE_SHELF):
             rospy.loginfo("Planning for "+str(t)+" seconds...")
             plan = group.plan(pose)
             if len(plan.joint_trajectory.points) > 0:
-                result = move(plan.joint_trajectory)
-                print "Move:", result
-                # print "Move:", move(plan.joint_trajectory)
-                if result.success:
-                    return True
+                # result = move(plan.joint_trajectory)
+                # print "Move:", result
+                print "Move:", move(plan.joint_trajectory)
+                # if result.success:
+                return True
         return False
 
 
@@ -66,7 +66,7 @@ def execute_known_trajectory(group, task, bin):
 
     if group.get_current_joint_values() != start:
         rospy.logwarn("execute_known_trajectory(%s, %s): Not starting at the beginning." % (task, bin))
-        if not goto_pose(group, start, [1, 10, 30]):
+        if not goto_pose(group, start, [1, 2, 10]):
             return False
 
     with SIMPLE_SHELF:
