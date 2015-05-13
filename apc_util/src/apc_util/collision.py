@@ -29,7 +29,6 @@ def attach_sphere(link, name, pose, radius, touch_links=[]):
         aco.touch_links = touch_links
     else:
         aco.touch_links = [link]
-    print aco
     scene._pub_aco.publish(aco)
 
 
