@@ -20,7 +20,7 @@ ros::ServiceClient g_execute_client;
 std::vector<sensor_msgs::JointState> g_joint_states(4);
 std::mutex g_joint_state_mutex;
 
-std::map<std::string, double> GenerateNamePositionMap(const std::vector<std::string>& joint_names, const std::vector<double>& joint_positions)
+std::map<std::string, double> GenerateNameValueMap(const std::vector<std::string>& joint_names, const std::vector<double>& joint_positions)
 {
     if (joint_names.size() != joint_positions.size())
     {
@@ -63,22 +63,43 @@ std::vector<double> GetGroupPositions(const std::map<std::string, double>& joint
     return group_positions;
 }
 
+std::vector<double> GetGroupVelocities(const std::map<std::string, double>& command_map, const std::vector<std::string>& group_joint_names)
+{
+    std::vector<double> group_velocities(group_joint_names.size());
+    for (size_t idx = 0; idx < group_joint_names.size(); idx++)
+    {
+        const std::string joint_name = group_joint_names[idx];
+        std::map<std::string, double>::const_iterator found_joint_velocity = command_map.find(joint_name);
+        if (found_joint_velocity != command_map.end())
+        {
+            group_velocities[idx] = found_joint_velocity->second;
+        }
+        else
+        {
+            group_velocities[idx] = 0.0;
+        }
+    }
+    return group_velocities;
+}
+
 std::vector<motoman_msgs::DynamicJointsGroup> BuildGroupPoints(const std::map<std::string, double>& joint_state_map, const trajectory_msgs::JointTrajectory& commanded_traj, const std::vector<std::string>& group_joint_names, const int16_t group_number)
 {
     std::vector<motoman_msgs::DynamicJointsGroup> group_points;
     for (size_t idx = 0; idx < commanded_traj.points.size(); idx++)
     {
         const trajectory_msgs::JointTrajectoryPoint& commanded_point = commanded_traj.points[idx];
-        std::map<std::string, double> commanded_joint_map = GenerateNamePositionMap(commanded_traj.joint_names, commanded_point.positions);
+        std::map<std::string, double> commanded_position_map = GenerateNameValueMap(commanded_traj.joint_names, commanded_point.positions);
+        std::map<std::string, double> commanded_velocity_map = GenerateNameValueMap(commanded_traj.joint_names, commanded_point.velocities);
         motoman_msgs::DynamicJointsGroup group_point;
         group_point.group_number = group_number;
         group_point.time_from_start = commanded_point.time_from_start;
         group_point.num_joints = (int16_t)group_joint_names.size();
         // Populate the point
-        group_point.positions = GetGroupPositions(joint_state_map, commanded_joint_map, group_joint_names);
-        group_point.velocities = std::vector<double>(group_joint_names.size(), 0.0);
+        group_point.positions = GetGroupPositions(joint_state_map, commanded_position_map, group_joint_names);
+        group_point.velocities = GetGroupVelocities(commanded_velocity_map, group_joint_names);
         //group_point.accelerations = ;
         //group_point.effort = ;
+        group_points.push_back(group_point);
     }
     return group_points;
 }
@@ -91,10 +112,12 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, moto
         res.success = true;
         return true;
     }
+    ROS_INFO("Received trajectory with %zu points to convert and execute", req.jointTraj.points.size());
     // Copy the current joint states
     g_joint_state_mutex.lock();
     std::vector<sensor_msgs::JointState> current_states = g_joint_states;
     g_joint_state_mutex.unlock();
+    ROS_INFO("Got current joint state");
     // Insert all joints states into a map
     std::map<std::string, double> current_joint_values;
     for (size_t sdx = 0; sdx < current_states.size(); sdx++)
@@ -125,6 +148,7 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, moto
             return true;
         }
     }
+    ROS_INFO("Trajectory safety check passed");
     // Now, build a trajectory for each group
     std::vector<std::string> left_arm_group_names(7);
     left_arm_group_names[0] = "arm_left_joint_1_s";
@@ -135,6 +159,7 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, moto
     left_arm_group_names[5] = "arm_left_joint_6_b";
     left_arm_group_names[6] = "arm_left_joint_7_t";
     std::vector<motoman_msgs::DynamicJointsGroup> left_arm_group_points = BuildGroupPoints(current_joint_values, req.jointTraj, left_arm_group_names, 0);
+    ROS_INFO("Generated left arm group trajectory with %zu points", left_arm_group_points.size());
     std::vector<std::string> right_arm_group_names(7);
     right_arm_group_names[0] = "arm_right_joint_1_s";
     right_arm_group_names[1] = "arm_right_joint_2_l";
@@ -144,14 +169,18 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, moto
     right_arm_group_names[5] = "arm_right_joint_6_b";
     right_arm_group_names[6] = "arm_right_joint_7_t";
     std::vector<motoman_msgs::DynamicJointsGroup> right_arm_group_points = BuildGroupPoints(current_joint_values, req.jointTraj, right_arm_group_names, 1);
+    ROS_INFO("Generated right arm group trajectory with %zu points", right_arm_group_points.size());
     std::vector<std::string> torso_1_group_names(1);
     torso_1_group_names[0] = "torso_joint_b1";
     std::vector<motoman_msgs::DynamicJointsGroup> torso_1_group_points = BuildGroupPoints(current_joint_values, req.jointTraj, torso_1_group_names, 2);
+    ROS_INFO("Generated torso 1 group trajectory with %zu points", torso_1_group_points.size());
     std::vector<std::string> torso_2_group_names(1);
     torso_2_group_names[0] = "torso_joint_b2";
     std::vector<motoman_msgs::DynamicJointsGroup> torso_2_group_points = BuildGroupPoints(current_joint_values, req.jointTraj, torso_2_group_names, 3);
+    ROS_INFO("Generated torso 2 group trajectory with %zu points", torso_2_group_points.size());
     // Safety check
-    if (left_arm_group_points.size() != right_arm_group_points.size() != torso_1_group_points.size() != torso_2_group_points.size())
+    size_t expected_size = req.jointTraj.points.size();
+    if (left_arm_group_points.size() != expected_size || right_arm_group_points.size() != expected_size || torso_1_group_points.size() != expected_size || torso_2_group_points.size() != expected_size)
     {
         ROS_ERROR("Failure generating trajectories for each group");
         res.success = false;
@@ -159,12 +188,14 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, moto
     }
     // Now, combine the points into a single trajectory
     std::vector<motoman_msgs::DynamicJointPoint> complete_trajectory_points;
-    for (size_t idx = 0; idx < left_arm_group_points.size(); idx++)
+    for (size_t idx = 0; idx < expected_size; idx++)
     {
         motoman_msgs::DynamicJointPoint new_traj_point;
         new_traj_point.groups = {left_arm_group_points[idx], right_arm_group_points[idx], torso_1_group_points[idx], torso_2_group_points[idx]};
         new_traj_point.num_groups = 4;
+        complete_trajectory_points.push_back(new_traj_point);
     }
+    ROS_INFO("Assembled combined trajectory with %zu points", complete_trajectory_points.size());
     // Assemble full trajectory
     std::vector<std::string> complete_joint_names(16);
     complete_joint_names[0] = "arm_left_joint_1_s";
@@ -191,6 +222,7 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, moto
     motoman_msgs::CmdJointTrajectoryEx::Request trajectory_req;
     trajectory_req.trajectory = complete_trajectory;
     motoman_msgs::CmdJointTrajectoryEx::Response trajectory_res;
+    ROS_INFO("Executing trajectory...");
     bool status = g_execute_client.call(trajectory_req, trajectory_res);
     if (!status)
     {
@@ -235,7 +267,7 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, moto
         }
     }
     // Get an equivalent map for the target joint states
-    std::map<std::string, double> target_joint_values = GenerateNamePositionMap(req.jointTraj.joint_names, req.jointTraj.points[req.jointTraj.points.size() - 1].positions);
+    std::map<std::string, double> target_joint_values = GenerateNameValueMap(req.jointTraj.joint_names, req.jointTraj.points[req.jointTraj.points.size() - 1].positions);
     // Make sure the target is reached within the desired tolerance
     std::map<std::string, double>::const_iterator target_joint_values_itr;
     for (target_joint_values_itr = target_joint_values.begin(); target_joint_values_itr != target_joint_values.end(); ++target_joint_values_itr)
