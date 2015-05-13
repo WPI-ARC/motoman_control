@@ -2,6 +2,7 @@ import rospy
 import smach
 
 from apc_util.moveit import execute_known_trajectory
+from apc_util.smach import on_exception
 
 
 class MoveToBin(smach.State):
@@ -14,6 +15,7 @@ class MoveToBin(smach.State):
                              input_keys=['bin'], output_keys=[])
         self.arm = robot.arm_left_torso
 
+    @on_exception(failure_state="Failed")
     def execute(self, userdata):
         rospy.loginfo("Trying to move to bin '"+userdata.bin+"'...")
 

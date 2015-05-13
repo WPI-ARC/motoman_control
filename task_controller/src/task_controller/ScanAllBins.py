@@ -8,6 +8,7 @@ from apc_vision.srv import *
 from apc_vision.msg import *
 from apc_util.moveit import follow_path
 from apc_util.shelf import bin_pose
+from apc_util.smach import on_exception
 
 
 class ScanAllBins(smach.State):
@@ -22,6 +23,7 @@ class ScanAllBins(smach.State):
         self.arm = robot.arm_left_torso
         self.sample = rospy.ServiceProxy("sample_vision", SampleVision)
 
+    @on_exception(failure_state="Failed")
     def execute(self, userdata):
         rospy.loginfo("Trying to find "+userdata.item+"...")
 

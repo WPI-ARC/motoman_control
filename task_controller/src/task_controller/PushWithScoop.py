@@ -8,7 +8,6 @@
 # e.g. 'Left' implies going along the left wall, and pushing to the right.
 
 
-import roslib; roslib.load_manifest('task_controller')
 import rospy
 import smach
 
@@ -17,7 +16,9 @@ from geometry_msgs.msg import Pose, Point, Quaternion
 
 from apc_util.moveit import follow_path, goto_pose, execute_known_trajectory
 from apc_util.shelf import bin_pose, BIN
+from apc_util.smach import on_exception
 from motoman_moveit.srv import convert_trajectory_server
+
 
 class PushWithScoop( smach.State ):
 
@@ -28,6 +29,7 @@ class PushWithScoop( smach.State ):
         self.move = rospy.ServiceProxy(  "/convert_trajectory_server",
         convert_trajectory_server )
 
+    @on_exception(failure_state="Failed")
     def execute( self, userdata ):
         rospy.loginfo( "Trying to push with scoop bin " + userdata.bin +
         " from side " + userdata.side )

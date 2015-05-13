@@ -7,6 +7,7 @@ from geometry_msgs.msg import PoseStamped
 from apc_util.collision import attach_sphere
 from apc_util.grasping import plan_grasps, execute_grasp, control_gripper, generate_grasps
 from apc_util.shelf import NO_SHELF, BIN, PADDED_SHELF
+from apc_util.smach import on_exception
 
 
 class PickItem(smach.State):
@@ -21,6 +22,7 @@ class PickItem(smach.State):
 
         self.points = rospy.Publisher("/grasp_points", PointCloud2, 10)
 
+    @on_exception(failure_state="Failed")
     def execute(self, userdata):
         rospy.loginfo("Trying to pick '"+userdata.item+"'...")
         self.points.publish(userdata.points)

@@ -6,6 +6,7 @@ from apc_msgs.msg import APCItem
 from apc_util.collision import publish_pointcloud_collision
 from apc_util.vision import take_sample, get_samples, process_samples
 from apc_util.grasping import control_gripper
+from apc_util.smach import on_exception
 
 
 class ScanForItem(smach.State):
@@ -21,6 +22,7 @@ class ScanForItem(smach.State):
         self.tf = TransformListener(True, rospy.Duration(10.0))
         rospy.sleep(rospy.Duration(1.0))  # Wait for network timting
 
+    @on_exception(failure_state="Failed")
     def execute(self, userdata):
         rospy.loginfo("Trying to find "+userdata.item+"...")
 

@@ -4,7 +4,7 @@ import smach
 from apc_util.moveit import scene, execute_known_trajectory
 from apc_util.grasping import control_gripper
 from apc_util.shelf import BIN
-
+from apc_util.smach import on_exception
 
 class PlaceItem(smach.State):
     """
@@ -16,6 +16,7 @@ class PlaceItem(smach.State):
                              input_keys=['bin'], output_keys=[])
         self.arm = robot.arm_left_torso
 
+    @on_exception(failure_state="Failed")
     def execute(self, userdata):
         rospy.loginfo("Trying to place from bin '"+userdata.bin+"'...")
 
