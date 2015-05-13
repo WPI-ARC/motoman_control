@@ -3,75 +3,100 @@ items:
   cheezit_big_original:
     supported: true
     bonus: 0
+	force: 100 
   genuine_joe_plastic_stir_sticks:
     supported: false
     bonus: 0
+    force: 15
   crayola_64_ct:
     supported: true
     bonus: 0
+    force: 50
   expo_dry_erase_board_eraser:
     supported: true
     bonus: 0
+    force: 1
   elmers_washable_no_run_school_glue:
     supported: true
     bonus: 0
+    force: 125
   kyjen_squeakin_eggs_plush_puppies:
     supported: false
     bonus: 1
+    force: 255
   oreo_mega_stuf:
     supported: false
     bonus: 0
+    force: 50
   champion_copper_plus_spark_plug:
     supported: false
     bonus: 0
+    force: 15
   munchkin_white_hot_duck_bath_toy:
     supported: false
     bonus: 1
+    force: 50
   mommys_helper_outlet_plugs:
     supported: false
     bonus: 0
+    force: 1
   sharpie_accent_tank_style_highlighters:
     supported: false
     bonus: 0
+    force: 50
   stanley_66_052:
     supported: false
     bonus: 3
+    force: 15
   safety_works_safety_glasses:
     supported: false
     bonus: 1
+    force: 40
   paper_mate_12_count_mirado_black_warrior:
     supported: false
     bonus: 0
+    force: 50
   mark_twain_huckleberry_finn:
     supported: false
     bonus: 3
+    force: 1
   first_years_take_and_toss_straw_cup:
     supported: false
     bonus: 0
+    force: 50
   feline_greenies_dental_treats:
     supported: true
     bonus: 0
+    force: 255
   laugh_out_loud_joke_book:
     supported: false
     bonus: 3
+    force: 1
   kong_air_dog_squeakair_tennis_ball:
     supported: false
     bonus: 1
+    force: 255
   highland_6539_self_stick_notes:
     supported: false
     bonus: 0
+    force: 15
   kong_sitting_frog_dog_toy:
     supported: false
     bonus: 1
+    force: 255
   kong_duck_dog_toy:
     supported: false
     bonus: 1
+    force: 255
   rolodex_jumbo_pencil_cup:
     supported: false
     bonus: 2
+    force: 50
   mead_index_cards:
     supported: false
     bonus: 0
+    force: 50
   dr_browns_bottle_brush:
     supported: false
     bonus: 2
+    force: 1
