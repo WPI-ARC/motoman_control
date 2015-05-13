@@ -3,16 +3,17 @@ import traceback
 
 
 class OnException(object):
-    def __init__(self, cb, failure_state):
-        self._cb = cb
+    def __init__(self, failure_state):
         self._failure_state = failure_state
 
-    def __call__(self, *args, **kwargs):
-        try:
-            return self._cb(*args, **kwargs)
-        except Exception as e:
-            rospy.logerr("Exception occurred while executing state.")
-            traceback.print_tb(e.__traceback__)
-            return self._failure_state
+    def __call__(self, f):
+        def wrapped_f(*args, **kwargs):
+            try:
+                return f(*args, **kwargs)
+            except Exception, err:
+                rospy.logerr("Exception occurred while executing state: %s." % str(err))
+                traceback.print_last()
+                return self._failure_state
+        return wrapped_f
 
 on_exception = OnException

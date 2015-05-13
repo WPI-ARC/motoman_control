@@ -41,7 +41,7 @@ def check_collisions(query):
 def get_known_trajectory(task, bin):
     for i in range(5):
         try:
-            result = _trajlib(task, bin)
+            result = _trajlib(task=task, bin_num=bin)
             return result.plan, True
         except rospy.ServiceException as e:
             rospy.logwarn("Failure with get_known_trajectory(%s, %s): %s" % (task, bin, str(e)))

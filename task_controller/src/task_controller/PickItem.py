@@ -20,7 +20,7 @@ class PickItem(smach.State):
                              input_keys=['item', 'pose', 'points', 'bin'])
         self.arm = robot.arm_left_torso
 
-        self.points = rospy.Publisher("/grasp_points", PointCloud2, 10)
+        self.points = rospy.Publisher("/grasp_points", PointCloud2)
 
     @on_exception(failure_state="Failed")
     def execute(self, userdata):
