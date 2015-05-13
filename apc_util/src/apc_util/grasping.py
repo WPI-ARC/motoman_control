@@ -20,7 +20,7 @@ def control_gripper(command):
             # TODO: Make gripper assertions
             return True
         except rospy.ServiceException as e:
-            rospy.logwarn("Error control_gripper(%s): %s" % (command, str(e)))
+            rospy.logwarn("Failure with control_gripper(%s): %s" % (command, str(e)))
     rospy.logerr("Failed to %s gripper" % command)
     return False
 
@@ -36,7 +36,7 @@ def generate_grasps(item, pose, pointcloud, bin):
             )
             return response.grasps.grasps, True
         except rospy.ServiceException as e:
-            rospy.logwarn("Error generate_grasps(%s, %s, <<pointcloud>>, %s): %s" % (item, pose, bin, str(e)))
+            rospy.logwarn("Failure with generate_grasps(%s, %s, <<pointcloud>>, %s): %s" % (item, pose, bin, str(e)))
     rospy.logerr("Failed to get online grasps for (%s, %s, <<pointcloud>>, %s)"
                  % (item, pose, bin))
     return None, False
