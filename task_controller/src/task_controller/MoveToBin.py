@@ -29,7 +29,7 @@ class MoveToBin(smach.State):
 
         # return 'Success'
 
-        self.arm.set_planner_id("RRTstarkConfigDefault")
+        self.arm.set_planner_id("KPIECEkConfigDefault")
         if execute_known_trajectory(self.arm, "Forward", userdata.bin):
             return "Success"
 

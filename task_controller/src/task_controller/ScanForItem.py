@@ -37,10 +37,9 @@ class ScanForItem(smach.State):
         response = self.gripper_control.call(command="close")
         print "Activate Gripper:", response
 
-        poses = self.get_poses()
         for i in range(5):
             try:
-                self.sample_bin(userdata.bin, poses)
+                self.sample_bin(userdata.bin)
                 samples = self.get_samples(bin=userdata.bin)
                 if samples.status != GetSamplesResponse.SUCCESS:
                     return 'Failure'
@@ -63,34 +62,11 @@ class ScanForItem(smach.State):
         rospy.logwarn("Can't find "+userdata.item+"...")
         return 'Failure'
 
-    def get_poses(self):
-        center_pose = self.arm.get_current_pose().pose
-        center_matrix = PoseToMatrix(center_pose)
-        angle, offset = pi/12, 0.175
-        move_left = numpy.array([[ cos(-angle), 0, sin(-angle), -offset],
-                                 [           0, 1,           0,       0],
-                                 [-sin(-angle), 0, cos(-angle),       0],
-                                 [           0, 0,           0,       1]])
-        move_right = numpy.array([[ cos(angle), 0, sin(angle), offset],
-                                  [          0, 1,          0,      0],
-                                  [-sin(angle), 0, cos(angle),      0],
-                                  [          0, 0,          0,      1]])
+    def sample_bin(self, bin):
 
-        # return [center_pose,
-        #         PoseFromMatrix(numpy.dot(center_matrix, move_left)),
-        #         PoseFromMatrix(numpy.dot(center_matrix, move_right))]
-
-        return [center_pose]
-
-    def sample_bin(self, bin, poses):
         print "Reset:", self.take_sample(command="reset", bin=bin)
-        for pose in poses:
-            current_pose = self.arm.get_current_pose().pose
-            print current_pose, pose
-            if not follow_path(self.arm, [current_pose, pose]):
-                return False
-            result = self.take_sample(command="sample", bin=bin)
-            if result.status != TakeSampleResponse.SUCCESS:
-                print "Sample:", result
-                return False
+        result = self.take_sample(command="sample", bin=bin)
+        if result.status != TakeSampleResponse.SUCCESS:
+            print "Sample:", result
+            return False
         return True

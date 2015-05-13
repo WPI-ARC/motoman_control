@@ -2,7 +2,7 @@
 import rospy
 
 from copy import deepcopy
-from gripper_srv.srv import gripper, gripperRequest
+from gripper_srv.srv import gripper
 
 from moveit import goto_pose, follow_path, move
 from shelf import FULL_SHELF
@@ -10,7 +10,7 @@ from shelf import FULL_SHELF
 
 def plan_grasps(group, grasps):
     for i, grasp in enumerate(grasps):
-        print "%s/%s" % (i+1, len(grasps))
+        rospy.loginfo("%s/%s" % (i+1, len(grasps)))
         traj, success = group.compute_cartesian_path(
             [grasp.approach, grasp.pregrasp],
             0.01,  # 1cm interpolation resolution
@@ -18,7 +18,7 @@ def plan_grasps(group, grasps):
             avoid_collisions=True,
         )
         if success >= 1:
-            print "Success"
+            rospy.loginfo("Found grasp")
             yield grasp, traj
 
 
@@ -26,23 +26,20 @@ gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
 
 
 def execute_grasp(group, grasp, plan, shelf=FULL_SHELF):
-    print "Moving to approach pose"
-    start = plan.joint_trajectory.points[0].positions
+    rospy.loginfo("Moving to approach pose")
+    start = list(plan.joint_trajectory.points[0].positions)
     if not goto_pose(group, start, [1, 5, 30, 60], shelf=shelf):
         return False
-    print plan.joint_trajectory.points[0].positions
-    print group.get_current_joint_values()
-    print "Executing cartesian approach"
-    print move(plan.joint_trajectory)  # TODO: Error check
 
-    # request = gripperRequest(command="pinch")
-    # print "Change to pinch mode:", gripper_control(request)
+    rospy.loginfo("Executing cartesian approach")
+    if not move(plan.joint_trajectory).success:
+        rospy.logerr("Failed to execute approach")
+        return False
 
-    request = gripperRequest(command="close")
-    print "Grabbing:", gripper_control(request)
+    rospy.loginfo("Grabbing: %s" % gripper_control(command="close"))
     rospy.sleep(4)
 
-    print "Executing cartesian retreat"
+    rospy.loginfo("Executing cartesian retreat")
     poses = [group.get_current_pose().pose]
     poses.append(deepcopy(poses[-1]))
     poses[-1].position.z += 0.032

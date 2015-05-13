@@ -17,6 +17,7 @@ trajlib = rospy.ServiceProxy("/trajlib", GetTrajectory)
 
 robot = moveit_commander.RobotCommander()
 
+
 def goto_pose(group, pose, times=[5, 20, 40, 60], shelf=SIMPLE_SHELF):
     """Moves the hand to a given `pose`, using the configured `group`. The
     planning time is modified based on the passed in `times` to try to
@@ -28,14 +29,15 @@ def goto_pose(group, pose, times=[5, 20, 40, 60], shelf=SIMPLE_SHELF):
             group.set_planning_time(t)
             # group.set_start_state_to_current_state()
             rospy.loginfo("Planning for "+str(t)+" seconds...")
-            print pose
             plan = group.plan(pose)
             if len(plan.joint_trajectory.points) > 0:
-                result = move(plan.joint_trajectory)
-                print "Move:", result
-                # print "Move:", move(plan.joint_trajectory)
-                if result.success:
+                if move(plan.joint_trajectory).success:
                     return True
+                else:
+                    rospy.logwarn("Failed to execute")
+            else:
+                rospy.logwarn("Failed to plan in %s seconds" % t)
+        rospy.logerr("Failed to go to %s" % pose)
         return False
 
 
@@ -49,21 +51,24 @@ def follow_path(group, path, collision_checking=True):
         0.0,  # jump_threshold disabled
         avoid_collisions=collision_checking,
     )
+
     if success < 1:
-        rospy.logwarn(
+        rospy.logerr(
             "Cartesian trajectory could not be completed. Only solved for: '"
             + str(success) + "'..."
         )
-        # TODO: return False
-    print move(traj.joint_trajectory)
-    return True
+        return False
+
+    if move(traj.joint_trajectory).success:
+        return True
+    else:
+        rospy.logerr("Failed to execute")
+        return False
 
 
 def execute_known_trajectory(group, task, bin):
     response = trajlib(task=task, bin_num=bin)
-
     start = list(response.plan.joint_trajectory.points[0].positions)
-    print start
 
     if group.get_current_joint_values() != start:
         rospy.logwarn("execute_known_trajectory(%s, %s): Not starting at the beginning." % (task, bin))
@@ -85,5 +90,8 @@ def execute_known_trajectory(group, task, bin):
         rospy.logwarn("Can't execute path from trajectory library, status=%s" % collisions.result.status)
         return False
 
-    print move(response.plan.joint_trajectory)
-    return True
+    if move(response.plan.joint_trajectory).success:
+        return True
+    else:
+        rospy.logerr("Failed to execute known trajectory")
+        return False
