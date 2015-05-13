@@ -11,11 +11,42 @@ from trajectory_verifier.srv import CheckTrajectoryValidity
 from trajectory_verifier.msg import CheckTrajectoryValidityQuery, CheckTrajectoryValidityResult
 from trajlib.srv import GetTrajectory
 
-move = rospy.ServiceProxy("/convert_trajectory_service", convert_trajectory_server)
-check_collisions = rospy.ServiceProxy("/check_trajectory_validity", CheckTrajectoryValidity)
-trajlib = rospy.ServiceProxy("/trajlib", GetTrajectory)
+_move = rospy.ServiceProxy("/convert_trajectory_service", convert_trajectory_server)
+_check_collisions = rospy.ServiceProxy("/check_trajectory_validity", CheckTrajectoryValidity)
+_trajlib = rospy.ServiceProxy("/trajlib", GetTrajectory)
 
 robot = moveit_commander.RobotCommander()
+
+
+def move(traj):
+    try:
+        result = _move(traj)
+        return result.success
+    except rospy.ServiceException as e:
+        rospy.logerr("Failure with move(<<trajectory>>): %s" % (str(e)))
+        return False
+
+
+def check_collisions(query):
+    for i in range(5):
+        try:
+            result = _check_collisions(query)
+            return result, True
+        except rospy.ServiceException as e:
+            rospy.logwarn("Failure with check_collisions(<<query>>): %s" % (str(e)))
+    rospy.logerr("Failed to check collisions")
+    return None, False
+
+
+def get_known_trajectory(task, bin):
+    for i in range(5):
+        try:
+            result = _trajlib(task, bin)
+            return result.plan, True
+        except rospy.ServiceException as e:
+            rospy.logwarn("Failure with get_known_trajectory(%s, %s): %s" % (task, bin, str(e)))
+    rospy.logerr("Failed to get known trajectory")
+    return None, False
 
 
 def goto_pose(group, pose, times=[5, 20, 40, 60], shelf=SIMPLE_SHELF):
@@ -33,7 +64,7 @@ def goto_pose(group, pose, times=[5, 20, 40, 60], shelf=SIMPLE_SHELF):
             rospy.loginfo("Planning for "+str(t)+" seconds...")
             plan = group.plan(pose)
             if len(plan.joint_trajectory.points) > 0:
-                if move(plan.joint_trajectory).success:
+                if move(plan.joint_trajectory):
                     return True
                 else:
                     rospy.logwarn("Failed to execute")
@@ -61,38 +92,41 @@ def follow_path(group, path, collision_checking=True):
         )
         return False
 
-    if move(traj.joint_trajectory).success:
+    if move(traj.joint_trajectory):
         return True
     else:
-        rospy.logerr("Failed to execute")
+        rospy.logerr("Failed to execute cartesian path")
         return False
 
 
 def execute_known_trajectory(group, task, bin):
-    response = trajlib(task=task, bin_num=bin)
-    start = list(response.plan.joint_trajectory.points[0].positions)
+    plan, success = get_known_trajectory(task, bin)
+    if not success:
+        return False
 
+    start = list(plan.joint_trajectory.points[0].positions)
     if group.get_current_joint_values() != start:
         rospy.logwarn("execute_known_trajectory(%s, %s): Not starting at the beginning." % (task, bin))
-        if not goto_pose(group, start, [1, 2, 10]):
+        if not goto_pose(group, start, [1, 1, 5, 10]):
             return False
 
     with SIMPLE_SHELF:
-        collisions = check_collisions(CheckTrajectoryValidityQuery(
+        collisions, success = check_collisions(CheckTrajectoryValidityQuery(
             initial_state=JointState(
                 header=Header(stamp=rospy.Time.now()),
                 name=robot.sda10f.get_joints(),
                 position=robot.sda10f.get_current_joint_values()
             ),
-            trajectory=response.plan.joint_trajectory,
+            trajectory=plan.joint_trajectory,
             check_type=CheckTrajectoryValidityQuery.CHECK_ENVIRONMENT_COLLISION,
         ))
-
+    if not success:
+        return False
     if collisions.result.status != CheckTrajectoryValidityResult.SUCCESS:
         rospy.logwarn("Can't execute path from trajectory library, status=%s" % collisions.result.status)
         return False
 
-    if move(response.plan.joint_trajectory).success:
+    if move(plan.joint_trajectory):
         return True
     else:
         rospy.logerr("Failed to execute known trajectory")

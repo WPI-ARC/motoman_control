@@ -39,7 +39,7 @@ def process_samples(samples, order):
         try:
             result = _process_samples(SampleArray(samples, order))
             if result.result.status != ProcessedObject.SUCCESS:
-                rospy.logwarn("Failure with get_samples(<<samplse>>, %s): status=%s" % (order))
+                rospy.logwarn("Failure with get_samples(<<samples>>, %s): status=%s" % (order))
             return result, result.result.status == ProcessedObject.SUCCESS
         except rospy.ServiceException as e:
             rospy.logwarn("Failure with get_samples(<<samples>>, %s): %s" % (order, str(e)))
