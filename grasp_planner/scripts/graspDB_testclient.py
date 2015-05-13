@@ -28,7 +28,7 @@ def main():
     try:
         client = rospy.ServiceProxy('getGrasps', apcGraspDB)
         item = 'expo_dry_erase_board_eraser' # Set response item
-        item = 'cheezit_big_original'
+        # item = 'cheezit_big_original'
         tfs = []
         pts = []
 

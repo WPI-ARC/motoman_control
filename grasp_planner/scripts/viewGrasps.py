@@ -11,11 +11,6 @@ if not __openravepy_build_doc__:
     from openravepy import *
     from numpy import *
 
-def waitrobot(robot):
-    """busy wait for robot completion"""
-    while not robot.GetController().IsDone():
-        time.sleep(0.01)
-
 if __name__ == "__main__":
     env = Environment()
     env.SetViewer('qtcoin')
@@ -48,8 +43,8 @@ if __name__ == "__main__":
     tennisball = '../env/tennisball.env.xml'
 
     try:
-        item = dentaltreat #Set item to load grasps for
-        object = env.Load(item)
+        item = cheezit #Set item to load grasps for
+        env.Load(item)
         print "loading object XML: "+ item
 
         time.sleep(0.1)

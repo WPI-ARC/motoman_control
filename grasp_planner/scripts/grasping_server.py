@@ -157,6 +157,11 @@ def CB_getGrasp(req):
             item = '../env/tennisball.env.xml'
         else:
             print "could not find scene xml for object: %s"%req.item
+
+        with open(os.path.join(os.path.dirname(__file__), "graspDict_"+req.item+".csv")) as file:
+            print "Loading grasp DB for " + req.item
+            graspDict = pickle.load(file)
+
         #env.Load(item) # Load requested item
         item =os.path.basename(item)
         if showOutput:
@@ -214,14 +219,12 @@ def CB_getGrasp(req):
         return apcGraspDBResponse(status=True,grasps=grasps)
     
 def publisher():
-    global graspDict
     # global graspDict
     rospy.init_node('graspDatabase_service')
     rate = rospy.Rate(10.0)
     # graspDict = initialize()
 
-    with open(os.path.join(os.path.dirname(__file__), "graspDict_new.csv")) as file:
-        graspDict = pickle.load(file)
+
     while not rospy.is_shutdown():
         s = rospy.Service('getGrasps', apcGraspDB, CB_getGrasp)
         print "Ready to retrieve grasps from database"

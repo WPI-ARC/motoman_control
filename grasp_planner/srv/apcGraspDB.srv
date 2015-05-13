@@ -5,4 +5,4 @@ sensor_msgs/PointCloud2 object_points
 ---
 bool status
 grasp_planner/apcGraspArray grasps
-float preshape
+float32 preshape
