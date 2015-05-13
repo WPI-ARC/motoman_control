@@ -1,6 +1,7 @@
-import roslib; roslib.load_manifest('task_controller')
 import rospy
 import smach
+
+from apc_util.smach import on_exception
 
 
 class FinishTask(smach.State):
@@ -11,6 +12,7 @@ class FinishTask(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'])
 
+    @on_exception(failure_state="Failed")
     def execute(self, userdata):
         rospy.loginfo("Trying to finish up the task...")
         return 'Success'

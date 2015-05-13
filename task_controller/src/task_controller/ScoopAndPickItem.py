@@ -1,4 +1,3 @@
-import roslib; roslib.load_manifest('task_controller')
 import smach
 
 from Scoop import Scoop
