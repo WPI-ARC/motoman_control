@@ -127,7 +127,7 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req,
             leftGroupPoints[i].num_joints = 7;
             leftGroupPoints[i].positions = jointStates[0].position;
             leftGroupPoints[i].velocities = zeroArmVector;
-            leftGroupPoints[i].time_from_start = ros::Duration(0.01*i);
+            leftGroupPoints[i].time_from_start = msgTraj.points[i].time_from_start;
         }
     }
 
@@ -160,7 +160,7 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req,
             rightGroupPoints[i].num_joints = 7;
             rightGroupPoints[i].positions = jointStates[1].position;
             rightGroupPoints[i].velocities = zeroArmVector;
-            rightGroupPoints[i].time_from_start = ros::Duration(0.01*i);
+            rightGroupPoints[i].time_from_start = msgTraj.points[i].time_from_start;
         }
     }
 
@@ -196,7 +196,7 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req,
             torso1GroupPoints[i].num_joints = 1;
             torso1GroupPoints[i].positions = jointStates[2].position;
             torso1GroupPoints[i].velocities = zeroTorsoVector;
-            torso1GroupPoints[i].time_from_start = ros::Duration(0.01*i);
+            torso1GroupPoints[i].time_from_start = msgTraj.points[i].time_from_start;
         }
 
         torso2GroupPoints.resize(msgSize);
@@ -205,7 +205,7 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req,
             torso2GroupPoints[i].num_joints = 1;
             torso2GroupPoints[i].positions = jointStates[3].position;
             torso2GroupPoints[i].velocities = zeroTorsoVector;
-            torso2GroupPoints[i].time_from_start = ros::Duration(0.01*i);
+            torso2GroupPoints[i].time_from_start = msgTraj.points[i].time_from_start;
         }
     }
 
@@ -339,7 +339,6 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req,
             if( fabs(currentPosition - endPositions[joint_iter]) > tolerance ) {
                 // ROS_INFO("finished_trajectory = false");
                 finished_trajectory = false;
-            sleep(0.1);
             }
         }
     }
