@@ -130,15 +130,16 @@ class APCScheduler(smach.State):
 
     def calculate_cost(self, item):
         # TODO: Check status
-        traj_to_bin = trajlib(task="Forward", bin_num=self.items[item].bin)
-        traj_from_bin = trajlib(task="Drop", bin_num=self.items[item].bin)
+        # traj_to_bin = trajlib(task="Forward", bin_num=self.items[item].bin)
+        # traj_from_bin = trajlib(task="Drop", bin_num=self.items[item].bin)
 
         SCAN_TIME = 20  # TODO: measure
-        time_to_bin = traj_to_bin.plan.joint_trajectory.points[-1].time_from_start.to_sec()
+        # time_to_bin = traj_to_bin.plan.joint_trajectory.points[-1].time_from_start.to_sec()
         PICK_TIME = 25  # TODO: measure
-        time_to_drop = traj_from_bin.plan.joint_trajectory.points[-1].time_from_start.to_sec()
+        # time_to_drop = traj_from_bin.plan.joint_trajectory.points[-1].time_from_start.to_sec()
         DROP_TIME = 10  # TODO: measure
-        return SCAN_TIME + time_to_bin + PICK_TIME + time_to_drop + DROP_TIME
+        # return SCAN_TIME + time_to_bin + PICK_TIME + time_to_drop + DROP_TIME
+        return 1
 
 
 def get_item_property(item, property, default):

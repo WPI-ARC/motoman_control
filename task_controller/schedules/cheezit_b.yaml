@@ -2,3 +2,7 @@
   bin: B
   item: "cheezit_big_original"
   others: []
+- action: grab
+  bin: A
+  item: "elmers_washable_no_run_school_glue"
+  others: []

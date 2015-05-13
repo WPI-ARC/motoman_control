@@ -1,0 +1,5 @@
+- action: scoop
+  bin: C
+  item: "crayola_64_ct"
+  others: []
+

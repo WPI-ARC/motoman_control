@@ -502,8 +502,8 @@ class Grasping:
                     Tpregraspapproach = self.construct_4Dmatrix(Trans_pregraspapproach, Rot_pregraspapproach)
 
                     # Generate and display TF in Rviz
-                    self.generate_tf('/shelf', '/pregrasp', Tshelfpregrasp)
-                    self.generate_tf('/pregrasp', '/approach', Tpregraspapproach)
+                    # self.generate_tf('/shelf', '/pregrasp', Tshelfpregrasp)
+                    # self.generate_tf('/pregrasp', '/approach', Tpregraspapproach)
 
                     # Transform of grasp wrt to camera frame. From toollink which has approach backwards and using Z-axis to using x for the approach.
                     TgraspIK = numpy.dot(self.Tcamera, self.Tcamgrasp)

@@ -7,6 +7,7 @@ from apc_util.transformation_helpers import PoseToMatrix, PoseFromMatrix
 
 from apc_vision.srv import *
 from apc_vision.msg import *
+from apc_msgs.msg import *
 from apc_util.moveit import follow_path
 
 
@@ -20,8 +21,9 @@ class ScanForItem(smach.State):
                              input_keys=['bin', 'item'],
                              output_keys=['pose', 'points'])
         self.arm = robot.arm_left_torso
-        self.sample = rospy.ServiceProxy("sample_vision", SampleVision)
-        self.process = rospy.ServiceProxy("process_vision", ProcessVision)
+        self.take_sample = rospy.ServiceProxy("take_sample", TakeSample)
+        self.get_samples = rospy.ServiceProxy("get_samples", GetSamples)
+        self.process_samples = rospy.ServiceProxy("process_samples", ProcessSamples)
         self.tf = TransformListener(True, rospy.Duration(10.0))
         rospy.sleep(rospy.Duration(1.0))  # Wait for network timting
 
@@ -37,14 +39,21 @@ class ScanForItem(smach.State):
         for i in range(5):
             try:
                 self.sample_bin(userdata.bin, poses)
-                response = self.process(
-                    bin=userdata.bin,
-                    target=APCObject(name=userdata.item, number=1),
-                    objects=[],
-                )
-                userdata.pose = self.tf.transformPose("/base_link", response.pose)
-                userdata.points = response.object_points
-                print "Pose:", self.tf.transformPose("/base_link", response.pose)
+                samples = self.get_samples(bin=userdata.bin)
+                if samples.status != GetSamplesResponse.SUCCESS:
+                    return 'Failure'
+                response = self.process_samples(SampleArray(
+                    samples=samples.samples,
+                    order=APCItem(
+                        name=userdata.item,
+                        bin=userdata.bin,
+                        contents=[userdata.item]
+                    )
+                ))
+                if response.result.status != ProcessedObject.SUCCESS:
+                    return 'Failure'
+                userdata.pose = response.result.pose
+                userdata.points = response.result.pointcloud
                 return 'Success'
             except rospy.ServiceException as e:
                 rospy.logwarn("Error process: "+str(e))
@@ -71,11 +80,14 @@ class ScanForItem(smach.State):
         return [center_pose]
 
     def sample_bin(self, bin, poses):
-        print "Reset:", self.sample(command="reset")
+        print "Reset:", self.take_sample(command="reset", bin=bin)
         for pose in poses:
             current_pose = self.arm.get_current_pose().pose
             print current_pose, pose
             if not follow_path(self.arm, [current_pose, pose]):
                 return False
-            print "Sample:", self.sample(command=bin)
+            result = self.take_sample(command="sample", bin=bin)
+            if result.status != TakeSampleResponse.SUCCESS:
+                print "Sample:", result
+                return False
         return True
