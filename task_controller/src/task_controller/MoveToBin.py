@@ -19,7 +19,7 @@ class MoveToBin(smach.State):
 
         from apc_util.moveit import goto_pose
         from apc_util.shelf import bin_pose
-        self.arm.set_planner_id("RRTstarkConfigDefault")
+        self.arm.set_planner_id("KPIECEkConfigDefault")
         self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
         target = bin_pose(userdata.bin).pose
         target.position.x -= 0.15

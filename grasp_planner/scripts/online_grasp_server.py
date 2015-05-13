@@ -30,9 +30,9 @@ class Grasping:
         self.tfList = []
 
         # Adjustable variables in planner
-        self.pitchList = numpy.linspace(0 , pi/12, num=3)
+        # self.pitchList = numpy.linspace(0 , pi/12, num=3)
         # self.pitchList = [pi/12]
-        # self.pitchList = [0]
+        self.pitchList = [0]
         self.thetaList = numpy.linspace(-pi/6, pi/6, num=101) # Rotation of generated projection frames
         # self.thetaList = [0]
         self.padding = 0.015  # Extra padding between object and gripper is 1 cm.
@@ -281,8 +281,8 @@ class Grasping:
         offset = numpy.true_divide(obj_depth, 2)
         if offset > self.fingerlength:
             offset = 0.08
-        if offset < 0.06:
-            offset = 0.06
+        if offset < 0.08:
+            offset = 0.08
         return (edge_offset - self.fingerlength - extensions + offset) # the palm is located at min_x so move out till lenght of finger to place lenght of finger at min_x. Then move in 1/4 of the total depth of object
 
     def compute_height(self, bin_min_z):
@@ -384,7 +384,7 @@ class Grasping:
 
         pregrasp_left.position.y = y_left
         approach_left.position.y = y_left
-        pregrasp_right.position.y = y_right
+        pregrasp_right.position.y = y_right  
         approach_right.position.y = y_right
 
         print pregrasp_left

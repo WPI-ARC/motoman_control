@@ -233,7 +233,7 @@ class Scoop(smach.State):
         jointValues[7] = -0.087   # T
 
         self.arm.set_joint_value_target(jointValues)
-        self.arm.set_planning_time(10)
+        self.arm.set_planning_time(20)
         plan = self.arm.plan()
         self.move(plan.joint_trajectory)
 
@@ -366,7 +366,7 @@ class Scoop(smach.State):
 
         # UP
         poses.append(deepcopy(poses[-1]))
-        poses[-1].position.z += 0.20
+        poses[-1].position.z += 0.30
 
         # OVER
         poses.append(deepcopy(poses[-1]))
@@ -374,15 +374,25 @@ class Scoop(smach.State):
 
         follow_path(self.arm, poses)
 
-        jointValues[0] = 0.000   # TORSO
-        jointValues[1] = 1.612   # S
-        jointValues[2] = 1.391   # L
-        jointValues[3] = 0.000   # E
-        jointValues[4] = 1.466   # U
-        jointValues[5] = 0.111   # R
-        jointValues[6] = 1.711   # B
-        jointValues[7] = -1.167   # T
+        # jointValues[0] = 0.000   # TORSO
+        # jointValues[1] = 1.612   # S
+        # jointValues[2] = 1.391   # L
+        # jointValues[3] = 0.000   # E
+        # jointValues[4] = 1.466   # U
+        # jointValues[5] = 0.111   # R
+        # jointValues[6] = 1.711   # B
+        # jointValues[7] = -1.167   # T
 
+        jointValues[0] = 0.000   # TORSO
+        jointValues[1] = -1.557   # S
+        jointValues[2] = 1.032   # L
+        jointValues[3] = 0.000   # E
+        jointValues[4] = -1.448   # U
+        jointValues[5] = -1.238   # R
+        jointValues[6] = -1.808   # B
+        jointValues[7] = -0.087   # T
+
+        self.arm.set_planning_time(20)
         self.arm.set_joint_value_target(jointValues)
         plan = self.arm.plan()
         self.move(plan.joint_trajectory)

@@ -8,6 +8,7 @@
 #include <motoman_msgs/DynamicJointsGroup.h>
 #include <motoman_msgs/CmdJointTrajectoryEx.h>
 #include <sensor_msgs/JointState.h>
+#include <moveit/move_group_interface/move_group.h>
 
 #include <motoman_moveit/convert_trajectory_server.h>
 
@@ -266,15 +267,101 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req,
     cmd.request.trajectory = completeTraj;
     jointPathCommand.call(cmd);
 
-    // sleep for expected duration of trajectory (rounded up to nearest second)
+    // // sleep for expected duration of trajectory (rounded up to nearest second)
     double trajDuration =  msgTraj.points[msgSize-1].time_from_start.toSec();
-    for (int i = 0; i < (int)trajDuration + 1; i++) {
-        sleep(1.0);
-        std::cout << i + 1 << " seconds" << std::endl;
+    // for (int i = 0; i < (int)trajDuration; i++) {
+    //     sleep(1.0);
+    //     std::cout << i + 1 << " seconds" << std::endl;
+    // }
+
+    ros::Time begin = ros::Time::now();
+
+    // Wait until current joint state is within tolerance of target state
+    std::vector<double> endPositions = req.jointTraj.points[msgSize-1].positions;
+
+    std::vector<std::string> endJointNames = req.jointTraj.joint_names;
+
+    ROS_INFO("##########  endPositions: %f", endPositions[0]);
+    ROS_INFO("##########  endPositions: %f", endPositions[1]);
+    ROS_INFO("##########  endPositions: %f", endPositions[2]);
+    ROS_INFO("##########  endPositions: %f", endPositions[3]);
+    ROS_INFO("##########  endPositions: %f", endPositions[4]);
+    ROS_INFO("##########  endPositions: %f", endPositions[5]);
+    ROS_INFO("##########  endPositions: %f", endPositions[6]);
+    ROS_INFO("##########  endPositions: %f", endPositions[7]);
+    ROS_INFO("##########  endPositions: %f", endPositions[8]);
+
+    int joint_iter;
+    double tolerance = 0.001;  // joint tolerance in rads
+    double timeBuffer = 5.0;
+    double timeLimit = trajDuration + timeBuffer;
+    bool finished_trajectory = false;
+    bool timedOut = false;
+    double currentPosition;
+    std::vector<double> jointPositions(8);
+    moveit::planning_interface::MoveGroup move_group("sda10f");
+    while( !finished_trajectory ) {
+        if( ros::Time::now().toSec() > (begin.toSec() + timeLimit) ) {
+            ROS_INFO("Trajectory timed out");
+            res.success = false;
+            timedOut = true;
+            break;
+        }
+
+        sleep(0.1);
+        // std::vector<double> currentPositions = move_group.getCurrentState()->joint_state.position;
+        // std::cout << "##########   currentPositions: " << currentPositions << std::endl;
+        jointPositions[0] = jointStates[2].position[0];
+        if (moveLeft) {
+            jointPositions[1] = jointStates[0].position[0];
+            jointPositions[2] = jointStates[0].position[1];
+            jointPositions[3] = jointStates[0].position[2];
+            jointPositions[4] = jointStates[0].position[3];
+            jointPositions[5] = jointStates[0].position[4];
+            jointPositions[6] = jointStates[0].position[5];
+            jointPositions[7] = jointStates[0].position[6];
+        }
+        else if (moveRight) {
+            jointPositions[1] = jointStates[1].position[0];
+            jointPositions[2] = jointStates[1].position[1];
+            jointPositions[3] = jointStates[1].position[2];
+            jointPositions[4] = jointStates[1].position[3];
+            jointPositions[5] = jointStates[1].position[4];
+            jointPositions[6] = jointStates[1].position[5];
+            jointPositions[7] = jointStates[1].position[6];
+        }
+
+        finished_trajectory = true;
+        for( joint_iter = 0; joint_iter < endJointNames.size(); joint_iter++ ) {
+            currentPosition = jointPositions[joint_iter];
+            // ROS_INFO( "currentPosition: %f", currentPosition);
+            // ROS_INFO( "difference: %f", currentPosition - endPositions[joint_iter]);
+            if( fabs(currentPosition - endPositions[joint_iter]) > tolerance ) {
+                // ROS_INFO("finished_trajectory = false");
+                finished_trajectory = false;
+            sleep(0.1);
+            }
+        }
     }
+
+    for( joint_iter = 0; joint_iter < endJointNames.size(); joint_iter++ ) {
+        currentPosition = jointPositions[joint_iter];
+        ROS_INFO( "currentPosition: %f", currentPosition);
+        ROS_INFO( "difference: %f", currentPosition - endPositions[joint_iter]);
+        sleep(0.1);
+    }
+
+    std::cout << "Start Time: " << begin.sec << std::endl;
+    std::cout << "End Time: " << ros::Time::now().sec <<  std::endl;
 
     std::cout << cmd.response << std::endl;
     std::cout << "##########   COMPLETED TRAJECTORY   ##########" << std::endl;
+
+    if (timedOut) {
+        res.success = false;
+        return true;
+    }
+
     res.success = cmd.response.code.val == 1;
     return true;
 }

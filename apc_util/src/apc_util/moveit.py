@@ -11,7 +11,6 @@ from trajectory_verifier.srv import CheckTrajectoryValidity
 from trajectory_verifier.msg import CheckTrajectoryValidityQuery, CheckTrajectoryValidityResult
 from trajlib.srv import GetTrajectory
 
-
 move = rospy.ServiceProxy("/convert_trajectory_service", convert_trajectory_server)
 check_collisions = rospy.ServiceProxy("/check_trajectory_validity", CheckTrajectoryValidity)
 trajlib = rospy.ServiceProxy("/trajlib", GetTrajectory)
@@ -27,11 +26,15 @@ def goto_pose(group, pose, times=[5, 20, 40, 60], shelf=SIMPLE_SHELF):
     with shelf:
         for t in times:
             group.set_planning_time(t)
+            group.set_start_state_to_current_state()
             rospy.loginfo("Planning for "+str(t)+" seconds...")
             plan = group.plan(pose)
             if len(plan.joint_trajectory.points) > 0:
-                print "Move:", move(plan.joint_trajectory)
-                return True
+                result = move(plan.joint_trajectory)
+                print "Move:", result
+                # print "Move:", move(plan.joint_trajectory)
+                if result.success:
+                    return True
         return False
 
 

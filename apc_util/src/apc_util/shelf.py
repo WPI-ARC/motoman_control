@@ -15,8 +15,8 @@ APC_BINS = "ABCDEFGHIJKL"
 
 PADDING = 0.01
 HEIGHT = 2.5
-WIDTH = 0.92
-DEPTH = 0.92
+WIDTH = 0.96
+DEPTH = 0.96
 
 
 class Shelf(object):
