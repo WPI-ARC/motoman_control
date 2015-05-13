@@ -3,9 +3,43 @@ import rospy
 
 from copy import deepcopy
 from gripper_srv.srv import gripper
+from grasp_planner.srv import apcGraspDB
 
 from moveit import goto_pose, follow_path, move
 from shelf import FULL_SHELF
+
+_gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
+_grasp_generator = rospy.ServiceProxy('getGrasps_online_server', apcGraspDB)
+
+
+def control_gripper(command):
+    for i in range(5):
+        try:
+            _gripper_control(command=command)
+            rospy.sleep(2)  # Wait for gripper to move
+            # TODO: Make gripper assertions
+            return True
+        except rospy.ServiceException as e:
+            rospy.logwarn("Error control_gripper(%s): %s" % (command, str(e)))
+    rospy.logerr("Failed to %s gripper" % command)
+    return False
+
+
+def generate_grasps(item, pose, pointcloud, bin):
+    for i in range(5):
+        try:
+            response = _grasp_generator(
+                item=item,
+                object_pose=pose,
+                object_points=pointcloud,
+                bin=bin,
+            )
+            return response.grasps.grasps, True
+        except rospy.ServiceException as e:
+            rospy.logwarn("Error generate_grasps(%s, %s, <<pointcloud>>, %s): %s" % (item, pose, bin, str(e)))
+    rospy.logerr("Failed to get online grasps for (%s, %s, <<pointcloud>>, %s)"
+                 % (item, pose, bin))
+    return None, False
 
 
 def plan_grasps(group, grasps):
@@ -22,9 +56,6 @@ def plan_grasps(group, grasps):
             yield grasp, traj
 
 
-gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
-
-
 def execute_grasp(group, grasp, plan, shelf=FULL_SHELF):
     rospy.loginfo("Moving to approach pose")
     start = list(plan.joint_trajectory.points[0].positions)
@@ -36,8 +67,8 @@ def execute_grasp(group, grasp, plan, shelf=FULL_SHELF):
         rospy.logerr("Failed to execute approach")
         return False
 
-    rospy.loginfo("Grabbing: %s" % gripper_control(command="close"))
-    rospy.sleep(4)
+    if not control_gripper("close"):
+        return False
 
     rospy.loginfo("Executing cartesian retreat")
     poses = [group.get_current_pose().pose]

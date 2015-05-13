@@ -19,17 +19,13 @@ class MoveToBin(smach.State):
 
         # from apc_util.moveit import goto_pose
         # from apc_util.shelf import bin_pose
-        # self.arm.set_planner_id("KPIECEkConfigDefault")
-        # self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
         # target = bin_pose(userdata.bin).pose
         # target.position.x -= 0.15
         # target.position.z += 0.1
         # if not goto_pose(self.arm, target, [1, 10, 30, 60, 120]):
         #     return 'Failure'
-
         # return 'Success'
 
-        self.arm.set_planner_id("KPIECEkConfigDefault")
         if execute_known_trajectory(self.arm, "Forward", userdata.bin):
             return "Success"
 

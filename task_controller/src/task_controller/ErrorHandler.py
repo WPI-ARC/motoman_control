@@ -3,6 +3,7 @@ import smach
 
 from apc_util.collision import remove_object
 
+
 class ErrorHandler(smach.State):
     """
     Decide how to handle errors. Currently, it just gives up; we
