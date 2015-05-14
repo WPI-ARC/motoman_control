@@ -150,7 +150,7 @@ def execute_known_trajectory(group, task, bin):
         return False
 
 
-def go_home(max_tries=None):
+def go_home(max_tries=None, shelf=SIMPLE_SHELF):
     check_left = lambda: check_joint_values(robot.arm_left_torso, LEFT_NAMES, LEFT_HOME)
     check_right = lambda: check_joint_values(robot.arm_right_torso, RIGHT_NAMES, RIGHT_HOME)
     tries = 0
@@ -167,11 +167,11 @@ def go_home(max_tries=None):
             rospy.logerr("Not currently at home position, trying again..")
 
         if not check_left():
-            if not goto_pose(robot.arm_left_torso, LEFT_HOME, [2, 2, 5, 10, 30]):
+            if not goto_pose(robot.arm_left_torso, LEFT_HOME, [2, 2, 5, 10, 30], shelf=shelf):
                 rospy.logerr("Failed to move left hand to home")
 
         if not check_right():
-            if not goto_pose(robot.arm_right_torso, RIGHT_HOME, [2, 2, 5, 10, 30]):
+            if not goto_pose(robot.arm_right_torso, RIGHT_HOME, [2, 2, 5, 10, 30], shelf=shelf):
                 rospy.logerr("Failed to move right hand to home")
 
     rospy.loginfo("Successfully moved home")
