@@ -425,7 +425,7 @@ class Grasping:
                 # Get min max points. Pass in transformed points list to get min max for target frame. Compute width of projection shadow. Width is the y axis because shelf frame is set that way with y axis as width. Check if width of shadow projection can fit inside gripper width
                 min_max = self.compute_minmax(points)
                 min_x, max_x, min_y, max_y, min_z, max_z = min_max
-                
+              
                 if use_local_points:
                     width = self.compute_width(min_y, max_y)
                 else:
