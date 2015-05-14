@@ -3,7 +3,7 @@ items:
   cheezit_big_original:
     supported: true
     bonus: 0
-	force: 100 
+    force: 100 
   genuine_joe_plastic_stir_sticks:
     supported: false
     bonus: 0
