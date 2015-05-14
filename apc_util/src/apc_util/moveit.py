@@ -18,9 +18,15 @@ _get_known_trajectory = rospy.ServiceProxy("/trajlib", GetTrajectory)
 robot = moveit_commander.RobotCommander()
 
 
-def move(traj):
+def move(group, traj):
     try:
+        if not check_joint_values(group, traj.joint_names, traj.points[0].positions):
+            rospy.logerr("Not moving since initial joint values are not within tolerance")
+            return False
         result = _move(traj)
+        if not check_joint_values(group, traj.joint_names, traj.points[-1].positions):
+            rospy.logerr("Moving failed, final joint values are not within tolerance")
+            return False
         return result.success
     except rospy.ServiceException as e:
         rospy.logerr("Failure with move(<<trajectory>>): %s" % (str(e)))
@@ -48,6 +54,7 @@ def get_known_trajectory(task, bin):
     rospy.logerr("Failed to get known trajectory")
     return None, False
 
+
 def goto_pose(group, pose, times=[5, 20, 40, 60], shelf=SIMPLE_SHELF):
     """Moves the hand to a given `pose`, using the configured `group`. The
     planning time is modified based on the passed in `times` to try to
@@ -65,7 +72,7 @@ def goto_pose(group, pose, times=[5, 20, 40, 60], shelf=SIMPLE_SHELF):
             rospy.loginfo("Planning for "+str(t)+" seconds...")
             plan = group.plan(pose)
             if len(plan.joint_trajectory.points) > 0:
-                if move(plan.joint_trajectory):
+                if move(group, plan.joint_trajectory):
                     return True
                 else:
                     rospy.logwarn("Failed to execute")
@@ -93,7 +100,7 @@ def follow_path(group, path, collision_checking=True):
         )
         return False
 
-    if move(traj.joint_trajectory):
+    if move(group, traj.joint_trajectory):
         return True
     else:
         rospy.logerr("Failed to execute cartesian path")
@@ -127,8 +134,21 @@ def execute_known_trajectory(group, task, bin):
         rospy.logwarn("Can't execute path from trajectory library, status=%s" % collisions.result.status)
         return False
 
-    if move(plan.joint_trajectory):
+    if move(group, plan.joint_trajectory):
         return True
     else:
         rospy.logerr("Failed to execute known trajectory")
         return False
+
+
+def check_joint_values(group, name, desired_values, tolerance=0.01):
+    actual = {name: value for name, value in
+              zip(group.get_joints(), group.get_current_joint_values())}
+
+    for name, value in zip(name, desired_values):
+        if abs(actual[name] - value) > tolerance:
+            rospy.logerr("Joint %s should have value '%s', but has value '%s'"
+                         % (name, value, actual[name]))
+            return False
+
+    return True

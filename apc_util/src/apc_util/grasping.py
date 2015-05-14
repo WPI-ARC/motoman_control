@@ -63,7 +63,7 @@ def execute_grasp(group, grasp, plan, shelf=FULL_SHELF):
         return False
 
     rospy.loginfo("Executing cartesian approach")
-    if not move(plan.joint_trajectory):
+    if not move(group, plan.joint_trajectory):
         rospy.logerr("Failed to execute approach")
         return False
 
