@@ -379,12 +379,12 @@ class Grasping:
         else:
             # use point cloud
             Tbaseobj = PoseToMatrix(req.object_pose)  # same Trob_obj request from offline planner
-            Tbaseshelf = PosetoMatrix(req.shelf_pose) # Tbaseshelf transform passed in from state matchine
+            Tbaseshelf = PoseToMatrix(req.shelf_pose) # Tbaseshelf transform passed in from state matchine
             Tshelfobj = numpy.dot(inv(Tbaseshelf), Tbaseobj)
             pointcloud = list(pc2.read_points(req.object_points, skip_nans=True,
                               field_names=("x", "y", "z")))
 
-        rospy.logdebug("OBBPoints: "+ str(pointcloud))
+        rospy.logdebug("OBBPoints: " + str(pointcloud))
         rospy.logdebug("Transform from base to shelf: " + str(Tbaseshelf))
         rospy.logdebug("Transform from shelf to obj: " + str(Tshelfobj))
 
