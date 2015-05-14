@@ -23,6 +23,7 @@ def move(group, traj):
         if not check_joint_values(group, traj.joint_names, traj.points[0].positions):
             rospy.logerr("Not moving since initial joint values are not within tolerance")
             return False
+        print traj
         result = _move(traj)
         if not check_joint_values(group, traj.joint_names, traj.points[-1].positions):
             rospy.logerr("Moving failed, final joint values are not within tolerance")

@@ -17,7 +17,7 @@ class PlaceItem(smach.State):
                              input_keys=['bin'], output_keys=[])
         self.arm = robot.arm_left_torso
 
-    @on_exception(failure_state="Failed")
+    @on_exception(failure_state="Failure")
     def execute(self, userdata):
         rospy.loginfo("Trying to place from bin '"+userdata.bin+"'...")
 

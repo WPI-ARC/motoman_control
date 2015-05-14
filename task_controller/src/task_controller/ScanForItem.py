@@ -22,7 +22,7 @@ class ScanForItem(smach.State):
         self.tf = TransformListener(True, rospy.Duration(10.0))
         rospy.sleep(rospy.Duration(1.0))  # Wait for network timting
 
-    @on_exception(failure_state="Failed")
+    @on_exception(failure_state="Failure")
     def execute(self, userdata):
         rospy.loginfo("Trying to find "+userdata.item+"...")
 
@@ -52,6 +52,9 @@ class ScanForItem(smach.State):
                 if not publish_pointcloud_collision(response.result.collision_cloud):
                     rospy.logwarn("Failed to publish pointcloud collisions")
                     continue
+
+                if not gripper.open():
+                    return "Failure"
 
                 userdata.pose = response.result.pose
                 userdata.points = response.result.pointcloud

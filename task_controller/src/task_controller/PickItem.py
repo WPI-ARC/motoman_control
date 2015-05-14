@@ -22,7 +22,7 @@ class PickItem(smach.State):
 
         self.points = rospy.Publisher("/grasp_points", PointCloud2)
 
-    @on_exception(failure_state="Failed")
+    @on_exception(failure_state="Failure")
     def execute(self, userdata):
         rospy.loginfo("Trying to pick '"+userdata.item+"'...")
         self.points.publish(userdata.points)
@@ -39,12 +39,9 @@ class PickItem(smach.State):
 
             try:
                 grasp, plan = grasps.next()
-                rospy.debug("Grasp: %s" % grasp)
+                rospy.loginfo("Grasp: %s" % grasp)
             except StopIteration:
                 rospy.logwarn("No online grasps found.")
-                return "Failure"
-
-            if not gripper.open():
                 return "Failure"
 
             if not execute_grasp(self.arm, grasp, plan, shelf=NO_SHELF):

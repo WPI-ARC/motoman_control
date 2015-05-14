@@ -13,7 +13,7 @@ class SafeMode(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['Safed'])
 
-    @on_exception(failure_state="Failed")
+    @on_exception(failure_state="Failure")
     def execute(self, userdata):
         if (userdata is None):
             rospy.logfatal("Forced safing")

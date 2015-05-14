@@ -21,11 +21,24 @@ ros::ServiceClient g_execute_client;
 std::vector<sensor_msgs::JointState> g_joint_states(4);
 std::mutex g_joint_state_mutex;
 
-std::map<std::string, double> GenerateNameValueMap(const std::vector<std::string>& joint_names, const std::vector<double>& joint_positions)
+std::map<std::string, double> GenerateNameValueMap(const std::vector<std::string>& joint_names, const std::vector<double>& joint_positions, bool allow_default=false)
 {
     if (joint_names.size() != joint_positions.size())
     {
-        throw std::invalid_argument("Size of joint names and joint points do not match");
+        if (allow_default)
+        {
+            ROS_WARN("Names and values do not match, replacing values with default");
+            std::map<std::string, double> name_position_map;
+            for (size_t idx = 0; idx < joint_names.size(); idx++)
+            {
+                name_position_map[joint_names[idx]] = 0.0;
+            }
+            return name_position_map;
+        }
+        else
+        {
+            throw std::invalid_argument("Size of joint names and joint points do not match");
+        }
     }
     std::map<std::string, double> name_position_map;
     for (size_t idx = 0; idx < joint_names.size(); idx++)
@@ -103,7 +116,7 @@ std::vector<motoman_msgs::DynamicJointsGroup> BuildGroupPoints(const std::map<st
     {
         const trajectory_msgs::JointTrajectoryPoint& commanded_point = commanded_traj.points[idx];
         std::map<std::string, double> commanded_position_map = GenerateNameValueMap(commanded_traj.joint_names, commanded_point.positions);
-        std::map<std::string, double> commanded_velocity_map = GenerateNameValueMap(commanded_traj.joint_names, commanded_point.velocities);
+        std::map<std::string, double> commanded_velocity_map = GenerateNameValueMap(commanded_traj.joint_names, commanded_point.velocities, true);
         motoman_msgs::DynamicJointsGroup group_point;
         group_point.group_number = group_number;
         group_point.time_from_start = commanded_point.time_from_start;

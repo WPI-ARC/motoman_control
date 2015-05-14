@@ -24,7 +24,7 @@ class Scoop(smach.State):
         self.move = rospy.ServiceProxy("/convert_trajectory_service", convert_trajectory_server)
         add_shelf()
 
-    @on_exception(failure_state="Failed")
+    @on_exception(failure_state="Failure")
     def execute(self, userdata):
         outsideRight = False
         outsideLeft = False

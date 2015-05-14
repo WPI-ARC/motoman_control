@@ -12,7 +12,7 @@ class FinishTask(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'])
 
-    @on_exception(failure_state="Failed")
+    @on_exception(failure_state="Failure")
     def execute(self, userdata):
         rospy.loginfo("Trying to finish up the task...")
         return 'Success'
