@@ -13,7 +13,7 @@ from trajlib.srv import GetTrajectory
 
 _move = rospy.ServiceProxy("/convert_trajectory_service", convert_trajectory_server)
 _check_collisions = rospy.ServiceProxy("/check_trajectory_validity", CheckTrajectoryValidity)
-_trajlib = rospy.ServiceProxy("/trajlib", GetTrajectory)
+_get_known_trajectory = rospy.ServiceProxy("/trajlib", GetTrajectory)
 
 robot = moveit_commander.RobotCommander()
 
@@ -41,13 +41,12 @@ def check_collisions(query):
 def get_known_trajectory(task, bin):
     for i in range(5):
         try:
-            result = _trajlib(task, bin)
+            result = _get_known_trajectory(task, bin)
             return result.plan, True
         except rospy.ServiceException as e:
             rospy.logwarn("Failure with get_known_trajectory(%s, %s): %s" % (task, bin, str(e)))
     rospy.logerr("Failed to get known trajectory")
     return None, False
-
 
 def goto_pose(group, pose, times=[5, 20, 40, 60], shelf=SIMPLE_SHELF):
     """Moves the hand to a given `pose`, using the configured `group`. The
