@@ -23,7 +23,7 @@ class PickScoop(smach.State):
         self.gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
         self.move = rospy.ServiceProxy("/convert_trajectory_service", convert_trajectory_server)
 
-    @on_exception(failure_state="Failed")
+    @on_exception(failure_state="Failure")
     def execute(self, userdata):
         rospy.loginfo("Trying to pick scoop...")
         userdata.output = userdata.input

@@ -1,5 +1,6 @@
 import rospy
 import traceback
+import sys
 
 
 class OnException(object):
@@ -12,7 +13,7 @@ class OnException(object):
                 return f(*args, **kwargs)
             except Exception, err:
                 rospy.logerr("Exception occurred while executing state: %s." % str(err))
-                traceback.print_last()
+                traceback.print_stack()
                 return self._failure_state
         return wrapped_f
 

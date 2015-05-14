@@ -23,7 +23,7 @@ class ScanAllBins(smach.State):
         self.arm = robot.arm_left_torso
         self.sample = rospy.ServiceProxy("sample_vision", SampleVision)
 
-    @on_exception(failure_state="Failed")
+    @on_exception(failure_state="Failure")
     def execute(self, userdata):
         rospy.loginfo("Trying to find "+userdata.item+"...")
 
