@@ -33,7 +33,7 @@ def genAPCGraspPose(grasp, object):
     newApproachVector = vector + offsetVector
 
     grasp = apcGraspPose(
-        posegrasp = Pose(
+        pregrasp = Pose(
             position=Point(
                 x=grasp.item(0,3),
                 y=grasp.item(1,3),
@@ -46,7 +46,7 @@ def genAPCGraspPose(grasp, object):
                 w=qw,
             )
         ),    
-        poseapproach = Pose(
+        approach = Pose(
             position=Point(
                 x=newApproachVector.item(0),
                 y=newApproachVector.item(1),
@@ -104,7 +104,7 @@ def CB_getGrasp(req):
         #     (Trobobj_trans,Trobobj_rot) = listener.lookupTransform('/base_link', '/target_object', rospy.Time(0))
         # except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
         #     print "Failed to lookup TF transform"
-        Trob_obj = req.Trob_obj
+        Trob_obj = req.object_pose
         # print Trobobj_trans
         # print Trobobj_rot
 
@@ -157,6 +157,11 @@ def CB_getGrasp(req):
             item = '../env/tennisball.env.xml'
         else:
             print "could not find scene xml for object: %s"%req.item
+
+        with open(os.path.join(os.path.dirname(__file__), "graspDict_"+req.item+".csv")) as file:
+            print "Loading grasp DB for " + req.item
+            graspDict = pickle.load(file)
+
         #env.Load(item) # Load requested item
         item =os.path.basename(item)
         if showOutput:
@@ -185,14 +190,14 @@ def CB_getGrasp(req):
                 Trobgrasp_msg = genAPCGraspPose(TrobIK, Trobobj)
                 if showOutput:
                     print Trobgrasp_msg
-                grasp_qw = Trobgrasp_msg.posegrasp.orientation.w
-                grasp_x = Trobgrasp_msg.posegrasp.position.x
-                grasp_y = Trobgrasp_msg.posegrasp.position.y
-                grasp_z = Trobgrasp_msg.posegrasp.position.z
-                approach_qw = Trobgrasp_msg.poseapproach.orientation.w
-                approach_x = Trobgrasp_msg.poseapproach.position.x
-                approach_y = Trobgrasp_msg.poseapproach.position.y
-                approach_z = Trobgrasp_msg.poseapproach.position.z
+                grasp_qw = Trobgrasp_msg.pregrasp.orientation.w
+                grasp_x = Trobgrasp_msg.pregrasp.position.x
+                grasp_y = Trobgrasp_msg.pregrasp.position.y
+                grasp_z = Trobgrasp_msg.pregrasp.position.z
+                approach_qw = Trobgrasp_msg.approach.orientation.w
+                approach_x = Trobgrasp_msg.approach.position.x
+                approach_y = Trobgrasp_msg.approach.position.y
+                approach_z = Trobgrasp_msg.approach.position.z
                 
                 if math.isnan(float(grasp_qw)) == False and math.isnan(float(approach_qw)) == False  and math.isnan(float(grasp_x)) == False and math.isnan(float(approach_x)) == False  and math.isnan(float(grasp_y)) == False and math.isnan(float(approach_y)) == False  and math.isnan(float(grasp_z)) == False and math.isnan(float(approach_z)) == False:
                     poseList.append(Trobgrasp_msg) # append pose to poselist                
@@ -211,17 +216,15 @@ def CB_getGrasp(req):
         if showOutput:
             print grasps
         
-        return apcGraspDBResponse(status=True,apcGraspArray=grasps)
+        return apcGraspDBResponse(status=True,grasps=grasps)
     
 def publisher():
-    global graspDict
     # global graspDict
     rospy.init_node('graspDatabase_service')
     rate = rospy.Rate(10.0)
-    graspDict = initialize()
+    # graspDict = initialize()
 
-    with open(os.path.join(os.path.dirname(__file__), "graspDict.csv")) as file:
-        graspDict = pickle.load(file)
+
     while not rospy.is_shutdown():
         s = rospy.Service('getGrasps', apcGraspDB, CB_getGrasp)
         print "Ready to retrieve grasps from database"

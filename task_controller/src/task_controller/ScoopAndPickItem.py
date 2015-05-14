@@ -17,10 +17,10 @@ def ScoopAndPickItem(robot):
 
     # Populate the state machine from the modules
     with sm:
-        smach.StateMachine.add(
-            'PushWithScoop', PushWithScoop(robot),
-            transitions={'Success': 'Success', 'Failure': 'Failure', 'Fatal': 'Fatal'},
-        )
+        # smach.StateMachine.add(
+        #     'PushWithScoop', PushWithScoop(robot),
+        #     transitions={'Success': 'Success', 'Failure': 'Failure', 'Fatal': 'Fatal'},
+        # )
         smach.StateMachine.add(
             'Scoop', Scoop(robot),
             transitions={'Success': 'Success', 'Failure': 'Failure', 'Fatal': 'Fatal'},

@@ -15,6 +15,54 @@ if not __openravepy_build_doc__:
     from openravepy import *
     from numpy import *
 
+def get_name(item):
+    if item == '../env/cheezit.env.xml':
+        name = 'cheezit_big_original'
+    elif item == '../env/colorballs.env.xml':
+        name = 'kyjen_squeakin_eggs_plush_puppies'
+    elif item =='../env/crayon.env.xml':
+        name = 'crayola_64_ct'
+    elif item == '../env/dentaltreat.env.xml':
+        name = 'feline_greenies_dental_treats'
+    elif item == '../env/eraser.env.xml':
+        name = 'expo_dry_erase_board_eraser'
+    elif item == '../env/glue.env.xml':
+        name = 'elmers_washable_no_run_school_glue'
+    elif item == '../env/highlighters.env.xml':
+        name = 'sharpie_accent_tank_style_highlighters'
+    elif item == '../env/huckfinn.env.xml':
+        name = 'mark_twain_huckleberry_finn'
+    elif item == '../env/indexcards.env.xml':
+        name = 'mead_index_cards'
+    elif item == '../env/oreo.env.xml':
+        name = 'oreo_mega_stuf'
+    elif item == '../env/outletplugs.env.xml':
+        name = 'mommys_helper_outlet_plugs'
+    elif item == '../env/pencil.env.xml':
+        name = 'paper_mate_12_count_mirado_black_warrior'
+    elif item == '../env/pencilcup.env.xml':
+        name = 'rolodex_jumbo_pencil_cup'
+    elif item == '../env/plushduck.env.xml':
+        name = 'kong_duck_dog_toy'
+    elif item == '../env/plushfrog.env.xml':
+        name = 'kong_sitting_frog_dog_toy'
+    elif item == '../env/rubberduck.env.xml':
+        name = 'munchkin_white_hot_duck_bath_toy'
+    elif item == '../env/safetyglasses.env.xml':
+        name = 'safety_works_safety_glasses'
+    elif item == '../env/screwdrivers.env.xml':
+        name = 'stanley_66_052'
+    elif item == '../env/sparkplug.env.xml':
+        name = 'champion_copper_plus_spark_plug'
+    elif item == '../env/stickynotes.env.xml':
+        name = 'highland_6539_self_stick_notes'
+    elif item == '../env/stirsticks.env.xml':
+        name = 'genuine_joe_plastic_stir_sticks'
+    elif item == '../env/strawcups.env.xml':
+        name = 'first_years_take_and_toss_straw_cup'
+    elif item == '../env/tennisball.env.xml':
+        name = 'kong_air_dog_squeakair_tennis_ball'
+    return name
 if __name__ == "__main__":
     # Set program options
     showOutput = False # If set to true, will show all print statments
@@ -47,18 +95,19 @@ if __name__ == "__main__":
                   '../env/strawcups.env.xml',
                   '../env/tennisball.env.xml']
 
-    objectlist = ['../env/cheezit.env.xml']
+    objectlist = ['../env/pencilcup.env.xml']
 
     # Generate grasp database for objects in list
     graspDict = {}
+    # Initialize OpenRave
+    # RaveSetDebugLevel(DebugLevel.Verbose)
+    env = Environment()
+    env.SetViewer('qtcoin')
+    
     for item in objectlist:
+        name = get_name(item)
         try:
             grasplist = []
-
-            # Initialize OpenRave
-            # RaveSetDebugLevel(DebugLevel.Verbose)
-            env = Environment()
-            env.SetViewer('qtcoin')
             env.Reset()
 
             # Load item
@@ -84,8 +133,7 @@ if __name__ == "__main__":
             if True or not gmodel.load():
                 print 'Generating grasp database'
                 gmodel.init(friction=0.4,avoidlinks=[])
-                gmodel.generate(approachrays=gmodel.computeBoxApproachRays(delta=0.06,normalanglerange=0))
-                #gmodel.generate(approachrays=gmodel.computeSphereApproachRays(delta=0.2,normalanglerange=0))
+                gmodel.generate(approachrays=gmodel.computeBoxApproachRays(delta=0.005,normalanglerange=0.17), graspingnoise = 0.0)
                 gmodel.save()
 
             # Load grasps
@@ -102,7 +150,7 @@ if __name__ == "__main__":
 
             # Transform each grasp from database
             for index in range(0, len(validgrasps)):
-                validgrasp=validgrasps[index]                     
+                validgrasp=validgrasps[index]
                 approachVector = gmodel.getGlobalApproachDir(validgrasp) # It says global but the object is at (0,0,0) so this is actually object frame.
                 Tobjgrasp = gmodel.getGlobalGraspTransform(validgrasp)
                 grasplist.append(Tobjgrasp)
@@ -113,9 +161,14 @@ if __name__ == "__main__":
             # Dictionary of grasps for each object
             item = os.path.basename(item)
             graspDict[item] = grasplist
-            env.Reset()
+
+            # Write graspDict to a csv file using pickle
+            print "saving "+name+" grasps to file"
+            with open(os.path.join(os.path.dirname(__file__), "graspDict_"+name+".csv"), "w") as file:
+                pickle.dump(graspDict, file)
             if showOutput:
                 print "Adding grasps for " + item + " to dictionary"
+            time.sleep(5)
         except:
             print "Failed to generate grasp database for object: " + item +" Skipping object"
             objectfailed.append(item) # Appended failed object to list
@@ -127,10 +180,6 @@ if __name__ == "__main__":
     print "Finish dictionary generation"
     print "Number of items in dictionary: " + str(len(graspDict))
     RaveDestroy() # destroys all environments and loaded plugins
-
-    # Write graspDict to a csv file using pickle
-    with open(os.path.join(os.path.dirname(__file__), "graspDict.csv"), "w") as file:
-        pickle.dump(graspDict, file)
 
     print "Finished generating grasp database"
     print "Failed to generate grasp database for object: " + str(objectfailed)

@@ -5,6 +5,7 @@ import smach_ros
 from task_controller.MoveToHome import MoveToHome
 from task_controller.PickAndPlaceItem import PickAndPlaceItem
 from task_controller.ScoopAndPickItem import ScoopAndPickItem
+from task_controller.Scoop import Scoop
 from task_controller.PickScoop import PickScoop
 from task_controller.FinishTask import FinishTask
 from task_controller.SafeMode import SafeMode
@@ -35,7 +36,7 @@ class MotomanController:
 
             smach.StateMachine.add(
                 'Scheduler', scheduler,
-                transitions={'Pick': 'PickAndPlaceItem', 'Scoop': 'ScoopAndPickItem', 'ToolChange': 'PickScoop',
+                transitions={'Pick': 'PickAndPlaceItem', 'Scoop': 'Scoop', 'ToolChange': 'PickScoop',
                              'Success': 'FinishTask', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
             )
 
@@ -46,8 +47,8 @@ class MotomanController:
             )
 
             smach.StateMachine.add(
-                'ScoopAndPickItem',
-                ScoopAndPickItem(robot),
+                'Scoop',
+                Scoop(robot),
                 transitions={'Success': 'Scheduler', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
             )
 
