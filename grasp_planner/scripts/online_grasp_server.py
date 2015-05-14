@@ -348,49 +348,6 @@ class Grasping:
             rospy.logerr(name + " is unit quaternion: " + str(unit_quat))
             self.status = False
 
-    def compute_wallgrasps(self, bin_min_y, bin_max_y, min_y, max_y, Tshelfproj, proj_msg, approach_msg, Tbaseshelf):
-        poseList = []
-        offset = self.gripperwidth/2
-        
-        # transfrom miny/maxy that are in project frame to be wrt to shelf frame
-        y_max_pt = numpy.dot(Tshelfproj, numpy.array([ [0], [max_y], [0], [1] ]))
-        y_min_pt = numpy.dot(Tshelfproj, numpy.array([ [0], [min_y], [0], [1] ]))
-        
-
-        # transfrom bin min/max that are in shelf frame to be wrt to base frame
-        bin_max_y_pt = numpy.dot(Tbaseshelf, numpy.array([ [0], [bin_max_y], [0], [1] ]))
-        bin_min_y_pt = numpy.dot(Tbaseshelf, numpy.array([ [0], [bin_min_y], [0], [1] ]))
-        print "bin_max_y_pt: " + str(bin_max_y_pt)
-        print "bin_min_y_pt: " + str(bin_min_y_pt)
-
-        # Clamp y for appraoch to be either left or right of bin so the finger is right up against the bin divider
-        y_left = bin_max_y_pt[1] - offset
-        y_right = bin_min_y_pt[1] + offset
-
-        print "y_left: " + str(y_left)
-        print "y_right: " + str(y_right)
-
-        # Check if finger away from wall will hit object. I don't think this is necessary since we already check object width        
-        
-        # Consturct msg for pregrasp and approach pose
-        pregrasp_left = deepcopy(proj_msg)
-        approach_left = deepcopy(approach_msg)
-        pregrasp_right = deepcopy(proj_msg)
-        approach_right = deepcopy(approach_msg)
-
-        pregrasp_left.position.y = y_left
-        approach_left.position.y = y_left
-        pregrasp_right.position.y = y_right        
-        approach_right.position.y = y_right
-
-        print pregrasp_left
-        print pregrasp_right
-
-        poseList.append((pregrasp_left, approach_left))
-        poseList.append((pregrasp_right, approach_right))
-
-        return poseList
-
     def compute_jaw_separation(self, width):
         padding = 0.02 # 2cm padding. 1cm on each side of jaw
         gpos = (-6.245 * width + 109.06) + padding
@@ -526,17 +483,6 @@ class Grasping:
                     approach_msg.position.z = height + pregrasp_height_extra + approach_height_extra
                     q_proj_msg.put((score, proj_msg))
                     q_approach_msg.put((score, approach_msg))
-
-                    if theta == 0:           
-                        # Compute wall grasps for theta = 0
-                        rospy.logdebug("creating two wall graps")
-                        wallgrasp_list = self.compute_wallgrasps(bin_min_y, bin_max_y, min_y, max_y, Tshelfproj, proj_msg, approach_msg, Tbaseshelf)
-                        wallgrasp_left = wallgrasp_list[0]
-                        wallgrasp_right = wallgrasp_list[1]
-                        q_proj_msg.put((9, wallgrasp_left[0]))
-                        q_approach_msg.put((9, wallgrasp_left[1]))
-                        q_proj_msg.put((9, wallgrasp_right[0]))
-                        q_approach_msg.put((9, wallgrasp_right[1]))
 
                     rospy.logdebug("score is %f. Good approach direction. Gripper is wide enough", score)
                 else:
