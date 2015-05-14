@@ -85,6 +85,7 @@ if __name__=='__main__':
         name="dropoff",
         pose=pose,
         size=(0.4, 0.65, 0.53)
+        #size=(0.4, 0.65, 0.45)   #FOR TESTING TRAJECTORIES TO DROP OBJECTS INTO BIN
     )
 
 
