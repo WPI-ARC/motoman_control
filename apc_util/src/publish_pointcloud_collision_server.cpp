@@ -15,6 +15,8 @@
 
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
 
+static ros::Publisher pub;
+
 bool callback(apc_util::PublishPointcloudCollision::Request  &req,
               apc_util::PublishPointcloudCollision::Response &res)
 {
@@ -28,12 +30,12 @@ bool callback(apc_util::PublishPointcloudCollision::Request  &req,
   pcl::RadiusOutlierRemoval<pcl::PCLPointCloud2> outrem;
   pcl::PCLPointCloud2::Ptr cloud_radius_filtered(new pcl::PCLPointCloud2);
   outrem.setInputCloud(cloud);
-  outrem.setRadiusSearch(0.8);
+  outrem.setRadiusSearch(0.025);
   outrem.setMinNeighborsInRadius(2);
   outrem.filter(*cloud_radius_filtered);
 
   std::cerr << "PointCloud after radius filtering: " << cloud_radius_filtered->width * cloud_radius_filtered->height 
-            << " data points (" << pcl::getFieldsList(*cloud_radius_filtered) << ").";
+            << " data points (" << pcl::getFieldsList(*cloud_radius_filtered) << ").\n";
 
   
   // Voxel Filter 
@@ -44,18 +46,18 @@ bool callback(apc_util::PublishPointcloudCollision::Request  &req,
   sor.filter(*cloud_filtered);
 
   std::cerr << "PointCloud after voxel filtering: " << cloud_filtered->width * cloud_filtered->height 
-            << " data points (" << pcl::getFieldsList(*cloud_filtered) << ").";
+            << " data points (" << pcl::getFieldsList(*cloud_filtered) << ").\n";
 
-  // TODO: Publish Collision Objects
+  // Publish Collision Objects
 
   PointCloud::Ptr voxel_cloud(new PointCloud);
   pcl::fromPCLPointCloud2(*cloud_filtered, *voxel_cloud);
   
   shape_msgs::SolidPrimitive voxel;
   voxel.type = shape_msgs::SolidPrimitive::BOX;
-  voxel.dimensions.push_back(0.1);
-  voxel.dimensions.push_back(0.1);
-  voxel.dimensions.push_back(0.1);
+  voxel.dimensions.push_back(0.01);
+  voxel.dimensions.push_back(0.01);
+  voxel.dimensions.push_back(0.01);
 
   geometry_msgs::Pose pose;
   pose.orientation.x = 0;
@@ -74,17 +76,20 @@ bool callback(apc_util::PublishPointcloudCollision::Request  &req,
     pose.position.y = (*voxel_cloud).points[i].y;
     pose.position.z = (*voxel_cloud).points[i].z;
     co.primitive_poses.push_back(pose);
-  }  
+  }
+  pub.publish(co);
+  
   return true;
 }
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "publish_pointtcloud_collision_server");
+  ros::init(argc, argv, "publish_pointcloud_collision_server");
   ros::NodeHandle n;
+  pub = n.advertise<moveit_msgs::CollisionObject>("/collision_object", 1000);
 
-  ros::ServiceServer service = n.advertiseService("publish_pointtcloud_collision", callback);
-  ROS_INFO("publish_pointtcloud_collision_server ready.");
+  ros::ServiceServer service = n.advertiseService("publish_pointcloud_collision", callback);
+  ROS_INFO("publish_pointcloud_collision_server ready.");
   ros::spin();
 
   return 0;

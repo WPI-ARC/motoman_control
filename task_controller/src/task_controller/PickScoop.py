@@ -1,4 +1,3 @@
-import roslib; roslib.load_manifest('task_controller')
 import rospy
 import smach
 from geometry_msgs.msg import Pose, Quaternion
@@ -7,6 +6,7 @@ from gripper_srv.srv import gripper
 from motoman_moveit.srv import convert_trajectory_server
 
 from apc_util.scoop import allow_scoop_collision, disallow_scoop_collision
+from apc_util.smach import on_exception
 from copy import deepcopy
 
 
@@ -23,10 +23,7 @@ class PickScoop(smach.State):
         self.gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
         self.move = rospy.ServiceProxy("/convert_trajectory_service", convert_trajectory_server)
 
-        # TODO: Handle response error
-        response = self.gripper_control.call(command="activate")
-        print "Activate Gripper:", response
-
+    @on_exception(failure_state="Failure")
     def execute(self, userdata):
         rospy.loginfo("Trying to pick scoop...")
         userdata.output = userdata.input

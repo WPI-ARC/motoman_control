@@ -15,8 +15,8 @@ APC_BINS = "ABCDEFGHIJKL"
 
 PADDING = 0.01
 HEIGHT = 2.5
-WIDTH = 0.92
-DEPTH = 0.92
+WIDTH = 0.96
+DEPTH = 0.96
 
 
 class Shelf(object):
@@ -43,12 +43,12 @@ class Shelf(object):
         self.quality = quality
 
     def __enter__(self):
-        print "Entering shelf: ", self.quality
+        rospy.loginfo("Adding shelf: %s" % self.quality)
         if self.quality != Shelf.NONE:
             add_shelf(self.quality)
 
     def __exit__(self, type, value, tb):
-        print "Exit shelf: ", self.quality
+        rospy.loginfo("Removing shelf: %s" % self.quality)
         if self.quality != Shelf.NONE:
             remove_shelf()
 
@@ -64,7 +64,6 @@ def BIN(bin):
 
 def add_shelf(quality=Shelf.SIMPLE):
     pose = get_shelf_pose()
-    print "Adding shelf", scene._pub_co.get_num_connections()
     while scene._pub_co.get_num_connections() == 0:
         rospy.sleep(0.01)
     if quality == Shelf.SIMPLE:
@@ -95,7 +94,7 @@ def add_shelf(quality=Shelf.SIMPLE):
     else:
         rospy.logwarn("Unsupported quality %s" % quality)
     rospy.sleep(1)
-    print "Added"
+
 
 def add_bin(bin, prefix="/shelf"):
     # Necessary parameters
@@ -103,7 +102,6 @@ def add_bin(bin, prefix="/shelf"):
     shelf_max_x = DEPTH/2
     shelf_min_y, shelf_max_y = -WIDTH/2, WIDTH/2
     shelf_min_z, shelf_max_z = 0, HEIGHT
-    pose = get_shelf_pose()
     objects = []
     poses = []
 
@@ -166,7 +164,6 @@ def add_bin(bin, prefix="/shelf"):
     co.primitive_poses = poses
 
     scene._pub_co.publish(co)
-    print "Published:", co
 
 
 def remove_shelf():

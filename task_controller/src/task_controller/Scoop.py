@@ -1,13 +1,14 @@
-import roslib; roslib.load_manifest('task_controller')
 import rospy
 import smach
 
 from copy import deepcopy
 from geometry_msgs.msg import Pose, Point, Quaternion
+from motoman_moveit.srv import convert_trajectory_server
 
 from apc_util.moveit import follow_path, goto_pose, execute_known_trajectory
 from apc_util.shelf import bin_pose, add_shelf, remove_shelf
-from motoman_moveit.srv import convert_trajectory_server
+from apc_util.smach import on_exception
+
 
 class Scoop(smach.State):
 
@@ -23,6 +24,7 @@ class Scoop(smach.State):
         self.move = rospy.ServiceProxy("/convert_trajectory_service", convert_trajectory_server)
         add_shelf()
 
+    @on_exception(failure_state="Failure")
     def execute(self, userdata):
         outsideRight = False
         outsideLeft = False
@@ -233,7 +235,7 @@ class Scoop(smach.State):
         jointValues[7] = -0.087   # T
 
         self.arm.set_joint_value_target(jointValues)
-        self.arm.set_planning_time(10)
+        self.arm.set_planning_time(20)
         plan = self.arm.plan()
         self.move(plan.joint_trajectory)
 
@@ -366,7 +368,7 @@ class Scoop(smach.State):
 
         # UP
         poses.append(deepcopy(poses[-1]))
-        poses[-1].position.z += 0.20
+        poses[-1].position.z += 0.30
 
         # OVER
         poses.append(deepcopy(poses[-1]))
@@ -374,15 +376,25 @@ class Scoop(smach.State):
 
         follow_path(self.arm, poses)
 
-        jointValues[0] = 0.000   # TORSO
-        jointValues[1] = 1.612   # S
-        jointValues[2] = 1.391   # L
-        jointValues[3] = 0.000   # E
-        jointValues[4] = 1.466   # U
-        jointValues[5] = 0.111   # R
-        jointValues[6] = 1.711   # B
-        jointValues[7] = -1.167   # T
+        # jointValues[0] = 0.000   # TORSO
+        # jointValues[1] = 1.612   # S
+        # jointValues[2] = 1.391   # L
+        # jointValues[3] = 0.000   # E
+        # jointValues[4] = 1.466   # U
+        # jointValues[5] = 0.111   # R
+        # jointValues[6] = 1.711   # B
+        # jointValues[7] = -1.167   # T
 
+        jointValues[0] = 0.000   # TORSO
+        jointValues[1] = -1.557   # S
+        jointValues[2] = 1.032   # L
+        jointValues[3] = 0.000   # E
+        jointValues[4] = -1.448   # U
+        jointValues[5] = -1.238   # R
+        jointValues[6] = -1.808   # B
+        jointValues[7] = -0.087   # T
+
+        self.arm.set_planning_time(20)
         self.arm.set_joint_value_target(jointValues)
         plan = self.arm.plan()
         self.move(plan.joint_trajectory)

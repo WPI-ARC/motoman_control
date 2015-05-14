@@ -12,7 +12,7 @@ class APCScheduler(smach.State):
 
     def __init__(self, order):
         smach.State.__init__(self, outcomes=['Pick', 'Scoop', 'ToolChange', 'Success', 'Failure', 'Fatal'],
-                             input_keys=[], output_keys=['item', 'bin'])
+                             input_keys=[], output_keys=['item', 'bin', 'contents'])
         self.order = order
         self.items = {item.key: item for item in self.order.items}
         self.picked_items = []
@@ -33,6 +33,7 @@ class APCScheduler(smach.State):
             if action.startswith("grab"):
                 data.item = current["item"]
                 data.bin = current["bin"]
+                data.contents = current["others"]
                 print action, current["bin"], current["item"]
                 rospy.loginfo("Scheduling pick of %s from bin %s." % (current["item"], current["bin"]))
                 return 'Pick'
@@ -40,6 +41,7 @@ class APCScheduler(smach.State):
             elif action == 'scoop':
                 data.item = current["item"]
                 data.bin = current["bin"]
+                data.contents = current["others"]
                 rospy.loginfo("Scheduling scoop of %s from bin %s." % (current["item"], current["bin"]))
                 return 'Scoop'
 

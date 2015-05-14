@@ -30,9 +30,9 @@ class Grasping:
         self.tfList = []
 
         # Adjustable variables in planner
-        self.pitchList = numpy.linspace(0 , pi/12, num=3)
+        # self.pitchList = numpy.linspace(0 , pi/12, num=3)
         # self.pitchList = [pi/12]
-        # self.pitchList = [0]
+        self.pitchList = [0]
         self.thetaList = numpy.linspace(-pi/6, pi/6, num=101) # Rotation of generated projection frames
         # self.thetaList = [0]
         self.padding = 0.015  # Extra padding between object and gripper is 1 cm.
@@ -370,38 +370,39 @@ class Grasping:
         bin_min_x, bin_max_x, bin_min_y, bin_max_y, bin_min_z, bin_max_z = binbounds
         rospy.logdebug( "bin min z: " + str(bin_min_z))
 
+        use_local_points = False  # set to true to use the local boudindbox points. set to else for point cloud stuff
+        if use_local_points:
+            Tbaseshelf = self.get_tf('/base_link', '/shelf')
+            Tshelfobj = self.get_tf('/shelf', '/object')
+            pointcloud = self.get_obb_points(size)
+
+        else:
+            # use point cloud
+            Tbaseobj = PoseToMatrix(req.object_pose)  # same Trob_obj request from offline planner
+            Tbaseshelf = PosetoMatrix(req.shelf_pose) # Tbaseshelf transform passed in from state matchine
+            Tshelfobj = numpy.dot(inv(Tbaseshelf), Tbaseobj)
+            pointcloud = list(pc2.read_points(req.object_points, skip_nans=True,
+                              field_names=("x", "y", "z")))
+
+        rospy.logdebug("OBBPoints: "+ str(pointcloud))
+        rospy.logdebug("Transform from base to shelf: " + str(Tbaseshelf))
+        rospy.logdebug("Transform from shelf to obj: " + str(Tshelfobj))
+
+        rospy.logdebug("********************************************** Start loop ********************************************")
+
         # Generate TFs to project onto
         for pitch in self.pitchList:
             for theta in self.thetaList:
-                
-                use_local_points = False  # set to true to use the local boudindbox points. set to else for point cloud stuff
-                if use_local_points:
-                    Tbaseshelf = self.get_tf('/base_link', '/shelf')
-                    Tshelfobj = self.get_tf('/shelf', '/object')
-                    pointcloud = self.get_obb_points(size)
-
-                else:
-                    # use point cloud
-                    Tbaseobj = PoseToMatrix(req.object_pose)  # same Trob_obj request from offline planner
-                    Tbaseshelf = PosetoMatrix(req.shelf_pose) # Tbaseshelf transform passed in from state matchine
-                    Tshelfobj = numpy.dot(inv(Tbaseshelf), Tbaseobj)
-                    pointcloud = list(pc2.read_points(req.object_points, skip_nans=True,
-                                      field_names=("x", "y", "z")))
-
-                rospy.logdebug( "********************************************** Start loop ********************************************")
-                rospy.logdebug( "OBBPoints: "+ str(pointcloud))
-                rospy.logdebug( "Transform from base to shelf: " + str(Tbaseshelf))
-                rospy.logdebug( "Transform from shelf to obj: " + str(Tshelfobj))
 
                 # Construction projection frames
                 Rot_shelfproj = self.generate_rotation_matrix(theta, pitch)
                 # Rot_shelfproj_new = numpy.dot(Rot_shelfproj, self.Tshelfpitch)
-                Trans_shelfobj = numpy.array([Tshelfobj[0, 3], Tshelfobj[1, 3], bin_min_z ])
+                Trans_shelfobj = numpy.array([Tshelfobj[0, 3], Tshelfobj[1, 3], bin_min_z])
                 # Trans_shelfobj = Tshelfobj[0:3,3]
                 Tshelfproj = self.construct_4Dmatrix(Trans_shelfobj, Rot_shelfproj)
                 # Tshelfproj = self.construct_4Dmatrix(Trans_shelfobj, Rot_shelfproj_new)
 
-                rospy.logdebug( str(Tshelfproj))
+                rospy.logdebug(str(Tshelfproj))
 
                 # Transform from projection to object
                 Tprojshelf = inv(Tshelfproj)
@@ -413,8 +414,8 @@ class Grasping:
                     projected_point = numpy.dot(Tprojshelf, oldpt)
                     points.append(projected_point)
 
-                rospy.logdebug( "List of transformed object points after projection to target projection frame")
-                rospy.logdebug( str(points))
+                rospy.logdebug("List of transformed object points after projection to target projection frame")
+                rospy.logdebug(str(points))
 
                 # Get min max points. Pass in transformed points list to get min max for target frame. Compute width of projection shadow. Width is the y axis because shelf frame is set that way with y axis as width. Check if width of shadow projection can fit inside gripper width
                 min_max = self.compute_minmax(points)
@@ -437,6 +438,7 @@ class Grasping:
                 # Get hand pose
                 if width <= self.gripperwidth:
                     score = self.compute_score(width)
+
                     grasp_depth = self.compute_depth(min_x, max_x)  # set how far hand should go past front edge of object
                     height = self.compute_height(bin_min_z)  # select the height so bottom of object and also hand won't collide wit shelf lip. may need to take into acount the max_z and objects height to see if object will hit top of shelf.
                     approach_offset = self.compute_approach_offset(Trans_shelfobj[0], bin_min_x, theta)

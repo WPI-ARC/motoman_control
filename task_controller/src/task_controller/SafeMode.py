@@ -1,6 +1,7 @@
-import roslib; roslib.load_manifest('task_controller')
 import rospy
 import smach
+
+from apc_util.smach import on_exception
 
 
 class SafeMode(smach.State):
@@ -12,6 +13,7 @@ class SafeMode(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['Safed'])
 
+    @on_exception(failure_state="Failure")
     def execute(self, userdata):
         if (userdata is None):
             rospy.logfatal("Forced safing")

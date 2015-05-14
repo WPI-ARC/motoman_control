@@ -62,8 +62,7 @@ class MotomanController:
 
             smach.StateMachine.add(
                 'ErrorHandler', ErrorHandler(),
-                transitions={'ReMove': 'SafeMode', 'ReScan': 'SafeMode', 'RePick': 'SafeMode',
-                             'ReFinish': 'SafeMode', 'Failed': 'FAILED', 'Fatal': 'SafeMode'},
+                transitions={'Continue': 'Scheduler', 'Failed': 'FAILED', 'Fatal': 'SafeMode'},
             )
 
         # Set up the introspection server

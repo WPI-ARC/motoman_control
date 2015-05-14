@@ -53,6 +53,7 @@
   <node pkg="trajectory_verifier" type="trajectory_verifier_node" name="trajectory_verifier" output="screen"/>
 
   <rosparam command="load" file="$(find task_controller)/cfg/items.yaml" />
+  <node pkg="apc_util" type="publish_pointcloud_collision_server" name="publish_pointcloud_collision_server" />
 
   <!-- Environment models -->
   <rosparam command="load" file="$(find task_controller)/cfg/shelf.yaml" />

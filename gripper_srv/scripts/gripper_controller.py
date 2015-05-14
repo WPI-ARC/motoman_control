@@ -65,12 +65,12 @@ called it will set all the values to 0. So probably if you set a speed, it will 
 command = outputMsg.SModel_robot_output()
 
 def update_joint_states(hand, state):
-    msg = JointState(name=["hand_"+hand+"_palm_finger_1_joint", "hand_"+hand+"_finger_1_joint_1", "hand_"+hand+"_finger_1_joint_2", "hand_"+hand+"_finger_1_joint_3", "hand_"+hand+"_palm_finger_2_joint", "hand_"+hand+"_finger_2_joint_1", "hand_"+hand+"_finger_2_joint_2", "hand_"+hand+"_finger_2_joint_3", "hand_"+hand+"_finger_middle_joint_1", "hand_"+hand+"_finger_middle_joint_2", "hand_"+hand+"_finger_middle_joint_3"])
+    msg = JointState(name=["hand_"+hand+"_palm_finger_middle_joint", "hand_"+hand+"_palm_finger_1_joint", "hand_"+hand+"_finger_1_joint_1", "hand_"+hand+"_finger_1_joint_2", "hand_"+hand+"_finger_1_joint_3", "hand_"+hand+"_palm_finger_2_joint", "hand_"+hand+"_finger_2_joint_1", "hand_"+hand+"_finger_2_joint_2", "hand_"+hand+"_finger_2_joint_3", "hand_"+hand+"_finger_middle_joint_1", "hand_"+hand+"_finger_middle_joint_2", "hand_"+hand+"_finger_middle_joint_3"])
     msg.header.stamp = rospy.Time.now()
     if state == "70":
-        msg.position = [0, 0.5, -0.15, -0.5, 0, 0.5, -0.15, -0.5, 0.5, -0.15, -0.5]
+        msg.position = [0, 0, 0.5, -0.15, -0.5, 0, 0.5, -0.15, -0.5, 0.5, -0.15, -0.5]
     else:
-        msg.position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        msg.position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     joint_states.publish(msg)
 
 def genCommand(req):
