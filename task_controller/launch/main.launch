@@ -57,6 +57,7 @@
 
   <!-- Environment models -->
   <rosparam command="load" file="$(find task_controller)/cfg/shelf.yaml" />
+  <rosparam command="load" file="$(find task_controller)/cfg/shelf_collision.yaml" />
   <node pkg="apc_util" type="publish_shelf_tf.py" name="publish_shelf_tf" />
   <node pkg="apc_util" type="publish_lab.py" name="publish_lab" />
   <node pkg="apc_util" type="publish_checkerboard.py" name="publish_checkerboard" />
