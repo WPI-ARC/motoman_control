@@ -11,6 +11,15 @@ from services import _move, _check_collisions, _get_known_trajectory
 
 robot = moveit_commander.RobotCommander()
 
+LEFT_NAMES = ["torso_joint_b1", "arm_left_joint_1_s", "arm_left_joint_2_l", "arm_left_joint_3_e",
+              "arm_left_joint_4_u", "arm_left_joint_5_r", "arm_left_joint_6_b", "arm_left_joint_7_t"]
+LEFT_HOME = [0.0, 2.1987425554414965, -1.2856041261915816, -2.0572122610542043, -2.1844569809370875,
+             -0.8355313237647156, -0.6598546685936744, 2.244587644488423]
+RIGHT_NAMES = ["torso_joint_b1", "arm_right_joint_1_s", "arm_right_joint_2_l", "arm_right_joint_3_e",
+              "arm_right_joint_4_u", "arm_right_joint_5_r", "arm_right_joint_6_b", "arm_right_joint_7_t"]
+RIGHT_HOME = [0.0, -1.0030564513590334, -1.49978651413566, 0.457500317369117, -2.1772162870743323,
+              0.4509681667487428, -1.2043397683221861, -1.5581499385881046]
+
 
 def move(group, traj):
     try:
@@ -134,6 +143,34 @@ def execute_known_trajectory(group, task, bin):
     else:
         rospy.logerr("Failed to execute known trajectory")
         return False
+
+
+def go_home(max_tries=None):
+    check_left = lambda: check_joint_values(robot.arm_left_torso, LEFT_NAMES, LEFT_HOME)
+    check_right = lambda: check_joint_values(robot.arm_right_torso, RIGHT_NAMES, RIGHT_HOME)
+    tries = 0
+    while not check_left() or not check_right():
+        tries += 1
+        if max_tries is not None and tries > max_tries:
+            rospy.logerr("Failed to move to the home position within %s tries." % max_tries)
+            return False
+        if tries == 1:
+            rospy.loginfo("Trying to move home")
+        elif tries < 5:
+            rospy.logwarn("Not currently at home position, trying to move there...")
+        else:
+            rospy.logerr("Not currently at home position, trying again..")
+
+        if not check_left():
+            if not goto_pose(robot.arm_left_torso, LEFT_HOME, [2, 2, 5, 10, 30]):
+                rospy.logerr("Failed to move left hand to home")
+
+        if not check_right():
+            if not goto_pose(robot.arm_right_torso, RIGHT_HOME, [2, 2, 5, 10, 30]):
+                rospy.logerr("Failed to move right hand to home")
+
+    rospy.loginfo("Successfully moved home")
+    return True
 
 
 def check_joint_values(group, name, desired_values, tolerance=0.01):

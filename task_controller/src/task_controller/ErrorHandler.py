@@ -2,7 +2,9 @@ import rospy
 import smach
 
 from apc_util.collision import remove_object
+from apc_util.moveit import go_home
 from apc_util.smach import on_exception
+from apc_util.grasping import gripper
 
 
 class ErrorHandler(smach.State):
@@ -19,4 +21,7 @@ class ErrorHandler(smach.State):
         rospy.loginfo("ErrorHandler executing...")
         remove_object()
         remove_object("pointcloud_voxels")
+        gripper.open()
+        if not go_home():
+            return 'Failed'
         return 'Continue'
