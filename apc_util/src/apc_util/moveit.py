@@ -116,12 +116,6 @@ def execute_known_trajectory(group, task, bin):
     if not success:
         return False
 
-    start = list(plan.joint_trajectory.points[0].positions)
-    if group.get_current_joint_values() != start:
-        rospy.logwarn("execute_known_trajectory(%s, %s): Not starting at the beginning." % (task, bin))
-        if not goto_pose(group, start, [2, 2, 5, 10]):
-            return False
-
     with SIMPLE_SHELF:
         collisions, success = check_collisions(CheckTrajectoryValidityQuery(
             initial_state=JointState(
@@ -136,7 +130,18 @@ def execute_known_trajectory(group, task, bin):
         return False
     if collisions.result.status != CheckTrajectoryValidityResult.SUCCESS:
         rospy.logwarn("Can't execute path from trajectory library, status=%s" % collisions.result.status)
-        return False
+        rospy.loginfo("Planning path to drop")
+        target = list(plan.joint_trajectory.points[-1].positions)
+        if not goto_pose(group, target, [2, 2, 5, 10, 30]):
+            rospy.logerr("Failed to plan path")
+            return False
+        return True
+
+    start = list(plan.joint_trajectory.points[0].positions)
+    if group.get_current_joint_values() != start:
+        rospy.logwarn("execute_known_trajectory(%s, %s): Not starting at the beginning." % (task, bin))
+        if not goto_pose(group, start, [2, 2, 5, 10]):
+            return False
 
     if move(group, plan.joint_trajectory):
         return True
