@@ -3,20 +3,16 @@ import rospy
 
 from copy import deepcopy
 from threading import Lock
-from grasp_planner.srv import apcGraspDB
 from robotiq_s_model_articulated_msgs.msg import SModelRobotInput
 
 from moveit import goto_pose, follow_path, move
 from shelf import FULL_SHELF
-
-_grasp_generator = rospy.ServiceProxy('getGrasps_online_server', apcGraspDB)
+from services import _grasp_generator, _gripper_control
 
 
 class Gripper(object):
     def __init__(self):
         self._safety = 10
-        from gripper_srv.srv import gripper
-        self._gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
         self._latest_gripper_value = None
         self._m = Lock()
         rospy.Subscriber("/left/SModelRobotInput", SModelRobotInput, self.gripper_callback)
@@ -59,7 +55,7 @@ class Gripper(object):
     def control_gripper(self, command):
         for i in range(5):
             try:
-                self._gripper_control(command=command)
+                _gripper_control(command=command)
                 rospy.sleep(4)  # Wait for gripper to move
                 if not self.check_gripper_values(command):
                     rospy.logerr("Gripper failed verification")

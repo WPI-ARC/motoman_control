@@ -4,16 +4,10 @@ import moveit_commander
 
 from std_msgs.msg import Header
 from sensor_msgs.msg import JointState
-from motoman_moveit.srv import convert_trajectory_server
 from shelf import Shelf, NO_SHELF, SIMPLE_SHELF, FULL_SHELF, PADDED_SHELF
 from collision import scene
-from trajectory_verifier.srv import CheckTrajectoryValidity
 from trajectory_verifier.msg import CheckTrajectoryValidityQuery, CheckTrajectoryValidityResult
-from trajlib.srv import GetTrajectory
-
-_move = rospy.ServiceProxy("/convert_trajectory_service", convert_trajectory_server)
-_check_collisions = rospy.ServiceProxy("/check_trajectory_validity", CheckTrajectoryValidity)
-_get_known_trajectory = rospy.ServiceProxy("/trajlib", GetTrajectory)
+from services import _move, _check_collisions, _get_known_trajectory
 
 robot = moveit_commander.RobotCommander()
 

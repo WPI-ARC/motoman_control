@@ -1,12 +1,12 @@
 #!/usr/bin/python
 
-import roslib; roslib.load_manifest('task_controller')
 import rospy
 import yaml
 import os
 
 from task_controller.MotomanController import MotomanController
 from task_controller.Scheduler import SimpleScheduler
+from apc_util.services import wait_for_services
 
 if __name__ == '__main__':
     rospy.init_node("motoman_apc_controller")
@@ -20,6 +20,8 @@ if __name__ == '__main__':
     with open(schedule_file) as file:
         schedule = yaml.load(file)
     print schedule
+
+    wait_for_services()
 
     controller = MotomanController(SimpleScheduler(schedule))
     controller.Start()

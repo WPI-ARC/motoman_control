@@ -6,10 +6,9 @@ import moveit_commander
 from geometry_msgs.msg import PoseStamped
 from moveit_msgs.msg import CollisionObject, AttachedCollisionObject
 from shape_msgs.msg import SolidPrimitive
-from apc_util.srv import PublishPointcloudCollision
+from services import _publish_pointcloud_collision
 
 scene = moveit_commander.PlanningSceneInterface()
-_publish_pointcloud_collision = rospy.ServiceProxy("publish_pointcloud_collision", PublishPointcloudCollision)
 
 
 def publish_pointcloud_collision(pointcloud):
