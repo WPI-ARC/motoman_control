@@ -1,11 +1,8 @@
 import rospy
 
 from apc_msgs.msg import ProcessedObject, SampleArray
-from apc_vision.srv import TakeSample, GetSamples, ProcessSamples, TakeSampleResponse, GetSamplesResponse, ProcessSamplesResponse
-
-_take_sample = rospy.ServiceProxy("take_sample", TakeSample)
-_get_samples = rospy.ServiceProxy("get_samples", GetSamples)
-_process_samples = rospy.ServiceProxy("process_samples", ProcessSamples)
+from apc_vision.srv import TakeSampleResponse, GetSamplesResponse, ProcessSamplesResponse
+from services import _take_sample, _get_samples, _process_samples
 
 
 def take_sample(command, bin):

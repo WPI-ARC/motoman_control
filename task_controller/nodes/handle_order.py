@@ -7,6 +7,7 @@ import os
 from task_controller.MotomanController import MotomanController
 from task_controller.Scheduler import APCScheduler
 from apc_msgs.msg import WorkOrder, APCItem
+from apc_util.services import wait_for_services
 
 if __name__ == '__main__':
     rospy.init_node("motoman_apc_controller")
@@ -30,6 +31,8 @@ if __name__ == '__main__':
         ))
 
     print order
+
+    wait_for_services()
 
     controller = MotomanController(APCScheduler(order))
     controller.Start()
