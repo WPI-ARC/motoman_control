@@ -11,7 +11,7 @@ _process_samples = rospy.ServiceProxy("process_samples", ProcessSamples)
 def take_sample(command, bin):
     for i in range(5):
         try:
-            result = _take_sample(command, bin)
+            result = _take_sample(command=command, bin=bin)
             if result.status != TakeSampleResponse.SUCCESS:
                 rospy.logwarn("Failure with take_sample(%s, %s): status=%s" % (command, bin, result.status))
             return result.status == TakeSampleResponse.SUCCESS

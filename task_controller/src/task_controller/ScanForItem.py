@@ -16,7 +16,7 @@ class ScanForItem(smach.State):
 
     def __init__(self, robot):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],
-                             input_keys=['bin', 'item'],
+                             input_keys=['bin', 'item', 'contents'],
                              output_keys=['pose', 'points'])
         self.arm = robot.arm_left_torso
         self.tf = TransformListener(True, rospy.Duration(10.0))
@@ -43,7 +43,7 @@ class ScanForItem(smach.State):
                     APCItem(
                         name=userdata.item,
                         bin=userdata.bin,
-                        contents=[userdata.item]
+                        contents=userdata.contents
                     )
                 )
                 if not success:

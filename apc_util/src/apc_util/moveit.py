@@ -41,7 +41,7 @@ def check_collisions(query):
 def get_known_trajectory(task, bin):
     for i in range(5):
         try:
-            result = _get_known_trajectory(task, bin)
+            result = _get_known_trajectory(task=task, bin_num=bin)
             return result.plan, True
         except rospy.ServiceException as e:
             rospy.logwarn("Failure with get_known_trajectory(%s, %s): %s" % (task, bin, str(e)))
@@ -55,7 +55,9 @@ def goto_pose(group, pose, times=[5, 20, 40, 60], shelf=SIMPLE_SHELF):
     necessary. If `add_shelf` is true, a box model of the shelf is
     added to the environment to avoid collisions."""
     # group.set_planner_id("RRTstarkConfigDefault")
-    group.set_planner_id("KPIECEkConfigDefault")
+    # group.set_planner_id("KPIECEkConfigDefault")
+    group.set_planner_id("RRTConnectkConfigDefault")
+
     group.set_workspace([-3, -3, -3, 3, 3, 3])
     with shelf:
         for t in times:
@@ -106,7 +108,7 @@ def execute_known_trajectory(group, task, bin):
     start = list(plan.joint_trajectory.points[0].positions)
     if group.get_current_joint_values() != start:
         rospy.logwarn("execute_known_trajectory(%s, %s): Not starting at the beginning." % (task, bin))
-        if not goto_pose(group, start, [1, 1, 5, 10]):
+        if not goto_pose(group, start, [2, 2, 5, 10]):
             return False
 
     with SIMPLE_SHELF:
