@@ -12,8 +12,9 @@
 #include <mutex>
 #include <motoman_moveit/convert_trajectory_server.h>
 
-#define TARGET_REACHED_THRESHOLD 0.0001
-#define EXEC_TIME_BUFFER 2.0
+#define TARGET_REACHED_THRESHOLD 0.01
+#define TRAJECTORY_START_THRESHOLD 0.01
+#define EXEC_TIME_BUFFER 5.0
 
 // Globals
 ros::ServiceClient g_execute_client;
@@ -34,31 +35,44 @@ std::map<std::string, double> GenerateNameValueMap(const std::vector<std::string
     return name_position_map;
 }
 
-inline double GetJointPosition(const std::map<std::string, double>& joint_state_map, const std::map<std::string, double>& command_map, const std::string joint_name)
+inline double GetJointPosition(const std::map<std::string, double>& joint_state_map, const std::map<std::string, double>& command_map, const std::string joint_name, const bool use_state_only)
 {
-    // Check if the joint is in the command map - if so, we use the command value
-    std::map<std::string, double>::const_iterator found_in_command_itr = command_map.find(joint_name);
-    if (found_in_command_itr != command_map.end())
+    if (use_state_only)
     {
-        return found_in_command_itr->second;
+        std::map<std::string, double>::const_iterator found_in_state_itr = joint_state_map.find(joint_name);
+        if (found_in_state_itr != joint_state_map.end())
+        {
+            return found_in_state_itr->second;
+        }
+        // If we haven't found it
+        throw std::invalid_argument("Cound not find joint in joint state [use_state_only = true]");
     }
-    // If not, we check the joint state map
-    std::map<std::string, double>::const_iterator found_in_state_itr = joint_state_map.find(joint_name);
-    if (found_in_state_itr != joint_state_map.end())
+    else
     {
-        return found_in_state_itr->second;
+        // Check if the joint is in the command map - if so, we use the command value
+        std::map<std::string, double>::const_iterator found_in_command_itr = command_map.find(joint_name);
+        if (found_in_command_itr != command_map.end())
+        {
+            return found_in_command_itr->second;
+        }
+        // If not, we check the joint state map
+        std::map<std::string, double>::const_iterator found_in_state_itr = joint_state_map.find(joint_name);
+        if (found_in_state_itr != joint_state_map.end())
+        {
+            return found_in_state_itr->second;
+        }
+        // If we haven't found it
+        throw std::invalid_argument("Cound not find joint in either joint state or command");
     }
-    // If we haven't found it
-    throw std::invalid_argument("Cound not find joint in either joint state or command");
 }
 
-std::vector<double> GetGroupPositions(const std::map<std::string, double>& joint_state_map, const std::map<std::string, double>& command_map, const std::vector<std::string>& group_joint_names)
+std::vector<double> GetGroupPositions(const std::map<std::string, double>& joint_state_map, const std::map<std::string, double>& command_map, const std::vector<std::string>& group_joint_names, const bool use_state_only=false)
 {
     std::vector<double> group_positions(group_joint_names.size());
     for (size_t idx = 0; idx < group_joint_names.size(); idx++)
     {
         const std::string joint_name = group_joint_names[idx];
-        group_positions[idx] = GetJointPosition(joint_state_map, command_map, joint_name);
+        group_positions[idx] = GetJointPosition(joint_state_map, command_map, joint_name, use_state_only);
     }
     return group_positions;
 }
@@ -94,11 +108,18 @@ std::vector<motoman_msgs::DynamicJointsGroup> BuildGroupPoints(const std::map<st
         group_point.group_number = group_number;
         group_point.time_from_start = commanded_point.time_from_start;
         group_point.num_joints = (int16_t)group_joint_names.size();
-        // Populate the point
-        group_point.positions = GetGroupPositions(joint_state_map, commanded_position_map, group_joint_names);
-        group_point.velocities = GetGroupVelocities(commanded_velocity_map, group_joint_names);
-        //group_point.accelerations = ;
-        //group_point.effort = ;
+        if (idx == 0)
+        {
+            // Populate the point
+            group_point.positions = GetGroupPositions(joint_state_map, commanded_position_map, group_joint_names, true);
+            group_point.velocities = GetGroupVelocities(commanded_velocity_map, group_joint_names);
+        }
+        else
+        {
+            // Populate the point
+            group_point.positions = GetGroupPositions(joint_state_map, commanded_position_map, group_joint_names);
+            group_point.velocities = GetGroupVelocities(commanded_velocity_map, group_joint_names);
+        }
         group_points.push_back(group_point);
     }
     return group_points;
@@ -144,6 +165,34 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, moto
         if (traj_point.positions.size() != trajectory_joint_names.size())
         {
             ROS_ERROR("Joint names and joint positions do not match - %zu joint names, %zu joint positions", trajectory_joint_names.size(), traj_point.positions.size());
+            res.success = false;
+            return true;
+        }
+    }
+    // Check to make sure the start is within tolerance
+    std::map<std::string, double> start_joint_values = GenerateNameValueMap(req.jointTraj.joint_names, req.jointTraj.points[0].positions);
+    // Make sure the target is reached within the desired tolerance
+    std::map<std::string, double>::const_iterator start_joint_values_itr;
+    for (start_joint_values_itr = start_joint_values.begin(); start_joint_values_itr != start_joint_values.end(); ++start_joint_values_itr)
+    {
+        std::string joint_name = start_joint_values_itr->first;
+        double start_joint_value = start_joint_values_itr->second;
+        // Look up the joint in the joint state
+        std::map<std::string, double>::const_iterator found_state_value = current_joint_values.find(joint_name);
+        if (found_state_value != current_joint_values.end())
+        {
+            double state_joint_value = found_state_value->second;
+            double joint_value_delta = fabs(start_joint_value - state_joint_value);
+            if (joint_value_delta >= TRAJECTORY_START_THRESHOLD)
+            {
+                ROS_ERROR("Joint %s is not close enough to the current configuration %f, is at %f instead", joint_name.c_str(), state_joint_value, start_joint_value);
+                res.success = false;
+                return true;
+            }
+        }
+        else
+        {
+            ROS_ERROR("Couldn't find joint state value for joint %s when trying to safety check the trajectory start", joint_name.c_str());
             res.success = false;
             return true;
         }
