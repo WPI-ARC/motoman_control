@@ -1,6 +1,7 @@
 string item
 string bin
 geometry_msgs/Pose object_pose
+geometry_msgs/Pose shelf_pose
 sensor_msgs/PointCloud2 object_points
 ---
 bool status

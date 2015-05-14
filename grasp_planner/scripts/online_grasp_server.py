@@ -373,16 +373,17 @@ class Grasping:
         # Generate TFs to project onto
         for pitch in self.pitchList:
             for theta in self.thetaList:
-                Tbaseshelf = self.get_tf('/base_link', '/shelf')
-
-                use_local_points = True  # set to true to use the local boudindbox points. set to else for point cloud stuff
+                
+                use_local_points = False  # set to true to use the local boudindbox points. set to else for point cloud stuff
                 if use_local_points:
+                    Tbaseshelf = self.get_tf('/base_link', '/shelf')
                     Tshelfobj = self.get_tf('/shelf', '/object')
                     pointcloud = self.get_obb_points(size)
 
                 else:
                     # use point cloud
                     Tbaseobj = PoseToMatrix(req.object_pose)  # same Trob_obj request from offline planner
+                    Tbaseshelf = PosetoMatrix(req.shelf_pose) # Tbaseshelf transform passed in from state matchine
                     Tshelfobj = numpy.dot(inv(Tbaseshelf), Tbaseobj)
                     pointcloud = list(pc2.read_points(req.object_points, skip_nans=True,
                                       field_names=("x", "y", "z")))
@@ -459,8 +460,8 @@ class Grasping:
                     Tpregraspapproach = self.construct_4Dmatrix(Trans_pregraspapproach, Rot_pregraspapproach)
 
                     # Generate and display TF in Rviz
-                    # self.generate_tf('/shelf', '/pregrasp', Tshelfpregrasp)
-                    # self.generate_tf('/pregrasp', '/approach', Tpregraspapproach)
+                    self.generate_tf('/shelf', '/pregrasp', Tshelfpregrasp)
+                    self.generate_tf('/pregrasp', '/approach', Tpregraspapproach)
 
                     # Transform of grasp wrt to camera frame. From toollink which has approach backwards and using Z-axis to using x for the approach.
                     TgraspIK = numpy.dot(self.Tcamera, self.Tcamgrasp)
