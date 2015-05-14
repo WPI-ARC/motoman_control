@@ -5,7 +5,7 @@ from sensor_msgs.msg import PointCloud2
 from geometry_msgs.msg import PoseStamped
 
 from apc_util.collision import attach_sphere
-from apc_util.grasping import plan_grasps, execute_grasp, control_gripper, generate_grasps
+from apc_util.grasping import plan_grasps, execute_grasp, gripper, generate_grasps
 from apc_util.shelf import NO_SHELF, BIN, PADDED_SHELF
 from apc_util.smach import on_exception
 
@@ -44,7 +44,7 @@ class PickItem(smach.State):
                 rospy.logwarn("No online grasps found.")
                 return "Failure"
 
-            if not control_gripper("open"):
+            if not gripper.open():
                 return "Failure"
 
             if not execute_grasp(self.arm, grasp, plan, shelf=NO_SHELF):

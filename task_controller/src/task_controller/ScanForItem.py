@@ -5,7 +5,7 @@ from tf import TransformListener
 from apc_msgs.msg import APCItem
 from apc_util.collision import publish_pointcloud_collision
 from apc_util.vision import take_sample, get_samples, process_samples
-from apc_util.grasping import control_gripper
+from apc_util.grasping import gripper
 from apc_util.smach import on_exception
 
 
@@ -26,7 +26,7 @@ class ScanForItem(smach.State):
     def execute(self, userdata):
         rospy.loginfo("Trying to find "+userdata.item+"...")
 
-        if not control_gripper("close"):
+        if not gripper.vision():
             return "Failure"
 
         for i in range(5):

@@ -2,9 +2,10 @@ import rospy
 import smach
 
 from apc_util.moveit import scene, execute_known_trajectory
-from apc_util.grasping import control_gripper
+from apc_util.grasping import gripper
 from apc_util.shelf import BIN
 from apc_util.smach import on_exception
+
 
 class PlaceItem(smach.State):
     """
@@ -35,7 +36,7 @@ class PlaceItem(smach.State):
         if not execute_known_trajectory(self.arm, "Drop", userdata.bin):
             return "Failure"
 
-        if not control_gripper("open"):
+        if not gripper.open():
             return "Failure"
 
         scene.remove_attached_object("arm_left_link_7_t")

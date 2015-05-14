@@ -2,27 +2,85 @@
 import rospy
 
 from copy import deepcopy
-from gripper_srv.srv import gripper
+from threading import Lock
 from grasp_planner.srv import apcGraspDB
+from robotiq_s_model_articulated_msgs.msg import SModelRobotInput
 
 from moveit import goto_pose, follow_path, move
 from shelf import FULL_SHELF
 
-_gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
 _grasp_generator = rospy.ServiceProxy('getGrasps_online_server', apcGraspDB)
 
 
-def control_gripper(command):
-    for i in range(5):
-        try:
-            _gripper_control(command=command)
-            rospy.sleep(2)  # Wait for gripper to move
-            # TODO: Make gripper assertions
+class Gripper(object):
+    def __init__(self):
+        self._safety = 10
+        from gripper_srv.srv import gripper
+        self._gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
+        self._latest_gripper_value = None
+        self._m = Lock()
+        rospy.Subscriber("/left/SModelRobotInput", SModelRobotInput, self.gripper_callback)
+
+    def gripper_callback(self, msg):
+        self._m.acquire()
+        self._latest_gripper_value = msg
+        self._m.release()
+
+    def check_gripper_values(self, command):
+        """
+        Check that the gripper doesn't close too much.
+
+        TODO: In the future, we should check for faults and other problems.
+        """
+        if command == "close":
+            return True  # Don't check, it's closing all the way
+        elif command == "open":
+            return True  # TODO: What do we do
+        elif command in ["activate", "reset", "pinch", "basic"]:
+            return True  # Don't check, Shouldn't really mess with the gripper
+        else:
+            self._m.acquire()
+            msg = self._latest_gripper_value
+            self._m.release()
+            if msg is None:
+                rospy.logerr("No SModelRobotInput messages received.")
+                return False
+            if msg.gPOA > (self._safety + msg.gPRA):
+                rospy.logerr("Finger A too far closed.")
+                return False
+            elif msg.gPOB > (self._safety + msg.gPRA):
+                rospy.logerr("Finger B too far closed.")
+                return False
+            elif msg.gPOC > (self._safety + msg.gPRA):
+                rospy.logerr("Finger C too far closed.")
+                return False
             return True
-        except rospy.ServiceException as e:
-            rospy.logwarn("Failure with control_gripper(%s): %s" % (command, str(e)))
-    rospy.logerr("Failed to %s gripper" % command)
-    return False
+
+    def control_gripper(self, command):
+        for i in range(5):
+            try:
+                self._gripper_control(command=command)
+                rospy.sleep(4)  # Wait for gripper to move
+                if not self.check_gripper_values(command):
+                    rospy.logerr("Gripper failed verification")
+                    # TODO: Open Hand
+                    return False
+                return True
+            except rospy.ServiceException as e:
+                rospy.logwarn("Failure with control_gripper(%s): %s" % (command, str(e)))
+        rospy.logerr("Failed to %s gripper" % command)
+        return False
+
+    def open(self):
+        return self.control_gripper("open")
+
+    def grab(self):
+        return self.control_gripper("125")
+
+    def vision(self):
+        return self.control_gripper("close")
+
+gripper = Gripper()
 
 
 def generate_grasps(item, pose, pointcloud, bin):
@@ -67,7 +125,7 @@ def execute_grasp(group, grasp, plan, shelf=FULL_SHELF):
         rospy.logerr("Failed to execute approach")
         return False
 
-    if not control_gripper("close"):
+    if not gripper.grab():
         return False
 
     rospy.loginfo("Executing cartesian retreat")
