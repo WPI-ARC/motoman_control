@@ -6,7 +6,7 @@ from geometry_msgs.msg import PoseStamped
 
 from apc_util.collision import attach_sphere
 from apc_util.grasping import plan_grasps, execute_grasp, gripper, generate_grasps
-from apc_util.shelf import NO_SHELF, BIN, PADDED_SHELF
+from apc_util.shelf import NO_SHELF, BIN, PADDED_SHELF, get_shelf_pose
 from apc_util.smach import on_exception
 
 
@@ -27,12 +27,18 @@ class PickItem(smach.State):
         rospy.loginfo("Trying to pick '"+userdata.item+"'...")
         self.points.publish(userdata.points)
 
-        grasps, success = generate_grasps(userdata.item, userdata.pose,
+        pose = get_shelf_pose().pose
+        # Note: Orientation for STL shelf differs from true shelf
+        pose.orientation.x = 0
+        pose.orientation.y = 0
+        pose.orientation.z = 0
+        pose.orientation.w = 1
+        grasps, success = generate_grasps(userdata.item, userdata.pose, pose,
                                           userdata.points, userdata.bin)
         if not success:
             return 'Failure'
 
-        # show_grasps(grasps)
+        # self.show_grasps(grasps)
 
         with BIN(userdata.bin):
             grasps = plan_grasps(self.arm, grasps)

@@ -24,16 +24,16 @@
   # item: "cheezit_big_original"
   # item: crayola_64_ct
   others: []
-- action: scoop
-  bin: C
-  # item: first_years_take_and_toss_straw_cup
-  # item: munchkin_white_hot_duck_bath_toy
-  # item: kong_duck_dog_toy
-  # item: champion_copper_plus_spark_plug
-  # item: kyjen_squeakin_eggs_plush_puppies
-  # item: expo_dry_erase_board_eraser
-  # item: elmers_washable_no_run_school_glue
-  #item: "feline_greenies_dental_treats"
-  # item: "cheezit_big_original"
-  item: champion_copper_plus_spark_plug
-  others: []
+# - action: scoop
+#   bin: C
+#   # item: first_years_take_and_toss_straw_cup
+#   # item: munchkin_white_hot_duck_bath_toy
+#   # item: kong_duck_dog_toy
+#   # item: champion_copper_plus_spark_plug
+#   # item: kyjen_squeakin_eggs_plush_puppies
+#   # item: expo_dry_erase_board_eraser
+#   # item: elmers_washable_no_run_school_glue
+#   #item: "feline_greenies_dental_treats"
+#   # item: "cheezit_big_original"
+#   item: champion_copper_plus_spark_plug
+#   others: []
