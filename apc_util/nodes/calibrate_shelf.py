@@ -7,6 +7,7 @@ import yaml
 import os
 
 from geometry_msgs.msg import Pose, Point, Quaternion
+from apc_util.moveit import goto_pose
 from apc_util.shelf import PADDED_SHELF
 
 depth = 0.87  # Depth of shelf
@@ -31,7 +32,7 @@ default_orientation = Quaternion(
 pose_left = Pose(
     position=Point(
         x=0.539323677836,
-        y=0.433382331813,
+        y=0.483382331813,
         z=1.6160210999,
     ),
     orientation=default_orientation,
@@ -40,7 +41,7 @@ pose_left = Pose(
 pose_right = Pose(
     position=Point(
         x=0.526801535149,
-        y=-0.379182889409,
+        y=-0.429182889409,
         z=0.88944822383,
     ),
     orientation=default_orientation,
@@ -59,7 +60,7 @@ if __name__ == '__main__':
     skip = raw_input("Hit enter to move to initial pose or type skip to skip: ")
     if "s" not in skip:
         with PADDED_SHELF:
-            rospy.loginfo("Left: %s" % robot.arm_left.go(pose_left))
+            rospy.loginfo("Left: %s" % goto_pose(robot.arm_left_torso, pose_left))
         # rospy.loginfo("Right: %s" % robot.arm_right.go(pose_right))
     rospy.loginfo("Please jog until the palms touch the shelf")
     raw_input("Hit enter to continue ")
@@ -69,11 +70,10 @@ if __name__ == '__main__':
     skip = raw_input("Hit enter to move to initial pose or type skip to skip: ")
     if "s" not in skip:
         with PADDED_SHELF:
-            rospy.loginfo("Right: %s" % robot.arm_left.go(pose_right))
+            rospy.loginfo("Right: %s" % goto_pose(robot.arm_left_torso, pose_right))
     rospy.loginfo("Please jog until the palms touch the shelf")
     raw_input("Hit enter to continue ")
     right = robot.arm_left.get_current_pose().pose
-
 
     x = depth/2 + palm_offset + (left.position.x + right.position.x)/2
     y = (left.position.y + right.position.y)/2

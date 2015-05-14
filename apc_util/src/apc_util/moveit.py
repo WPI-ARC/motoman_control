@@ -128,7 +128,7 @@ def execute_known_trajectory(group, task, bin):
     if not success:
         return False
     if collisions.result.status != CheckTrajectoryValidityResult.SUCCESS:
-        rospy.logwarn("Can't execute path from trajectory library, status=%s" % collisions.result.status)
+        rospy.logerr("Can't execute path from trajectory library, status=%s" % collisions.result.status)
         rospy.loginfo("Planning path to drop")
         target = list(plan.joint_trajectory.points[-1].positions)
         if not goto_pose(group, target, [2, 2, 5, 10, 30]):

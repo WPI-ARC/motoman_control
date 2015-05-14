@@ -157,7 +157,7 @@ class Grasping:
         elif req.item == 'crayola_64_ct':
             item = '../env/crayon.env.xml'
             size = [0.037, 0.125, 0.145]
-            self.objectheightoffset = -0.05
+            self.objectheightoffset = -0.055
         elif req.item == 'feline_greenies_dental_treats':
             item = '../env/dentaltreat.env.xml'
             size = [0.04, 0.175, 0.21]
@@ -169,7 +169,7 @@ class Grasping:
         elif req.item == 'elmers_washable_no_run_school_glue':
             item = '../env/glue.env.xml'
             size = [0.025, 0.06, 0.145]
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = -0.05
         elif req.item == 'sharpie_accent_tank_style_highlighters':
             item = '../env/highlighters.env.xml'
             size = [0.023, 0.116, 0.125]

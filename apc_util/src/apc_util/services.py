@@ -48,6 +48,6 @@ def wait_for_services(services=services):
 
     # Second pass
     for service in missing_services:
-        rospy.loginfo("Waiting for service `%s`..." % service.resolved_name)
+        rospy.logwarn("Waiting for service `%s`..." % service.resolved_name)
         service.wait_for_service()
-        rospy.loginfo("... service `%s` is available" % service.resolved_name)
+        rospy.logwarn("... service `%s` is available" % service.resolved_name)
