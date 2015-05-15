@@ -115,34 +115,12 @@ class Grasping:
         return transform
 
     def get_shelf_bounds(self, req):
-        if req.bin == 'A':
-            size = [-0.43, -.01,  0.15764, 0.41,    1.55794, 1.77212]
-        elif req.bin == 'B':
-            size = [-0.43, -.01, -0.14331, 0.14331, 1.55794, 1.77212]
-        elif req.bin == 'C':
-            size = [-0.43, -.01, -0.41,   -0.15764, 1.55794, 1.77212]
-        elif req.bin == 'D':
-            size = [-0.43, -.01,  0.15764, 0.41,    1.32733, 1.50775]
-        elif req.bin == 'E':
-            size = [-0.43, -.01, -0.14331, 0.14331, 1.32733, 1.50775]
-        elif req.bin == 'F':
-            size = [-0.43, -.01, -0.41,   -0.15764, 1.32733, 1.50775]
-        elif req.bin == 'G':
-            size = [-0.43, -.01,  0.15764, 0.41,    1.11053, 1.29092]
-        elif req.bin == 'H':
-            size = [-0.43, -.01, -0.14331, 0.14331, 1.11053, 1.29092]
-        elif req.bin == 'I':
-            size = [-0.43, -.01,  0.41,   -0.15764, 1.11053, 1.29092]
-        elif req.bin == 'J':
-            size = [-0.43, -.01,  0.15764, 0.41,    0.83651, 1.05069]
-        elif req.bin == 'K':
-            size = [-0.43, -.01, -0.14331, 0.14331, 0.83651, 1.05069]
-        elif req.bin == 'L':
-            size = [-0.43, -.01,  0.41,   -0.15764, 0.83651, 1.05069]
+        try:
+            bin_bounds = rospy.get_param("/shelf/bins/"+req.bin)
         else:
-            rospy.logerr("could not find bin size for: %s", req.item)
+            rospy.logerr("could not find rosparam for bin: %s", req.bin)
             self.status = False
-        return numpy.array(size)
+        return numpy.array(bin_bounds)
 
     def get_object_extents(self, req):
         if req.item == 'cheezit_big_original':
@@ -366,8 +344,8 @@ class Grasping:
         rospy.logdebug("Requesting object in bin %s", req.bin)
 
         size = self.get_object_extents(req)
-        binbounds = self.get_shelf_bounds(req)
-        bin_min_x, bin_max_x, bin_min_y, bin_max_y, bin_min_z, bin_max_z = binbounds
+        bin_bounds = self.get_shelf_bounds(req)
+        bin_min_x, bin_max_x, bin_min_y, bin_max_y, bin_min_z, bin_max_z = bin_bounds
         rospy.logdebug( "bin min z: " + str(bin_min_z))
 
         use_local_points = False  # set to true to use the local boudindbox points. set to else for point cloud stuff
