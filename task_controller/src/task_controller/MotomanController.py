@@ -2,6 +2,7 @@ import rospy
 import smach
 import smach_ros
 
+from task_controller.MoveToHome import MoveToHome
 from task_controller.PickAndPlaceItem import PickAndPlaceItem
 from task_controller.ScoopAndPickItem import ScoopAndPickItem
 from task_controller.Scoop import Scoop
@@ -26,6 +27,12 @@ class MotomanController:
         # Populate the state machine from the modules
         with self.sm:
             self.safemode = SafeMode()
+
+            smach.StateMachine.add(
+                'MoveToHome',
+                MoveToHome(robot),
+                transitions={'Success': 'Scheduler', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
+            )
 
             smach.StateMachine.add(
                 'Scheduler', scheduler,

@@ -79,12 +79,13 @@ class Gripper(object):
 gripper = Gripper()
 
 
-def generate_grasps(item, pose, pointcloud, bin):
+def generate_grasps(item, pose, shelf_pose, pointcloud, bin):
     for i in range(5):
         try:
             response = _grasp_generator(
                 item=item,
                 object_pose=pose,
+                shelf_pose=shelf_pose,
                 object_points=pointcloud,
                 bin=bin,
             )

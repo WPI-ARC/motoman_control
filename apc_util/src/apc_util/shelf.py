@@ -7,6 +7,8 @@ from collision import scene, remove_object
 from moveit_msgs.msg import CollisionObject
 from shape_msgs.msg import SolidPrimitive
 from geometry_msgs.msg import Pose, Point, Quaternion
+from moveit_msgs.msg import PlanningScene, PlanningSceneComponents
+from services import get_planning_scene
 
 kiva_pod = os.path.join(os.path.dirname(__file__),
                         "../../meshes/pod_lowres.stl")
@@ -80,12 +82,16 @@ def add_shelf(quality=Shelf.SIMPLE):
             filename=kiva_pod
         )
     elif quality == Shelf.PADDED:
-        for dx, dy in [(0, 0), (1, 1), (1, -1), (-1, -1), (-1, 1)]:
+        for dx, dy in [(1, 1), (1, -1), (-1, -1), (-1, 1), (0, 0)]:
             mypose = deepcopy(pose)
             mypose.pose.position.x += dx * PADDING
             mypose.pose.position.y += dy * PADDING
+            if (dx, dy) == (0, 0):
+                name = "shelf"
+            else:
+                name = "shelf"+str(dx)+str(dy)
             scene.add_mesh(
-                name="shelf"+str(dx)+str(dy),
+                name=name,
                 pose=mypose,
                 filename=kiva_pod
             )
@@ -93,7 +99,20 @@ def add_shelf(quality=Shelf.SIMPLE):
         add_bin(quality)
     else:
         rospy.logwarn("Unsupported quality %s" % quality)
-    rospy.sleep(1)
+
+    while True:
+        rospy.sleep(0.1)
+        result, success = get_planning_scene(
+            PlanningSceneComponents(
+                PlanningSceneComponents.WORLD_OBJECT_NAMES
+                + PlanningSceneComponents.WORLD_OBJECT_GEOMETRY
+            )
+        )
+        if not success:
+            continue
+        for object in result.scene.world.collision_objects:
+            if object.id == "shelf":
+                return
 
 
 def add_bin(bin, prefix="/shelf"):

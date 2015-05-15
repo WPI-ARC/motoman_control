@@ -19,6 +19,7 @@ from grasp_planner.srv import apcGraspDB, apcGraspDBResponse
 # from apc_util.transformation_helpers import ExtractFromMatrix, BuildMatrix, PoseFromMatrix, PoseToMatrix, InvertMatrix
 from transformation_helper import ExtractFromMatrix, BuildMatrix, PoseFromMatrix, PoseToMatrix, InvertMatrix
 
+
 class Grasping:
 
     def __init__(self):
@@ -134,7 +135,7 @@ class Grasping:
         elif req.item == 'crayola_64_ct':
             item = '../env/crayon.env.xml'
             size = [0.037, 0.125, 0.145]
-            self.objectheightoffset = -0.05
+            self.objectheightoffset = -0.055
         elif req.item == 'feline_greenies_dental_treats':
             item = '../env/dentaltreat.env.xml'
             size = [0.04, 0.175, 0.21]
@@ -146,7 +147,7 @@ class Grasping:
         elif req.item == 'elmers_washable_no_run_school_glue':
             item = '../env/glue.env.xml'
             size = [0.025, 0.06, 0.145]
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = -0.05
         elif req.item == 'sharpie_accent_tank_style_highlighters':
             item = '../env/highlighters.env.xml'
             size = [0.023, 0.116, 0.125]
@@ -297,8 +298,8 @@ class Grasping:
         y = []
         z = []
         for point in pointList:
-            if point[0] > 0:
-                continue
+            # if point[0] > 0:
+            #     continue
             x.append(point[0])
             y.append(point[1])
             z.append(point[2])
@@ -391,20 +392,25 @@ class Grasping:
                     oldpt = numpy.array([[point[0]], [point[1]], [point[2]], [1]])
                     projected_point = numpy.dot(Tprojshelf, oldpt)
                     points.append(projected_point)
+                if not points:
+                    rospy.logerr("No points in poincloud!!!")
+                    return apcGraspDBResponse(status=False)
+
 
                 rospy.logdebug("List of transformed object points after projection to target projection frame")
-                rospy.logdebug(str(points))
+                rospy.logdebug(str(len(points)))
 
                 # Get min max points. Pass in transformed points list to get min max for target frame. Compute width of projection shadow. Width is the y axis because shelf frame is set that way with y axis as width. Check if width of shadow projection can fit inside gripper width
                 min_max = self.compute_minmax(points)
                 min_x, max_x, min_y, max_y, min_z, max_z = min_max
-                
+              
                 if use_local_points:
                     width = self.compute_width(min_y, max_y)
                 else:
-                    filtered_min_max = self.compute_minmax_filtered(points)
-                    f_min_x, f_max_x, f_min_y, f_max_y, f_min_z, f_max_z = filtered_min_max                
-                    width = self.compute_width(f_min_y, f_max_y)
+                    # filtered_min_max = self.compute_minmax_filtered(points)
+                    # f_min_x, f_max_x, f_min_y, f_max_y, f_min_z, f_max_z = filtered_min_max
+                    # width = self.compute_width(f_min_y, f_max_y)
+                    width = self.compute_width(min_y, max_y)
 
                 jaw_separation = self.compute_jaw_separation(width)
 
@@ -467,7 +473,7 @@ class Grasping:
 
                     rospy.logdebug("score is %f. Good approach direction. Gripper is wide enough", score)
                 else:
-                    score = self.compute_score(width, theta)
+                    score = self.compute_score(width)
                     rospy.logdebug("score is %f. Bad approach direction. Gripper not wide enough", score)
                     countbad += 1
 
@@ -489,8 +495,8 @@ class Grasping:
 
 
 def publisher():
-    # rospy.init_node('online_grasp_server', log_level=rospy.DEBUG)
-    rospy.init_node('online_grasp_server')
+    rospy.init_node('online_grasp_server', log_level=rospy.DEBUG)
+    # rospy.init_node('online_grasp_server')
 
     grasp = Grasping()
     while not rospy.is_shutdown():
