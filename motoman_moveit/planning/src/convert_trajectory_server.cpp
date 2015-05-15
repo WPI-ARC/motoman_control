@@ -138,6 +138,89 @@ std::vector<motoman_msgs::DynamicJointsGroup> BuildGroupPoints(const std::map<st
     return group_points;
 }
 
+std::pair<double, int64_t> GetMaxVelocityJoint(const trajectory_msgs::JointTrajectoryPoint& current_point)
+{
+    double max_velocity = 0.0;
+    int64_t max_index = -1;
+    for (size_t jdx = 0; jdx < current_point.velocities.size(); jdx++)
+    {
+        double joint_velocity = fabs(current_point.velocities[jdx]);
+        if (joint_velocity > max_velocity)
+        {
+            max_velocity = joint_velocity;
+            max_index = (int64_t)jdx;
+        }
+    }
+    return std::pair<double, int64_t>(max_velocity, max_index);
+}
+
+std::pair<double, int64_t> GetMaxFiniteDifferenceVelocityJoint(const trajectory_msgs::JointTrajectoryPoint& previous_point, const trajectory_msgs::JointTrajectoryPoint& current_point)
+{
+    if (previous_point.positions.size() != current_point.positions.size())
+    {
+        throw std::invalid_argument("JointTrajectoryPoint sizes do not match");
+    }
+    double max_velocity = 0.0;
+    int64_t max_index = -1;
+    for (size_t jdx = 0; jdx < current_point.positions.size(); jdx++)
+    {
+        double previous_position = previous_point.positions[jdx];
+        double current_position = current_point.positions[jdx];
+        double joint_velocity = fabs(current_position - previous_position);
+        if (joint_velocity > max_velocity)
+        {
+            max_velocity = joint_velocity;
+            max_index = (int64_t)jdx;
+        }
+    }
+    return std::pair<double, int64_t>(max_velocity, max_index);
+}
+
+bool CheckVelocities(const trajectory_msgs::JointTrajectory& traj)
+{
+    // We can't do finite differencing with one point, and besides, this will be set to the current config anyways
+    if (traj.points.size() <= 1)
+    {
+        ROS_WARN("Single point trajectory, cannot meaningfully check velocities");
+        return true;
+    }
+    else
+    {
+        double max_velocity = 0.0;
+        std::string max_velocity_joint = "unknown";
+        for (size_t idx = 1; idx < traj.points.size(); idx++)
+        {
+            const trajectory_msgs::JointTrajectoryPoint& previous_point = traj.points[idx - 1];
+            const trajectory_msgs::JointTrajectoryPoint& current_point = traj.points[idx];
+            std::pair<double, int64_t> finite_difference_check = GetMaxFiniteDifferenceVelocityJoint(previous_point, current_point);
+            if (traj.joint_names.size() == current_point.velocities.size())
+            {
+                std::pair<double, int64_t> max_velocity_check = GetMaxVelocityJoint(current_point);
+                if (max_velocity_check.first > finite_difference_check.first && max_velocity_check.first > max_velocity)
+                {
+                    max_velocity = max_velocity_check.first;
+                    max_velocity_joint = traj.joint_names[(size_t)max_velocity_check.second];
+                }
+                else if (finite_difference_check.first > max_velocity_check.first && finite_difference_check.first > max_velocity)
+                {
+                    max_velocity = finite_difference_check.first;
+                    max_velocity_joint = traj.joint_names[(size_t)finite_difference_check.second];
+                }
+            }
+            else
+            {
+                if (finite_difference_check.first > max_velocity)
+                {
+                    max_velocity = finite_difference_check.first;
+                    max_velocity_joint = traj.joint_names[(size_t)finite_difference_check.second];
+                }
+            }
+        }
+        ROS_INFO("Maximum velocity joint is [%s] with velocity %f", max_velocity_joint.c_str(), max_velocity);
+        return true;
+    }
+}
+
 bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, motoman_moveit::convert_trajectory_server::Response &res)
 {
     if (req.jointTraj.points.size() == 0)
@@ -210,7 +293,18 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, moto
             return true;
         }
     }
-    ROS_INFO("Trajectory safety check passed");
+    // Check the velocities of the trajectory
+    bool velocity_check_passed = CheckVelocities(req.jointTraj);
+    if (velocity_check_passed)
+    {
+        ROS_INFO("Trajectory safety check passed");
+    }
+    else
+    {
+        ROS_ERROR("Joint velocity safety check failed - Not safe to execute");
+        res.success = false;
+        return true;
+    }
     // Now, build a trajectory for each group
     std::vector<std::string> left_arm_group_names(7);
     left_arm_group_names[0] = "arm_left_joint_1_s";
