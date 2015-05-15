@@ -1,8 +1,41 @@
+# - action: grab
+#   bin: C
+#   item: "crayola_64_ct"
+#   others: []
+# - action: grab
+#   bin: D
+#   item: "feline_greenies_dental_treats"
+#   others: ["elmers_washable_no_run_school_glue"]
+# - action: grab
+#   bin: E
+#   item: "feline_greenies_dental_treats"
+#   others: ["elmers_washable_no_run_school_glue"]
 - action: grab
-  bin: B
-  item: "crayola_64_ct"
-  others: []
-- action: grab
-  bin: E
-  item: "feline_greenies_dental_treats"
-  others: ["elmers_washable_no_run_school_glue"]
+  bin: F
+  item: "expo_dry_erase_board_eraser"
+  others: ["first_years_take_and_toss_straw_cup"]
+# - action: grab
+#   bin: G
+#   item: "feline_greenies_dental_treats"
+#   others: ["elmers_washable_no_run_school_glue"]
+# - action: grab
+#   bin: H
+#   item: "feline_greenies_dental_treats"
+#   others: ["elmers_washable_no_run_school_glue"]
+# - action: grab
+#   bin: I
+#   item: "feline_greenies_dental_treats"
+#   others: ["elmers_washable_no_run_school_glue"]
+# - action: grab
+#   bin: J
+#   item: "feline_greenies_dental_treats"
+#   others: ["elmers_washable_no_run_school_glue"]
+# - action: grab
+#   bin: K
+#   item: "feline_greenies_dental_treats"
+#   others: ["elmers_washable_no_run_school_glue"]
+# - action: grab
+#   bin: L
+#   item: "feline_greenies_dental_treats"
+#   others: ["elmers_washable_no_run_school_glue"]
+

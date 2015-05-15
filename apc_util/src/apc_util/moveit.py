@@ -13,8 +13,14 @@ robot = moveit_commander.RobotCommander()
 
 LEFT_NAMES = ["torso_joint_b1", "arm_left_joint_1_s", "arm_left_joint_2_l", "arm_left_joint_3_e",
               "arm_left_joint_4_u", "arm_left_joint_5_r", "arm_left_joint_6_b", "arm_left_joint_7_t"]
-LEFT_HOME = [0.0, 2.1987425554414965, -1.2856041261915816, -2.0572122610542043, -2.1844569809370875,
-             -0.8355313237647156, -0.6598546685936744, 2.244587644488423]
+
+# LEFT_HOME = [0.0, 2.1987425554414965, -1.2856041261915816, -2.0572122610542043, -2.1844569809370875,
+#              -0.8355313237647156, -0.6598546685936744, 2.244587644488423]
+
+# LEFT_HOME side position, currently being used for testing scooping
+LEFT_HOME = [0.0, -1.00305645, -1.49978651, 0.45750031, -2.17721628,
+             0.45096816, -1.20433976, -1.55814993]
+
 RIGHT_NAMES = ["torso_joint_b1", "arm_right_joint_1_s", "arm_right_joint_2_l", "arm_right_joint_3_e",
               "arm_right_joint_4_u", "arm_right_joint_5_r", "arm_right_joint_6_b", "arm_right_joint_7_t"]
 RIGHT_HOME = [0.0, -1.0030564513590334, -1.49978651413566, 0.457500317369117, -2.1772162870743323,
