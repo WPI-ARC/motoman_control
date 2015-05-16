@@ -21,8 +21,8 @@ if __name__ == '__main__':
 
     schedule = []
     for element in raw_schedule:
-        schedule.items.append(ScheduleItem(
-            action=element["actkion"],
+        schedule.append(ScheduleItem(
+            action=element["action"],
             name=element["item"],
             bin=element["bin"][-1],
             contents=element["others"],

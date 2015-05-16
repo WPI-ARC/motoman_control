@@ -22,6 +22,6 @@ if __name__ == '__main__':
 
     rospy.Service('set_schedule', SetSchedule, set_schedule_callback)
 
-    controller = MotomanController()
+    controller = MotomanController(scheduler)
 
     controller.Start()

@@ -223,7 +223,7 @@ class RobotState(object):
             if msg.error_code == 0:
                 rospy.loginfo("Robot is no longer in error")
             else:
-                rospy.logerr("Robot in error" % msg.error_code)
+                rospy.logerr("Robot in error code=%s" % msg.error_code)
         if self.msg.error_code != msg.error_code:
             if msg.error_code == 0:
                 rospy.loginfo("Error Resolved")
@@ -232,23 +232,23 @@ class RobotState(object):
         if self.msg.mode.val != msg.mode.val:
             rospy.logwarn("Robot is in %s" % ("AUTO" if msg.mode.val == 2 else "MANUAL"))
         if self.msg.e_stopped.val != msg.e_stopped.val:
-            rospy.logwarn("Robot is%s e-stopped" % (" not" if msg.mode.val == 0 else ""))
-        if self.msg.drive_powered.val != msg.drive_powered.val:
-            rospy.loginfo("Robot drive is%s powered" % (" not" if msg.mode.val == 0 else ""))
+            rospy.logwarn("Robot is%s e-stopped" % (" not" if msg.e_stopped.val == 0 else ""))
+        if self.msg.drives_powered.val != msg.drives_powered.val:
+            rospy.loginfo("Robot drive is%s powered" % (" not" if msg.drives_powered.val == 0 else ""))
         if self.msg.in_motion.val != msg.in_motion.val:
-            rospy.loginfo("Robot drive is%s in motion" % (" not" if msg.mode.val == 0 else ""))
+            rospy.loginfo("Robot drive is%s in motion" % (" not" if msg.in_motion.val == 0 else ""))
 
         self.msg = msg  # Update to the new message
         self._m.release()
 
-    def has_error(self, msg):
+    def has_error(self):
         "Returns true if the robot has an error"
         self._m.acquire()
         msg = self.msg
         self._m.release()
         return msg.in_error.val != 0
 
-    def is_stopped(self, msg):
+    def is_stopped(self):
         "Returns true if the robot is e-stopped"
         self._m.acquire()
         msg = self.msg

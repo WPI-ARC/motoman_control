@@ -31,9 +31,9 @@ class Grasping:
         self.tfList = []
 
         # Adjustable variables in planner
-        # self.pitchList = numpy.linspace(0 , pi/12, num=3)
+        self.pitchList = numpy.linspace(0, pi/12, num=3)
         # self.pitchList = [pi/12]
-        self.pitchList = [0]
+        # self.pitchList = [0]
         self.thetaList = numpy.linspace(-pi/6, pi/6, num=101) # Rotation of generated projection frames
         # self.thetaList = [0]
         self.padding = 0.015  # Extra padding between object and gripper is 1 cm.
@@ -157,7 +157,7 @@ class Grasping:
         elif req.item == 'crayola_64_ct':
             item = '../env/crayon.env.xml'
             size = [0.037, 0.125, 0.145]
-            self.objectheightoffset = -0.055
+            self.objectheightoffset = -0.04
         elif req.item == 'feline_greenies_dental_treats':
             item = '../env/dentaltreat.env.xml'
             size = [0.04, 0.175, 0.21]

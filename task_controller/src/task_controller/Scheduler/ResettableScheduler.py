@@ -18,7 +18,7 @@ class ResettableScheduler(smach.State):
         rospy.loginfo("Scheduler running...")
 
         schedule, location = [], 0
-        while location < len(schedule):
+        while location >= len(schedule):
             rospy.sleep(1)
             # Get snapshot of current state
             self._m.acquire()
@@ -30,18 +30,18 @@ class ResettableScheduler(smach.State):
             self.location += 1
 
             if current.action.startswith("grab"):
-                data.item = current.item
+                data.item = current.name
                 data.bin = current.bin
-                data.contents = current.others
-                print current.action, current.bin, current.item
-                rospy.loginfo("Scheduling pick of %s from bin %s." % (current.item, current.bin))
+                data.contents = current.contents
+                print current.action, current.bin, current.name
+                rospy.loginfo("Scheduling pick of %s from bin %s." % (current.name, current.bin))
                 return 'Pick'
 
             elif current.action == 'scoop':
-                data.item = current.item
+                data.item = current.name
                 data.bin = current.bin
-                data.contents = current.others
-                rospy.loginfo("Scheduling scoop of %s from bin %s." % (current.item, current.bin))
+                data.contents = current.contents
+                rospy.loginfo("Scheduling scoop of %s from bin %s." % (current.name, current.bin))
                 return 'Scoop'
 
             else:
