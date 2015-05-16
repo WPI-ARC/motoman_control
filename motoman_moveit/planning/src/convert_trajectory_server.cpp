@@ -14,7 +14,7 @@
 
 #define TARGET_REACHED_THRESHOLD 0.01
 #define TRAJECTORY_START_THRESHOLD 0.01
-#define EXEC_TIME_BUFFER 5.0
+#define EXEC_TIME_BUFFER 1.0
 
 // Globals
 ros::ServiceClient g_execute_client;
