@@ -45,10 +45,6 @@ class APCScheduler(smach.State):
                 rospy.loginfo("Scheduling scoop of %s from bin %s." % (current["item"], current["bin"]))
                 return 'Scoop'
 
-            elif action == "pick_scoop":
-                rospy.loginfo("Picking scoop up.")
-                return 'ToolChange'
-
             else:
                 return 'Failure'
 

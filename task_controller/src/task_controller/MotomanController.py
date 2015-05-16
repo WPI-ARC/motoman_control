@@ -36,7 +36,7 @@ class MotomanController:
 
             smach.StateMachine.add(
                 'Scheduler', scheduler,
-                transitions={'Pick': 'PickAndPlaceItem', 'Scoop': 'ScoopAndPickItem', 'ToolChange': 'PickScoop',
+                transitions={'Pick': 'PickAndPlaceItem', 'Scoop': 'ScoopAndPickItem',
                              'Success': 'FinishTask', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
             )
 
@@ -49,12 +49,6 @@ class MotomanController:
             smach.StateMachine.add(
                 'ScoopAndPickItem',
                 ScoopAndPickItem(robot),
-                transitions={'Success': 'Scheduler', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
-            )
-
-            smach.StateMachine.add(
-                'PickScoop',
-                PickScoop(robot),
                 transitions={'Success': 'Scheduler', 'Failure': 'ErrorHandler', 'Fatal': 'SafeMode'},
             )
 

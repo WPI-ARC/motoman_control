@@ -22,6 +22,8 @@
   <build_depend>tf</build_depend>
   <build_depend>smach_ros</build_depend>
   <build_depend>apc_util</build_depend>
+  <build_depend>moveit_msgs</build_depend>
+  <build_depend>apc_msgs</build_depend>
 
   <!-- <run_depend>message_runtime</run_depend> -->
   <run_depend>apc_msgs</run_depend>
@@ -35,5 +37,7 @@
   <run_depend>tf</run_depend>
   <run_depend>smach_ros</run_depend>
   <run_depend>apc_util</run_depend>
+  <run_depend>moveit_msgs</run_depend>
+  <run_depend>apc_msgs</run_depend>
 </package>
 
