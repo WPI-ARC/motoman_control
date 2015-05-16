@@ -30,6 +30,7 @@ RIGHT_HOME = [0.0, -1.0030564513590334, -1.49978651413566, 0.457500317369117, -2
 
 
 def move(group, traj):
+    robot_state.wait_to_continue()
     try:
         if not check_joint_values(group, traj.joint_names, traj.points[0].positions):
             rospy.logerr("Not moving since initial joint values are not within tolerance")
@@ -203,6 +204,10 @@ def check_joint_values(group, name, desired_values, tolerance=0.01):
 
 
 class RobotState(object):
+    """
+    Record information related to the robots state
+    """
+
     def __init__(self):
         self._m = Lock()
         self._sub = rospy.Subscriber("/robot_status", RobotStatus, self._callback)
@@ -237,15 +242,23 @@ class RobotState(object):
         self._m.release()
 
     def has_error(self, msg):
+        "Returns true if the robot has an error"
         self._m.acquire()
         msg = self.msg
         self._m.release()
         return msg.in_error.val != 0
 
     def is_stopped(self, msg):
+        "Returns true if the robot is e-stopped"
         self._m.acquire()
         msg = self.msg
         self._m.release()
         return msg.e_stopped.val != 0
+
+    def wait_to_continue(self):
+        "Wait until e-stop is released before continuing"
+        while self.is_stopped():
+            rospy.logwarn("Waiting until e-stop is removed to continue")
+            rospy.sleep(1)
 
 robot_state = RobotState()

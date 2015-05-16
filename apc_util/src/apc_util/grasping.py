@@ -53,9 +53,7 @@ class Gripper(object):
             return True
 
     def control_gripper(self, command):
-        while robot_state.is_stopped():
-            rospy.logwarn("Waiting until e-stop is removed to control the gripper")
-            rospy.sleep(1)
+        robot_state.wait_to_continue()
         for i in range(5):
             try:
                 _gripper_control(command=command)
