@@ -30,7 +30,7 @@ class PushWithScoop(smach.State):
     @on_exception(failure_state="Failure")
     def execute(self, userdata):
         shortRow = False
-        startBin = "A"
+        startBin = "C"
 
         add_shelf()
         # rospy.loginfo("Trying to scoop from bin '"+userdata.bin+"' section '"
@@ -139,17 +139,22 @@ class PushWithScoop(smach.State):
             startBin = "C"
 
         # if not execute_known_trajectory(self.arm, 'Pick', userdata.bin):
-        if not execute_known_trajectory(self.arm, 'Pick', userdata.bin):
+        if not execute_known_trajectory(self.arm, 'Pick', startBin):
+            return 'Failure'
             # this is done to achieve a good configuration for cartesian paths
-            self.arm.set_joint_value_target(jointValues)
-            self.arm.set_planning_time(15)
-            self.arm.set_planner_id("RRTConnectkConfigDefault")
-            self.arm.set_pose_reference_frame("/base_link")
-            plan = self.arm.plan()
-            self.move(plan.joint_trajectory)
+            # self.arm.set_joint_value_target(jointValues)
+            # self.arm.set_planning_time(15)
+            # self.arm.set_planner_id("RRTConnectkConfigDefault")
+            # self.arm.set_pose_reference_frame("/base_link")
+            # plan = self.arm.plan()
+            # self.move(plan.joint_trajectory)
+
+        remove_shelf()
 
         if not execute_known_trajectory(self.arm, 'Dump', userdata.bin):
             return 'Failure'
+
+        add_shelf()
 
         if not execute_known_trajectory(self.arm, 'Lift', userdata.bin):
             return 'Failure'
@@ -160,8 +165,8 @@ class PushWithScoop(smach.State):
         return 'Success'
 
         horizontalPose = bin_pose(userdata.bin).pose
-        horizontalPose.position.x += -0.267581
-        # horizontalPose.position.x += -0.307581
+        # horizontalPose.position.x += -0.267581
+        horizontalPose.position.x += -0.307581
         horizontalPose.position.y += -0.011221
         horizontalPose.position.z += 0.05463
         horizontalPose.orientation.x = -0.293106
@@ -171,7 +176,8 @@ class PushWithScoop(smach.State):
 
         leftOffset = -0.001
         middleOffset = -0.002
-        rightOffset = 0.050
+        # rightOffset = 0.050
+        rightOffset = 0.000
 
         if (userdata.bin == "A" or userdata.bin == "D" or
                 userdata.bin == "G" or userdata.bin == "J"):
@@ -188,16 +194,15 @@ class PushWithScoop(smach.State):
         horizontalPose = self.convertFrameRobotToShelf(horizontalPose)
 
         horizontalStartPose = bin_pose(startBin).pose
-        horizontalStartPose.position.x += -0.307581
-        # horizontalStartPose.position.x += -0.297581
-        horizontalStartPose.position.y += -0.011221
-        horizontalStartPose.position.z += 0.05463
-        horizontalStartPose.orientation.x = -0.293106
-        horizontalStartPose.orientation.y = -0.512959
-        horizontalStartPose.orientation.z = 0.403541
-        horizontalStartPose.orientation.w = 0.698654
-
-        horizontalStartPose = self.convertFrameRobotToShelf(horizontalStartPose)
+        # horizontalStartPose.position.x += -0.307581
+        # # horizontalStartPose.position.x += -0.297581
+        # horizontalStartPose.position.y += -0.011221
+        # horizontalStartPose.position.z += 0.05463
+        # horizontalStartPose.orientation.x = -0.293106
+        # horizontalStartPose.orientation.y = -0.512959
+        # horizontalStartPose.orientation.z = 0.403541
+        # horizontalStartPose.orientation.w = 0.698654
+        # horizontalStartPose = self.convertFrameRobotToShelf(horizontalStartPose)
 
         # this is done to achieve a good configuration for cartesian paths
         # self.arm.set_joint_value_target(jointValues)
@@ -299,50 +304,28 @@ class PushWithScoop(smach.State):
         # verticalPose = self.convertFrameRobotToShelf(verticalPose)
 
     def pushLeftToRight(self, horizontalStartPose, horizontalPose, verticalPose, shortRow):
-        rospy.loginfo("planning to horizontal pose")
-        # remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED HERE
-        add_shelf()
-
-        poses = [self.convertFrameRobotToShelf(self.arm.
-                                               get_current_pose().pose)]
-        poses.append(deepcopy(poses[-1]))
-        poses[-1].orientation.x = horizontalStartPose.orientation.x
-        poses[-1].orientation.y = horizontalStartPose.orientation.y
-        poses[-1].orientation.z = horizontalStartPose.orientation.z
-        poses[-1].orientation.w = horizontalStartPose.orientation.w
-        poses[-1].position.y = horizontalStartPose.position.y
-        poses[-1].position.z = horizontalStartPose.position.z
-
-        if not follow_path(self.arm, poses):
-            return False
-
-        poses = [self.convertFrameRobotToShelf(self.arm.
-                                               get_current_pose().pose)]
-        poses.append(deepcopy(poses[-1]))
-        poses[-1].position.x = horizontalStartPose.position.x
-
-        if not follow_path(self.arm, poses):
-            return False
-
-        poses = [self.convertFrameRobotToShelf(self.arm.
-                                               get_current_pose().pose)]
-        poses.append(horizontalPose)
-        if not follow_path(self.arm, poses):
-            return False
+        # rospy.loginfo("planning to horizontal pose")
+        # add_shelf()
+        # poses = [self.convertFrameRobotToShelf(self.arm.
+        #                                        get_current_pose().pose)]
+        # poses.append(horizontalPose)
+        # if not follow_path(self.arm, poses):
+        #     return False
 
         rospy.loginfo("planning to vertical pose")
-        # remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED HERE
-        add_shelf()
-        poses = [self.convertFrameRobotToShelf(self.arm.
-                                               get_current_pose().pose)]
-        poses.append(verticalPose)
-        if not follow_path(self.arm, poses):
+        # add_shelf()
+        # poses = [self.convertFrameRobotToShelf(self.arm.
+        #                                        get_current_pose().pose)]
+        # poses.append(verticalPose)
+        # if not follow_path(self.arm, poses):
+        #     return False
+
+        remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED HERE
+        self.arm.set_pose_target(verticalPose)
+        plan = self.arm.plan()
+        if not self.move(plan.joint_trajectory):
             return False
 
-        # self.arm.set_pose_target(verticalPose)
-        # plan = self.arm.plan()
-        # if not self.move(plan.joint_trajectory):
-        #     return False
         # add_shelf()  # just to check rviz
         # CURRENTLY NO SHELF BECAUSE MOTION PLANNER ALWAYS FAILED WITH SHELF
         # if not goto_pose(self.arm, verticalPose, shelf=Shelf.NONE):
@@ -388,50 +371,28 @@ class PushWithScoop(smach.State):
         return True
 
     def pushRightToLeft(self, horizontalStartPose, horizontalPose, verticalPose, shortRow):
-        rospy.loginfo("planning to horizontal pose")
-        # remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED HERE
-        add_shelf()
-        poses = [self.convertFrameRobotToShelf(self.arm.
-                                               get_current_pose().pose)]
-        poses.append(deepcopy(poses[-1]))
-        poses[-1].orientation.x = horizontalStartPose.orientation.x
-        poses[-1].orientation.y = horizontalStartPose.orientation.y
-        poses[-1].orientation.z = horizontalStartPose.orientation.z
-        poses[-1].orientation.w = horizontalStartPose.orientation.w
-        poses[-1].position.x = horizontalStartPose.position.x
-        poses[-1].position.y = horizontalStartPose.position.y
-        poses[-1].position.z = horizontalStartPose.position.z
-
-        if not follow_path(self.arm, poses):
-            return False
-
-        poses = [self.convertFrameRobotToShelf(self.arm.
-                                               get_current_pose().pose)]
-        poses.append(deepcopy(poses[-1]))
-        poses[-1].position.x += 0.04
-
-        if not follow_path(self.arm, poses):
-            return False
-
-        poses = [self.convertFrameRobotToShelf(self.arm.
-                                               get_current_pose().pose)]
-        poses.append(horizontalPose)
-        if not follow_path(self.arm, poses):
-            return False
+        # rospy.loginfo("planning to horizontal pose")
+        # add_shelf()
+        # poses = [self.convertFrameRobotToShelf(self.arm.
+        #                                        get_current_pose().pose)]
+        # poses.append(horizontalPose)
+        # if not follow_path(self.arm, poses):
+        #     return False
 
         rospy.loginfo("planning to vertical pose")
-        # remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED HERE
-        add_shelf()
-        poses = [self.convertFrameRobotToShelf(self.arm.
-                                               get_current_pose().pose)]
-        poses.append(verticalPose)
-        if not follow_path(self.arm, poses):
+        # add_shelf()
+        # poses = [self.convertFrameRobotToShelf(self.arm.
+        #                                        get_current_pose().pose)]
+        # poses.append(verticalPose)
+        # if not follow_path(self.arm, poses):
+        #     return False
+
+        remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED HERE
+        self.arm.set_pose_target(verticalPose)
+        plan = self.arm.plan()
+        if not self.move(plan.joint_trajectory):
             return False
 
-        # self.arm.set_pose_target(verticalPose)
-        # plan = self.arm.plan()
-        # if not self.move(plan.joint_trajectory):
-        #     return False
         # add_shelf()  # just to check rviz
         # CURRENTLY NO SHELF BECAUSE MOTION PLANNER ALWAYS FAILED WITH SHELF
         # if not goto_pose(self.arm, verticalPose, shelf=Shelf.NONE):
@@ -446,13 +407,13 @@ class PushWithScoop(smach.State):
 
         poses.append(deepcopy(poses[-1]))
         poses[-1].position.x += 0.12
-        poses[-1].position.y += 0.05
+        poses[-1].position.y += -0.05
         if shortRow:
             poses[-1].position.z += -0.03
 
         poses.append(deepcopy(poses[-1]))
         poses[-1].position.x += 0.35
-        poses[-1].position.y += 0.03
+        poses[-1].position.y += -0.03
         if shortRow:
             poses[-1].position.z += 0.09
 
