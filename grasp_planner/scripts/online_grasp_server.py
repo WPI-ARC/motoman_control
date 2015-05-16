@@ -34,8 +34,8 @@ class Grasping:
         self.tfList = []
 
         # Adjustable variables in planner
-        self.pitchList = numpy.linspace(0, pi/12, num=3)
-        # self.pitchList = [pi/12]
+        # self.pitchList = numpy.linspace(0, pi/12, num=3)
+        self.pitchList = [pi/12]
         # self.pitchList = [0]
         self.thetaList = numpy.linspace(-pi/6, pi/6, num=101) # Rotation of generated projection frames
         # self.thetaList = [0]
@@ -126,7 +126,7 @@ class Grasping:
             print traceback.format_exc()
             rospy.logerr(str(traceback.format_exc()))
             self.status = False
-        return numpy.array(bin_bounds)
+        return bin_bounds #numpy.array(bin_bounds)
 
     # def get_shelf_bounds(self, req):
     #     if req.bin == 'A':
@@ -170,7 +170,7 @@ class Grasping:
         elif req.item == 'crayola_64_ct':
             item = '../env/crayon.env.xml'
             size = [0.037, 0.125, 0.145]
-            self.objectheightoffset = -0.04
+            self.objectheightoffset = -0.2
         elif req.item == 'feline_greenies_dental_treats':
             item = '../env/dentaltreat.env.xml'
             size = [0.04, 0.175, 0.21]
@@ -182,7 +182,7 @@ class Grasping:
         elif req.item == 'elmers_washable_no_run_school_glue':
             item = '../env/glue.env.xml'
             size = [0.025, 0.06, 0.145]
-            self.objectheightoffset = -0.05
+            self.objectheightoffset = 0
         elif req.item == 'sharpie_accent_tank_style_highlighters':
             item = '../env/highlighters.env.xml'
             size = [0.023, 0.116, 0.125]
@@ -401,6 +401,9 @@ class Grasping:
         size = self.get_object_extents(req)
         bin_bounds = self.get_shelf_bounds(req)
         bin_min_x, bin_max_x, bin_min_y, bin_max_y, bin_min_z, bin_max_z = bin_bounds
+        rospy.logerr("TYPES")
+        rospy.logerr(type(bin_bounds))
+        rospy.logerr(type(bin_min_z))
         rospy.logdebug( "bin min z: " + str(bin_min_z))
 
         use_local_points = False  # set to true to use the local boudindbox points. set to else for point cloud stuff
@@ -515,14 +518,22 @@ class Grasping:
                     # Transform of grasp wrt to camera frame. From toollink which has approach backwards and using Z-axis to using x for the approach.
                     TgraspIK = numpy.dot(self.Rtooltip_palm, self.Ttooltip_grasp)
 
+                    # Rotation about z-aix 180deg
+                    Rotz = numpy.array([[numpy.cos(pi), numpy.sin(pi), 0, 0],
+                                [-numpy.sin(pi), numpy.cos(pi), 0, 0],
+                                [0, 0, 1, 0],
+                                [0, 0, 0, 1]])
+
                     # Transform from arm solved from IK to handpose for pregrasp
                     Tbasepregrasp = numpy.dot(Tbaseshelf, Tshelfpregrasp)
-                    TbaseIK_pregrasp = numpy.dot(Tbasepregrasp, TgraspIK)
+                    # TbaseIK_pregrasp = numpy.dot(Tbasepregrasp, TgraspIK)
+                    TbaseIK_pregrasp = numpy.dot(numpy.dot(Tbasepregrasp, TgraspIK), Rotz)
 
                     # Transform from arm solved from IK to handpose for approach
                     Tshelfapproach = numpy.dot(Tshelfpregrasp, Tpregraspapproach)
                     Tbaseapproach = numpy.dot(Tbaseshelf, Tshelfapproach)
-                    TbaseIK_approach = numpy.dot(Tbaseapproach, TgraspIK)
+                    # TbaseIK_approach = numpy.dot(Tbaseapproach, TgraspIK)
+                    TbaseIK_approach = numpy.dot(numpy.dot(Tbaseapproach, TgraspIK), Rotz)
 
                     # Construct msg. Then appened to queue with score as the priority in queue. This will put lowest score msg first in list.
                     proj_msg = PoseFromMatrix(TbaseIK_pregrasp)
