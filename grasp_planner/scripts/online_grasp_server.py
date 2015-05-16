@@ -35,14 +35,14 @@ class Grasping:
 
         # Adjustable variables in planner
         # self.pitchList = numpy.linspace(0, pi/12, num=3)
-        self.pitchList = [pi/12]
-        # self.pitchList = [0]
+        #self.pitchList = [pi/12]
+        self.pitchList = [0]
         self.thetaList = numpy.linspace(-pi/6, pi/6, num=101) # Rotation of generated projection frames
         # self.thetaList = [0]
         self.padding = 0.015  # Extra padding between object and gripper is 1 cm.
         self.fingerlength = 0.115  # palm to finger tip offset is 11.5 cm
         self.gripperwidth = 0.155 - self.padding  # gripper width is 15.5 cm
-        self.z_lowerboundoffset = 0.065  # Palm center to bottom of hand is 6.5 cm
+        self.z_lowerboundoffset = 0.065 #- 0.02  # Palm center to bottom of hand is 6.5 cm
         self.approachpose_offset = 0.3  # Set aproach pose to be 30cm back from the front of the bin
         # palm -15 deg offset about z-axis
         self.hand_theta = 0.261799
@@ -170,7 +170,7 @@ class Grasping:
         elif req.item == 'crayola_64_ct':
             item = '../env/crayon.env.xml'
             size = [0.037, 0.125, 0.145]
-            self.objectheightoffset = -0.2
+            self.objectheightoffset = 0.0
         elif req.item == 'feline_greenies_dental_treats':
             item = '../env/dentaltreat.env.xml'
             size = [0.04, 0.175, 0.21]
@@ -293,14 +293,16 @@ class Grasping:
         edge_offset = min_x
         extensions = 0.15 # 15cm finger extensions
         offset = numpy.true_divide(obj_depth, 2)
-        if offset > self.fingerlength:
-            offset = 0.08
-        if offset < 0.08:
-            offset = 0.08
-        return (edge_offset - self.fingerlength - extensions + offset) # the palm is located at min_x so move out till lenght of finger to place lenght of finger at min_x. Then move in 1/4 of the total depth of object
+        if offset > self.fingerlength + extensions:
+            offset = 0.10
+        if offset < 0.10:
+            offset = 0.10
+        return edge_offset - self.fingerlength - extensions + offset # the palm is located at min_x so move out till lenght of finger to place lenght of finger at min_x. Then move in 1/4 of the total depth of object
+        #return edge_offset - self.fingerlength - extensions
 
     def compute_height(self, bin_min_z):
         return bin_min_z + self.z_lowerboundoffset + self.objectheightoffset  # minus 5cm height as magic number adjustment. Should have to do this if binmin z is correct
+        #return bin_min_z + self.z_lowerboundoffset
 
     def compute_approach_offset(self, projection_x, bin_min_x, theta):
         dist = projection_x - bin_min_x
@@ -401,9 +403,9 @@ class Grasping:
         size = self.get_object_extents(req)
         bin_bounds = self.get_shelf_bounds(req)
         bin_min_x, bin_max_x, bin_min_y, bin_max_y, bin_min_z, bin_max_z = bin_bounds
-        rospy.logerr("TYPES")
-        rospy.logerr(type(bin_bounds))
-        rospy.logerr(type(bin_min_z))
+        # rospy.logerr("TYPES")
+        # rospy.logerr(type(bin_bounds))
+        # rospy.logerr(type(bin_min_z))
         rospy.logdebug( "bin min z: " + str(bin_min_z))
 
         use_local_points = False  # set to true to use the local boudindbox points. set to else for point cloud stuff
@@ -499,6 +501,7 @@ class Grasping:
 
                     # Transform from projection to pregrasp pose
                     Trans_projpregrasp = numpy.array([grasp_depth, 0, 0])
+                    #Trans_projpregrasp = numpy.array([0, 0, 0])
                     if use_local_points:
                         Trans_projpregrasp = numpy.array([-0.3, 0, 0])
                     Rot_projpregrasp = numpy.eye(3, 3)
@@ -526,14 +529,14 @@ class Grasping:
 
                     # Transform from arm solved from IK to handpose for pregrasp
                     Tbasepregrasp = numpy.dot(Tbaseshelf, Tshelfpregrasp)
-                    # TbaseIK_pregrasp = numpy.dot(Tbasepregrasp, TgraspIK)
-                    TbaseIK_pregrasp = numpy.dot(numpy.dot(Tbasepregrasp, TgraspIK), Rotz)
+                    TbaseIK_pregrasp = numpy.dot(Tbasepregrasp, TgraspIK)
+                    # TbaseIK_pregrasp = numpy.dot(numpy.dot(Tbasepregrasp, TgraspIK), Rotz)
 
                     # Transform from arm solved from IK to handpose for approach
                     Tshelfapproach = numpy.dot(Tshelfpregrasp, Tpregraspapproach)
                     Tbaseapproach = numpy.dot(Tbaseshelf, Tshelfapproach)
-                    # TbaseIK_approach = numpy.dot(Tbaseapproach, TgraspIK)
-                    TbaseIK_approach = numpy.dot(numpy.dot(Tbaseapproach, TgraspIK), Rotz)
+                    TbaseIK_approach = numpy.dot(Tbaseapproach, TgraspIK)
+                    # TbaseIK_approach = numpy.dot(numpy.dot(Tbaseapproach, TgraspIK), Rotz)
 
                     # Construct msg. Then appened to queue with score as the priority in queue. This will put lowest score msg first in list.
                     proj_msg = PoseFromMatrix(TbaseIK_pregrasp)
