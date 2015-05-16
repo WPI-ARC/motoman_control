@@ -1,4 +1,3 @@
-import roslib; roslib.load_manifest('task_controller')
 import rospy
 import smach
 
@@ -33,10 +32,6 @@ class SimpleScheduler(smach.State):
                 data.contents = current["others"]
                 rospy.loginfo("Scheduling scoop of %s from bin %s." % (current["item"], current["bin"]))
                 return 'Scoop'
-
-            elif action == "pick_scoop":
-                rospy.loginfo("Picking scoop up.")
-                return 'ToolChange'
 
             else:
                 return 'Failure'

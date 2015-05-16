@@ -5,7 +5,7 @@ from copy import deepcopy
 from threading import Lock
 from robotiq_s_model_articulated_msgs.msg import SModelRobotInput
 
-from moveit import goto_pose, follow_path, move
+from moveit import goto_pose, follow_path, move, robot_state
 from shelf import FULL_SHELF
 from services import _grasp_generator, _gripper_control
 
@@ -53,6 +53,7 @@ class Gripper(object):
             return True
 
     def control_gripper(self, command):
+        robot_state.wait_to_continue()
         for i in range(5):
             try:
                 _gripper_control(command=command)

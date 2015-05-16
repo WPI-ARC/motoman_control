@@ -54,6 +54,7 @@ add_message_files(
   Sample.msg
   SampleArray.msg
   ProcessedObject.msg
+  ScheduleItem.msg
 )
 
 ## Generate services in the 'srv' folder

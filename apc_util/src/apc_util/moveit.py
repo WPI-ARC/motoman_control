@@ -1,9 +1,11 @@
 import rospy
 
 import moveit_commander
+from threading import Lock
 
 from std_msgs.msg import Header
 from sensor_msgs.msg import JointState
+from industrial_msgs.msg import RobotStatus
 from shelf import Shelf, NO_SHELF, SIMPLE_SHELF, FULL_SHELF, PADDED_SHELF
 from collision import scene
 from trajectory_verifier.msg import CheckTrajectoryValidityQuery, CheckTrajectoryValidityResult
@@ -13,8 +15,14 @@ robot = moveit_commander.RobotCommander()
 
 LEFT_NAMES = ["torso_joint_b1", "arm_left_joint_1_s", "arm_left_joint_2_l", "arm_left_joint_3_e",
               "arm_left_joint_4_u", "arm_left_joint_5_r", "arm_left_joint_6_b", "arm_left_joint_7_t"]
-LEFT_HOME = [0.0, 2.1987425554414965, -1.2856041261915816, -2.0572122610542043, -2.1844569809370875,
-             -0.8355313237647156, -0.6598546685936744, 2.244587644488423]
+
+# LEFT_HOME = [0.0, 2.1987425554414965, -1.2856041261915816, -2.0572122610542043, -2.1844569809370875,
+#              -0.8355313237647156, -0.6598546685936744, 2.244587644488423]
+
+# LEFT_HOME side position, currently being used for testing scooping
+LEFT_HOME = [0.0, -1.00305645, -1.49978651, 0.45750031, -2.17721628,
+             0.45096816, -1.20433976, -1.55814993]
+
 RIGHT_NAMES = ["torso_joint_b1", "arm_right_joint_1_s", "arm_right_joint_2_l", "arm_right_joint_3_e",
               "arm_right_joint_4_u", "arm_right_joint_5_r", "arm_right_joint_6_b", "arm_right_joint_7_t"]
 RIGHT_HOME = [0.0, -1.0030564513590334, -1.49978651413566, 0.457500317369117, -2.1772162870743323,
@@ -22,6 +30,7 @@ RIGHT_HOME = [0.0, -1.0030564513590334, -1.49978651413566, 0.457500317369117, -2
 
 
 def move(group, traj):
+    robot_state.wait_to_continue()
     try:
         if not check_joint_values(group, traj.joint_names, traj.points[0].positions):
             rospy.logerr("Not moving since initial joint values are not within tolerance")
@@ -29,6 +38,10 @@ def move(group, traj):
         result = _move(traj)
         if not check_joint_values(group, traj.joint_names, traj.points[-1].positions):
             rospy.logerr("Moving failed, final joint values are not within tolerance")
+            if robot_state.is_stopped():
+                rospy.logwarn("Reason for failure likely due to e-stop")
+            if robot_state.has_error():
+                rospy.logwarn("Reason for failure likely related to motoman error, check alarms")
             return False
         return result.success
     except rospy.ServiceException as e:
@@ -188,3 +201,64 @@ def check_joint_values(group, name, desired_values, tolerance=0.01):
             return False
 
     return True
+
+
+class RobotState(object):
+    """
+    Record information related to the robots state
+    """
+
+    def __init__(self):
+        self._m = Lock()
+        self._sub = rospy.Subscriber("/robot_status", RobotStatus, self._callback)
+        self.msg = None
+
+    def _callback(self, msg):
+        self._m.acquire()
+        if self.msg is None:
+            self.msg = msg
+
+        # Print status changes
+        if self.msg.in_error.val != msg.in_error.val:
+            if msg.error_code == 0:
+                rospy.loginfo("Robot is no longer in error")
+            else:
+                rospy.logerr("Robot in error code=%s" % msg.error_code)
+        if self.msg.error_code != msg.error_code:
+            if msg.error_code == 0:
+                rospy.loginfo("Error Resolved")
+            else:
+                rospy.logerr("Error occurred. code=%s" % msg.error_code)
+        if self.msg.mode.val != msg.mode.val:
+            rospy.logwarn("Robot is in %s" % ("AUTO" if msg.mode.val == 2 else "MANUAL"))
+        if self.msg.e_stopped.val != msg.e_stopped.val:
+            rospy.logwarn("Robot is%s e-stopped" % (" not" if msg.e_stopped.val == 0 else ""))
+        if self.msg.drives_powered.val != msg.drives_powered.val:
+            rospy.loginfo("Robot drive is%s powered" % (" not" if msg.drives_powered.val == 0 else ""))
+        if self.msg.in_motion.val != msg.in_motion.val:
+            rospy.loginfo("Robot drive is%s in motion" % (" not" if msg.in_motion.val == 0 else ""))
+
+        self.msg = msg  # Update to the new message
+        self._m.release()
+
+    def has_error(self):
+        "Returns true if the robot has an error"
+        self._m.acquire()
+        msg = self.msg
+        self._m.release()
+        return msg.in_error.val != 0
+
+    def is_stopped(self):
+        "Returns true if the robot is e-stopped"
+        self._m.acquire()
+        msg = self.msg
+        self._m.release()
+        return msg.e_stopped.val != 0
+
+    def wait_to_continue(self):
+        "Wait until e-stop is released before continuing"
+        while self.is_stopped():
+            rospy.logwarn("Waiting until e-stop is removed to continue")
+            rospy.sleep(1)
+
+robot_state = RobotState()

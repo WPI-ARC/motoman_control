@@ -40,8 +40,7 @@ def add_order_bin(x, y):
             x=x,
             y=y-interior_width/2-wall_width/2,
             z=base_height+interior_height/2
-        ),
-        orientation=Quaternion(x=0, y=0, z=0, w=1),
+        ), orientation=Quaternion(x=0, y=0, z=0, w=1),
     ))
 
     # Create right side

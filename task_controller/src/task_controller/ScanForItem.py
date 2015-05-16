@@ -5,7 +5,6 @@ from tf import TransformListener
 from apc_msgs.msg import APCItem
 from apc_util.collision import publish_pointcloud_collision
 from apc_util.vision import take_sample, get_samples, process_samples
-from apc_util.grasping import gripper
 from apc_util.smach import on_exception
 
 
@@ -25,9 +24,6 @@ class ScanForItem(smach.State):
     @on_exception(failure_state="Failure")
     def execute(self, userdata):
         rospy.loginfo("Trying to find "+userdata.item+"...")
-
-        if not gripper.vision():
-            return "Failure"
 
         for i in range(5):
             try:
@@ -52,9 +48,6 @@ class ScanForItem(smach.State):
                 if not publish_pointcloud_collision(response.result.collision_cloud):
                     rospy.logwarn("Failed to publish pointcloud collisions")
                     continue
-
-                if not gripper.open():
-                    return "Failure"
 
                 userdata.pose = response.result.pose
                 userdata.points = response.result.pointcloud

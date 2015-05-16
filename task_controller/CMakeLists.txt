@@ -12,6 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   smach_ros
   apc_util
+  apc_msgs
+  moveit_msgs
 )
 
 # add_message_files(
@@ -20,12 +22,18 @@ find_package(catkin REQUIRED COMPONENTS
 #   WorkOrder.msg
 #   )
 
+add_service_files(
+    FILES
+    SetSchedule.srv
+)
+
 catkin_python_setup()
 
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  std_msgs  # Or other packages containing msgs
+  apc_msgs
+)
 
 catkin_package(
   # LIBRARIES

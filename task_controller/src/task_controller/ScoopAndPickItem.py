@@ -11,19 +11,21 @@ def ScoopAndPickItem(robot):
 
     sm = smach.StateMachine(
         outcomes=['Success', 'Failure', 'Fatal'],
-        input_keys=['input', 'bin', 'item'],
+        input_keys=['sm_input', 'bin', 'item'],
         output_keys=['output']
     )
 
     # Populate the state machine from the modules
     with sm:
-        # smach.StateMachine.add(
-        #     'PushWithScoop', PushWithScoop(robot),
-        #     transitions={'Success': 'Success', 'Failure': 'Failure', 'Fatal': 'Fatal'},
-        # )
+        smach.StateMachine.add(
+            'PushWithScoop', PushWithScoop(robot),
+            transitions={'Success': 'Scoop', 'Failure': 'Failure',
+                         'Fatal': 'Fatal'},
+        )
         smach.StateMachine.add(
             'Scoop', Scoop(robot),
-            transitions={'Success': 'Success', 'Failure': 'Failure', 'Fatal': 'Fatal'},
+            transitions={'Success': 'Success', 'Failure': 'Failure',
+                         'Fatal': 'Fatal'},
             # remapping={'output': 'sm_data'}
         )
 

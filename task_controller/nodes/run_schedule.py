@@ -4,12 +4,11 @@ import rospy
 import yaml
 import os
 
-from task_controller.MotomanController import MotomanController
-from task_controller.Scheduler import SimpleScheduler
-from apc_util.services import wait_for_services
+from task_controller.srv import SetSchedule
+from apc_msgs.msg import ScheduleItem
 
 if __name__ == '__main__':
-    rospy.init_node("motoman_apc_controller")
+    rospy.init_node("run_schedule")
 
     schedule_file = rospy.get_param("~schedule", "default.yaml")
 
@@ -18,10 +17,20 @@ if __name__ == '__main__':
                                      "../schedules", schedule_file)
     print schedule_file
     with open(schedule_file) as file:
-        schedule = yaml.load(file)
+        raw_schedule = yaml.load(file)
+
+    schedule = []
+    for element in raw_schedule:
+        schedule.append(ScheduleItem(
+            action=element["action"],
+            name=element["item"],
+            bin=element["bin"][-1],
+            contents=element["others"],
+        ))
     print schedule
 
-    wait_for_services()
-
-    controller = MotomanController(SimpleScheduler(schedule))
-    controller.Start()
+    set_schedule = rospy.ServiceProxy('set_schedule', SetSchedule)
+    rospy.loginfo("Waiting for service `/set_schedule`")
+    set_schedule.wait_for_service()
+    rospy.loginfo("`/set_schedule` available")
+    set_schedule(schedule)
