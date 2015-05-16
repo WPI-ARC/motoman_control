@@ -126,7 +126,7 @@ class Grasping:
             print traceback.format_exc()
             rospy.logerr(str(traceback.format_exc()))
             self.status = False
-        return bin_bounds #numpy.array(bin_bounds)
+        return numpy.array(bin_bounds)
 
     # def get_shelf_bounds(self, req):
     #     if req.bin == 'A':
@@ -146,13 +146,13 @@ class Grasping:
     #     elif req.bin == 'H':
     #         size = [-0.43, -.01, -0.14331, 0.14331, 1.11053, 1.29092]
     #     elif req.bin == 'I':
-    #         size = [-0.43, -.01,  0.41,   -0.15764, 1.11053, 1.29092]
+    #         size = [-0.43, -.01, -0.41,   -0.15764, 1.11053, 1.29092]
     #     elif req.bin == 'J':
     #         size = [-0.43, -.01,  0.15764, 0.41,    0.83651, 1.05069]
     #     elif req.bin == 'K':
     #         size = [-0.43, -.01, -0.14331, 0.14331, 0.83651, 1.05069]
     #     elif req.bin == 'L':
-    #         size = [-0.43, -.01,  0.41,   -0.15764, 0.83651, 1.05069]
+    #         size = [-0.43, -.01, -0.41,   -0.15764, 0.83651, 1.05069]
     #     else:
     #         rospy.logerr("could not find bin size for: %s", req.item)
     #         self.status = False
@@ -182,7 +182,7 @@ class Grasping:
         elif req.item == 'elmers_washable_no_run_school_glue':
             item = '../env/glue.env.xml'
             size = [0.025, 0.06, 0.145]
-            self.objectheightoffset = 0
+            self.objectheightoffset = -0.05
         elif req.item == 'sharpie_accent_tank_style_highlighters':
             item = '../env/highlighters.env.xml'
             size = [0.023, 0.116, 0.125]
@@ -384,11 +384,11 @@ class Grasping:
         filename = random.choice(os.listdir(folderpath))  # Load random file from directory
         with open(folderpath + "/" + filename, 'rb') as file:
             request = pickle.load(file)
-        print request.bin
+        return request
 
     def get_grasp_cb(self, req):
         # Dump request to file
-        self.save_request(req)
+        # self.save_request(req)
                 
         q_proj_msg = Q.PriorityQueue()
         q_approach_msg = Q.PriorityQueue()
@@ -403,33 +403,15 @@ class Grasping:
         size = self.get_object_extents(req)
         bin_bounds = self.get_shelf_bounds(req)
         bin_min_x, bin_max_x, bin_min_y, bin_max_y, bin_min_z, bin_max_z = bin_bounds
-        # rospy.logerr("TYPES")
-        # rospy.logerr(type(bin_bounds))
-        # rospy.logerr(type(bin_min_z))
+
         rospy.logdebug( "bin min z: " + str(bin_min_z))
 
-        use_local_points = False  # set to true to use the local boudindbox points. set to else for point cloud stuff
-        if use_local_points:
-            Tbaseshelf = self.get_tf('/base_link', '/shelf')
-            Tshelfobj = self.get_tf('/shelf', '/object')
-            pointcloud = self.get_obb_points(size)
-
-            # Load point cloud from pickled file
-            # request = self.load_request()
-            # Tbaseobj = PoseToMatrix(request.object_pose)  # same Trob_obj request from offline planner
-            # Tbaseshelf = PoseToMatrix(request.shelf_pose) # Tbaseshelf transform passed in from state matchine
-            # Tshelfobj = numpy.dot(inv(Tbaseshelf), Tbaseobj)
-            # pointcloud = list(pc2.read_points(request.object_points, skip_nans=True,
-            #                   field_names=("x", "y", "z")))
-
-        else:
-            # use point cloud
-            Tbaseobj = PoseToMatrix(req.object_pose)  # same Trob_obj request from offline planner
-            Tbaseshelf = PoseToMatrix(req.shelf_pose) # Tbaseshelf transform passed in from state matchine
-            Tshelfobj = numpy.dot(inv(Tbaseshelf), Tbaseobj)
-            pointcloud = list(pc2.read_points(req.object_points, skip_nans=True,
-                              field_names=("x", "y", "z")))
-
+        # use point cloud
+        Tbaseobj = PoseToMatrix(req.object_pose)  # same Trob_obj request from offline planner
+        Tbaseshelf = PoseToMatrix(req.shelf_pose) # Tbaseshelf transform passed in from state matchine
+        Tshelfobj = numpy.dot(inv(Tbaseshelf), Tbaseobj)
+        pointcloud = list(pc2.read_points(req.object_points, skip_nans=True,
+                          field_names=("x", "y", "z")))
 
         rospy.logdebug("OBBPoints: " + str(pointcloud))
         rospy.logdebug("Transform from base to shelf: " + str(Tbaseshelf))
@@ -472,13 +454,11 @@ class Grasping:
                 min_max = self.compute_minmax(points)
                 min_x, max_x, min_y, max_y, min_z, max_z = min_max
               
-                if use_local_points:
-                    width = self.compute_width(min_y, max_y)
-                else:
-                    # filtered_min_max = self.compute_minmax_filtered(points)
-                    # f_min_x, f_max_x, f_min_y, f_max_y, f_min_z, f_max_z = filtered_min_max
-                    # width = self.compute_width(f_min_y, f_max_y)
-                    width = self.compute_width(min_y, max_y)
+
+                # filtered_min_max = self.compute_minmax_filtered(points)
+                # f_min_x, f_max_x, f_min_y, f_max_y, f_min_z, f_max_z = filtered_min_max
+                # width = self.compute_width(f_min_y, f_max_y)
+                width = self.compute_width(min_y, max_y)
 
                 jaw_separation = self.compute_jaw_separation(width)
 
@@ -501,9 +481,7 @@ class Grasping:
 
                     # Transform from projection to pregrasp pose
                     Trans_projpregrasp = numpy.array([grasp_depth, 0, 0])
-                    #Trans_projpregrasp = numpy.array([0, 0, 0])
-                    if use_local_points:
-                        Trans_projpregrasp = numpy.array([-0.3, 0, 0])
+
                     Rot_projpregrasp = numpy.eye(3, 3)
                     Tprojpregrasp = self.construct_4Dmatrix(Trans_projpregrasp, Rot_projpregrasp)
                     Tshelfpregrasp = numpy.dot(Tshelfproj, Tprojpregrasp)
@@ -521,21 +499,18 @@ class Grasping:
                     # Transform of grasp wrt to camera frame. From toollink which has approach backwards and using Z-axis to using x for the approach.
                     TgraspIK = numpy.dot(self.Rtooltip_palm, self.Ttooltip_grasp)
 
-                    # Rotation about z-aix 180deg
-                    Rotz = numpy.array([[numpy.cos(pi), numpy.sin(pi), 0, 0],
-                                [-numpy.sin(pi), numpy.cos(pi), 0, 0],
-                                [0, 0, 1, 0],
-                                [0, 0, 0, 1]])
-
                     # Transform from arm solved from IK to handpose for pregrasp
                     Tbasepregrasp = numpy.dot(Tbaseshelf, Tshelfpregrasp)
                     TbaseIK_pregrasp = numpy.dot(Tbasepregrasp, TgraspIK)
+
                     # TbaseIK_pregrasp = numpy.dot(numpy.dot(Tbasepregrasp, TgraspIK), Rotz)
+
 
                     # Transform from arm solved from IK to handpose for approach
                     Tshelfapproach = numpy.dot(Tshelfpregrasp, Tpregraspapproach)
                     Tbaseapproach = numpy.dot(Tbaseshelf, Tshelfapproach)
                     TbaseIK_approach = numpy.dot(Tbaseapproach, TgraspIK)
+
                     # TbaseIK_approach = numpy.dot(numpy.dot(Tbaseapproach, TgraspIK), Rotz)
 
                     # Construct msg. Then appened to queue with score as the priority in queue. This will put lowest score msg first in list.
