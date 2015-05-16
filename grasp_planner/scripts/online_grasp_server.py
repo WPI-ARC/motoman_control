@@ -126,7 +126,7 @@ class Grasping:
             print traceback.format_exc()
             rospy.logerr(str(traceback.format_exc()))
             self.status = False
-        return numpy.array(bin_bounds)
+        return bin_bounds
 
     # def get_shelf_bounds(self, req):
     #     if req.bin == 'A':
