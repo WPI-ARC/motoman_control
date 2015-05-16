@@ -38,7 +38,7 @@ class PickItem(smach.State):
         if not success:
             return 'Failure'
 
-        # self.show_grasps(grasps)
+        self.show_grasps(grasps)
 
         with BIN(userdata.bin):
             grasps = plan_grasps(self.arm, grasps)

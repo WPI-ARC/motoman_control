@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+import datetime
+import os, random
+import cPickle as pickle
 import Queue as Q
 import tf
 import tf2_ros
@@ -16,8 +19,8 @@ from std_msgs.msg import Header
 from geometry_msgs.msg import PoseStamped
 from grasp_planner.msg import apcGraspPose, apcGraspArray
 from grasp_planner.srv import apcGraspDB, apcGraspDBResponse
-# from apc_util.transformation_helpers import ExtractFromMatrix, BuildMatrix, PoseFromMatrix, PoseToMatrix, InvertMatrix
-from transformation_helper import ExtractFromMatrix, BuildMatrix, PoseFromMatrix, PoseToMatrix, InvertMatrix
+from apc_util.transformation_helpers import ExtractFromMatrix, BuildMatrix, PoseFromMatrix, PoseToMatrix, InvertMatrix
+# from transformation_helper import ExtractFromMatrix, BuildMatrix, PoseFromMatrix, PoseToMatrix, InvertMatrix
 
 
 class Grasping:
@@ -31,8 +34,8 @@ class Grasping:
         self.tfList = []
 
         # Adjustable variables in planner
-        self.pitchList = numpy.linspace(0, pi/12, num=3)
-        # self.pitchList = [pi/12]
+        # self.pitchList = numpy.linspace(0, pi/12, num=3)
+        self.pitchList = [pi/12]
         # self.pitchList = [0]
         self.thetaList = numpy.linspace(-pi/6, pi/6, num=101) # Rotation of generated projection frames
         # self.thetaList = [0]
@@ -41,16 +44,16 @@ class Grasping:
         self.gripperwidth = 0.155 - self.padding  # gripper width is 15.5 cm
         self.z_lowerboundoffset = 0.065  # Palm center to bottom of hand is 6.5 cm
         self.approachpose_offset = 0.3  # Set aproach pose to be 30cm back from the front of the bin
-        # camera -15 deg offset about z-axis
-        self.camtheta = 0.261799
+        # palm -15 deg offset about z-axis
+        self.hand_theta = 0.261799
         self.shelfpitch = pi/12
-
-        self.Tcamera = numpy.array([[1, 0, 0, 0],
-                                    [0, numpy.cos(self.camtheta), -numpy.sin(self.camtheta), 0],
-                                    [0, numpy.sin(self.camtheta), numpy.cos(self.camtheta), 0],
+        # Transform rotation from tooltip to hand's palm. If no transforms then it grabs object at a slant
+        self.Rtooltip_palm = numpy.array([[1, 0, 0, 0],
+                                    [0, numpy.cos(self.hand_theta), -numpy.sin(self.hand_theta), 0],
+                                    [0, numpy.sin(self.hand_theta), numpy.cos(self.hand_theta), 0],
                                     [0, 0, 0, 1]])
         # Transform to orient hand to use x as approach direction
-        self.Tcamgrasp = numpy.array([[0, 0, -1, -0.17],
+        self.Ttooltip_grasp = numpy.array([[0, 0, -1, -0.17],
                                      [-1, 0, 0, 0],
                                      [0, 1, 0, 0],
                                      [0, 0, 0, 1]])
@@ -116,34 +119,44 @@ class Grasping:
         return transform
 
     def get_shelf_bounds(self, req):
-        if req.bin == 'A':
-            size = [-0.43, -.01,  0.15764, 0.41,    1.55794, 1.77212]
-        elif req.bin == 'B':
-            size = [-0.43, -.01, -0.14331, 0.14331, 1.55794, 1.77212]
-        elif req.bin == 'C':
-            size = [-0.43, -.01, -0.41,   -0.15764, 1.55794, 1.77212]
-        elif req.bin == 'D':
-            size = [-0.43, -.01,  0.15764, 0.41,    1.32733, 1.50775]
-        elif req.bin == 'E':
-            size = [-0.43, -.01, -0.14331, 0.14331, 1.32733, 1.50775]
-        elif req.bin == 'F':
-            size = [-0.43, -.01, -0.41,   -0.15764, 1.32733, 1.50775]
-        elif req.bin == 'G':
-            size = [-0.43, -.01,  0.15764, 0.41,    1.11053, 1.29092]
-        elif req.bin == 'H':
-            size = [-0.43, -.01, -0.14331, 0.14331, 1.11053, 1.29092]
-        elif req.bin == 'I':
-            size = [-0.43, -.01,  0.41,   -0.15764, 1.11053, 1.29092]
-        elif req.bin == 'J':
-            size = [-0.43, -.01,  0.15764, 0.41,    0.83651, 1.05069]
-        elif req.bin == 'K':
-            size = [-0.43, -.01, -0.14331, 0.14331, 0.83651, 1.05069]
-        elif req.bin == 'L':
-            size = [-0.43, -.01,  0.41,   -0.15764, 0.83651, 1.05069]
-        else:
-            rospy.logerr("could not find bin size for: %s", req.item)
+        try:
+            bin_bounds = rospy.get_param("/shelf/bins/"+req.bin)
+        except:
+            rospy.logerr("could not find rosparam for bin: %s", req.bin)
+            print traceback.format_exc()
+            rospy.logerr(str(traceback.format_exc()))
             self.status = False
-        return numpy.array(size)
+        return bin_bounds #numpy.array(bin_bounds)
+
+    # def get_shelf_bounds(self, req):
+    #     if req.bin == 'A':
+    #         size = [-0.43, -.01,  0.15764, 0.41,    1.55794, 1.77212]
+    #     elif req.bin == 'B':
+    #         size = [-0.43, -.01, -0.14331, 0.14331, 1.55794, 1.77212]
+    #     elif req.bin == 'C':
+    #         size = [-0.43, -.01, -0.41,   -0.15764, 1.55794, 1.77212]
+    #     elif req.bin == 'D':
+    #         size = [-0.43, -.01,  0.15764, 0.41,    1.32733, 1.50775]
+    #     elif req.bin == 'E':
+    #         size = [-0.43, -.01, -0.14331, 0.14331, 1.32733, 1.50775]
+    #     elif req.bin == 'F':
+    #         size = [-0.43, -.01, -0.41,   -0.15764, 1.32733, 1.50775]
+    #     elif req.bin == 'G':
+    #         size = [-0.43, -.01,  0.15764, 0.41,    1.11053, 1.29092]
+    #     elif req.bin == 'H':
+    #         size = [-0.43, -.01, -0.14331, 0.14331, 1.11053, 1.29092]
+    #     elif req.bin == 'I':
+    #         size = [-0.43, -.01,  0.41,   -0.15764, 1.11053, 1.29092]
+    #     elif req.bin == 'J':
+    #         size = [-0.43, -.01,  0.15764, 0.41,    0.83651, 1.05069]
+    #     elif req.bin == 'K':
+    #         size = [-0.43, -.01, -0.14331, 0.14331, 0.83651, 1.05069]
+    #     elif req.bin == 'L':
+    #         size = [-0.43, -.01,  0.41,   -0.15764, 0.83651, 1.05069]
+    #     else:
+    #         rospy.logerr("could not find bin size for: %s", req.item)
+    #         self.status = False
+    #     return numpy.array(size)
 
     def get_object_extents(self, req):
         if req.item == 'cheezit_big_original':
@@ -157,7 +170,7 @@ class Grasping:
         elif req.item == 'crayola_64_ct':
             item = '../env/crayon.env.xml'
             size = [0.037, 0.125, 0.145]
-            self.objectheightoffset = -0.04
+            self.objectheightoffset = -0.2
         elif req.item == 'feline_greenies_dental_treats':
             item = '../env/dentaltreat.env.xml'
             size = [0.04, 0.175, 0.21]
@@ -169,7 +182,7 @@ class Grasping:
         elif req.item == 'elmers_washable_no_run_school_glue':
             item = '../env/glue.env.xml'
             size = [0.025, 0.06, 0.145]
-            self.objectheightoffset = -0.05
+            self.objectheightoffset = 0
         elif req.item == 'sharpie_accent_tank_style_highlighters':
             item = '../env/highlighters.env.xml'
             size = [0.023, 0.116, 0.125]
@@ -293,7 +306,7 @@ class Grasping:
         dist = projection_x - bin_min_x
         offset = (dist - self.approachpose_offset) * numpy.cos(abs(theta))
         # return dist - self.approachpose_offset
-        return bin_min_x - 0.10
+        return bin_min_x - 0.20
 
     def compute_score(self, width):
         return numpy.true_divide(width, self.gripperwidth)
@@ -354,8 +367,27 @@ class Grasping:
         gpos = (-6.245 * width + 109.06) + padding
         return gpos
 
-    def get_grasp_cb(self, req):
+    def save_request(self, req):
+        rospy.loginfo("Saving request msg to file")
+        now = datetime.datetime.now()
+        timenow = now.strftime("%Y-%m-%d_%H:%M")
+        folderpath = os.path.join(os.path.dirname(__file__), "savedmsg")
+        filename = "bin"+req.bin+"_"+req.item+"_"+str(timenow)
+        with open(folderpath + "/" + filename, "w") as file:
+            pickle.dump(req, file)
+        
+    def load_request(self):
+        rospy.loginfo("Loading request msg from file")
+        folderpath = os.path.join(os.path.dirname(__file__), "savedmsg")
+        filename = random.choice(os.listdir(folderpath))  # Load random file from directory
+        with open(folderpath + "/" + filename, 'rb') as file:
+            request = pickle.load(file)
+        print request.bin
 
+    def get_grasp_cb(self, req):
+        # Dump request to file
+        self.save_request(req)
+                
         q_proj_msg = Q.PriorityQueue()
         q_approach_msg = Q.PriorityQueue()
         approachList = []
@@ -367,8 +399,11 @@ class Grasping:
         rospy.logdebug("Requesting object in bin %s", req.bin)
 
         size = self.get_object_extents(req)
-        binbounds = self.get_shelf_bounds(req)
-        bin_min_x, bin_max_x, bin_min_y, bin_max_y, bin_min_z, bin_max_z = binbounds
+        bin_bounds = self.get_shelf_bounds(req)
+        bin_min_x, bin_max_x, bin_min_y, bin_max_y, bin_min_z, bin_max_z = bin_bounds
+        rospy.logerr("TYPES")
+        rospy.logerr(type(bin_bounds))
+        rospy.logerr(type(bin_min_z))
         rospy.logdebug( "bin min z: " + str(bin_min_z))
 
         use_local_points = False  # set to true to use the local boudindbox points. set to else for point cloud stuff
@@ -377,6 +412,14 @@ class Grasping:
             Tshelfobj = self.get_tf('/shelf', '/object')
             pointcloud = self.get_obb_points(size)
 
+            # Load point cloud from pickled file
+            # request = self.load_request()
+            # Tbaseobj = PoseToMatrix(request.object_pose)  # same Trob_obj request from offline planner
+            # Tbaseshelf = PoseToMatrix(request.shelf_pose) # Tbaseshelf transform passed in from state matchine
+            # Tshelfobj = numpy.dot(inv(Tbaseshelf), Tbaseobj)
+            # pointcloud = list(pc2.read_points(request.object_points, skip_nans=True,
+            #                   field_names=("x", "y", "z")))
+
         else:
             # use point cloud
             Tbaseobj = PoseToMatrix(req.object_pose)  # same Trob_obj request from offline planner
@@ -384,6 +427,7 @@ class Grasping:
             Tshelfobj = numpy.dot(inv(Tbaseshelf), Tbaseobj)
             pointcloud = list(pc2.read_points(req.object_points, skip_nans=True,
                               field_names=("x", "y", "z")))
+
 
         rospy.logdebug("OBBPoints: " + str(pointcloud))
         rospy.logdebug("Transform from base to shelf: " + str(Tbaseshelf))
@@ -462,7 +506,7 @@ class Grasping:
                     Tshelfpregrasp = numpy.dot(Tshelfproj, Tprojpregrasp)
 
                     # Transform from pregrasp to approach pose
-                    # Trans_projapproach = numpy.array([-approach_offset, 0, 0])
+                    # Trans_pregraspapproach = numpy.array([-approach_offset, 0, 0])
                     Trans_pregraspapproach = numpy.array([-self.approachpose_offset, 0, 0])
                     Rot_pregraspapproach = numpy.eye(3, 3)
                     Tpregraspapproach = self.construct_4Dmatrix(Trans_pregraspapproach, Rot_pregraspapproach)
@@ -472,16 +516,24 @@ class Grasping:
                     self.generate_tf('/pregrasp', '/approach', Tpregraspapproach)
 
                     # Transform of grasp wrt to camera frame. From toollink which has approach backwards and using Z-axis to using x for the approach.
-                    TgraspIK = numpy.dot(self.Tcamera, self.Tcamgrasp)
+                    TgraspIK = numpy.dot(self.Rtooltip_palm, self.Ttooltip_grasp)
+
+                    # Rotation about z-aix 180deg
+                    Rotz = numpy.array([[numpy.cos(pi), numpy.sin(pi), 0, 0],
+                                [-numpy.sin(pi), numpy.cos(pi), 0, 0],
+                                [0, 0, 1, 0],
+                                [0, 0, 0, 1]])
 
                     # Transform from arm solved from IK to handpose for pregrasp
                     Tbasepregrasp = numpy.dot(Tbaseshelf, Tshelfpregrasp)
-                    TbaseIK_pregrasp = numpy.dot(Tbasepregrasp, TgraspIK)
+                    # TbaseIK_pregrasp = numpy.dot(Tbasepregrasp, TgraspIK)
+                    TbaseIK_pregrasp = numpy.dot(numpy.dot(Tbasepregrasp, TgraspIK), Rotz)
 
                     # Transform from arm solved from IK to handpose for approach
                     Tshelfapproach = numpy.dot(Tshelfpregrasp, Tpregraspapproach)
                     Tbaseapproach = numpy.dot(Tbaseshelf, Tshelfapproach)
-                    TbaseIK_approach = numpy.dot(Tbaseapproach, TgraspIK)
+                    # TbaseIK_approach = numpy.dot(Tbaseapproach, TgraspIK)
+                    TbaseIK_approach = numpy.dot(numpy.dot(Tbaseapproach, TgraspIK), Rotz)
 
                     # Construct msg. Then appened to queue with score as the priority in queue. This will put lowest score msg first in list.
                     proj_msg = PoseFromMatrix(TbaseIK_pregrasp)
@@ -517,8 +569,8 @@ class Grasping:
 
 
 def publisher():
-    rospy.init_node('online_grasp_server', log_level=rospy.DEBUG)
-    # rospy.init_node('online_grasp_server')
+    # rospy.init_node('online_grasp_server', log_level=rospy.DEBUG)
+    rospy.init_node('online_grasp_server')
 
     grasp = Grasping()
     while not rospy.is_shutdown():
@@ -528,7 +580,7 @@ def publisher():
             rospy.spin()
         except:
             print traceback.format_exc()
-            rospy.logdebug(str(traceback.format_exc()))
+            rospy.logerr(str(traceback.format_exc()))
 
 if __name__ == '__main__':
     publisher()
