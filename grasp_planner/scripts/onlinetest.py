@@ -85,6 +85,7 @@ def main():
 
 
         grasps = response.grasps.grasps
+
         for i in range(len(grasps)):
             grasp = grasps[i].pregrasp        
             t = geometry_msgs.msg.TransformStamped()
@@ -115,7 +116,7 @@ def main():
 
 
         # i = 0
-        # grasp = grasps[i].posegrasp        
+        # grasp = grasps[i].pregrasp        
         # t = geometry_msgs.msg.TransformStamped()
         # t.header.stamp = rospy.Time.now()
         # t.header.frame_id = "base_link"
@@ -123,7 +124,7 @@ def main():
         # t.transform.translation = grasp.position
         # t.transform.rotation = grasp.orientation
         # tfs.append(t)
-        # approach = grasps[i].poseapproach
+        # approach = grasps[i].approach
         # t = geometry_msgs.msg.TransformStamped()
         # t.header.stamp = rospy.Time.now()
         # t.header.frame_id = "base_link"
@@ -138,13 +139,15 @@ def main():
         #         tf.header.stamp = rospy.Time.now()
         #         br.sendTransform(tf)                
         #     rate.sleep()
+        #     request.object_points.header.stamp = rospy.Time.now()
+        #     pointcloud.publish(request.object_points)
 
-        rospy.loginfo("Trying to move to initial pose...")
-        approachpose = grasps[i].poseapproach
-        pregrasppose = grasps[i].posegrasp
+        # rospy.loginfo("Trying to move to initial pose...")
+        # approachpose = grasps[i].approach
+        # pregrasppose = grasps[i].pregrasp
         
-        arm.set_planner_id("RRTstarkConfigDefault")
-        arm.set_workspace([-3, -3, -3, 3, 3, 3])
+        # arm.set_planner_id("RRTConnectkConfigDefault")
+        # arm.set_workspace([-3, -3, -3, 3, 3, 3])
         # if not goto_pose(arm, approachpose, [1, 5, 30]): #move to approach
         #     sys.exit(1)
 
