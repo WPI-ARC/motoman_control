@@ -24,6 +24,9 @@ class Scoop(smach.State):
 
     @on_exception(failure_state="Failure")
     def execute(self, userdata):
+        # REMOVE THIS UNLESS 'PushWithScoop' IS CALLING EVERYTHING
+        # return 'Success'
+
         jointValues = [0, 0, 0, 0, 0, 0, 0, 0]
         
         if userdata.bin == "A":
