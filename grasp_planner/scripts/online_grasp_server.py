@@ -34,15 +34,15 @@ class Grasping:
         self.tfList = []
 
         # Adjustable variables in planner
-        # self.pitchList = numpy.linspace(0, pi/12, num=3)
-        #self.pitchList = [pi/12]
-        self.pitchList = [0]
+        self.pitchList = numpy.linspace(0, pi/12, num=3)
+        # self.pitchList = [pi/12]
+        # self.pitchList = [0]
         self.thetaList = numpy.linspace(-pi/6, pi/6, num=101) # Rotation of generated projection frames
         # self.thetaList = [0]
         self.padding = 0.015  # Extra padding between object and gripper is 1 cm.
         self.fingerlength = 0.115  # palm to finger tip offset is 11.5 cm
         self.gripperwidth = 0.155 - self.padding  # gripper width is 15.5 cm
-        self.z_lowerboundoffset = 0.065 #- 0.02  # Palm center to bottom of hand is 6.5 cm
+        self.z_lowerboundoffset = 0.065 - 0.02  # Palm center to bottom of hand is 6.5 cm
         self.approachpose_offset = 0.3  # Set aproach pose to be 30cm back from the front of the bin
         # palm -15 deg offset about z-axis
         self.hand_theta = 0.261799
@@ -228,7 +228,7 @@ class Grasping:
         obj_depth = abs(max_x-min_x)
         edge_offset = min_x
         extensions = 0.15 # 15cm finger extensions
-        offset = numpy.true_divide(obj_depth, 2)
+        offset = numpy.true_divide(obj_depth, 4)
         if offset > self.fingerlength + extensions:
             offset = 0.10
         if offset < 0.10:
@@ -447,15 +447,16 @@ class Grasping:
                     Tbasepregrasp = numpy.dot(Tbaseshelf, Tshelfpregrasp)
                     TbaseIK_pregrasp = numpy.dot(Tbasepregrasp, TgraspIK)
 
-                    # TbaseIK_pregrasp = numpy.dot(numpy.dot(Tbasepregrasp, TgraspIK), Rotz)
+                    #Rotz = numpy.array([[-1, 0, 0, 0], [0, -1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+
+                    #TbaseIK_pregrasp = numpy.dot(numpy.dot(Tbasepregrasp, TgraspIK), Rotz)
 
 
                     # Transform from arm solved from IK to handpose for approach
                     Tshelfapproach = numpy.dot(Tshelfpregrasp, Tpregraspapproach)
                     Tbaseapproach = numpy.dot(Tbaseshelf, Tshelfapproach)
                     TbaseIK_approach = numpy.dot(Tbaseapproach, TgraspIK)
-
-                    # TbaseIK_approach = numpy.dot(numpy.dot(Tbaseapproach, TgraspIK), Rotz)
+                    #TbaseIK_approach = numpy.dot(numpy.dot(Tbaseapproach, TgraspIK), Rotz)
 
                     # Construct msg. Then appened to queue with score as the priority in queue. This will put lowest score msg first in list.
                     proj_msg = PoseFromMatrix(TbaseIK_pregrasp)
