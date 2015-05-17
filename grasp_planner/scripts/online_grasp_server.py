@@ -241,10 +241,11 @@ class Grasping:
         #return bin_min_z + self.z_lowerboundoffset
 
     def compute_approach_offset(self, projection_x, bin_min_x, theta):
-        dist = projection_x - bin_min_x
-        offset = (dist - self.approachpose_offset) * numpy.cos(abs(theta))
-        # return dist - self.approachpose_offset
-        return bin_min_x - 0.20
+        dist = abs(projection_x - bin_min_x)
+        # offset = (dist + self.approachpose_offset) * numpy.cos(abs(theta))
+        # return dist + self.approachpose_offset
+        return dist
+        # return bin_min_x - 0.20
 
     def compute_score(self, width, pitch):
         fscore = numpy.true_divide(width, self.gripperwidth)
@@ -332,7 +333,7 @@ class Grasping:
 
     def get_grasp_cb(self, req):
         # Dump request to file
-        # self.save_request(req)
+        self.save_request(req)
                 
         q_proj_msg = Q.PriorityQueue()
         q_approach_msg = Q.PriorityQueue()
@@ -474,7 +475,8 @@ class Grasping:
                     rospy.logdebug("score is %f. Bad approach direction. Gripper not wide enough", score)
                     countbad += 1
 
-        rospy.logdebug("number of bad approach directions: " + str(countbad))
+        rospy.loginfo("number of bad approach directions: " + str(countbad))
+        rospy.loginfo("Total number returned tested: " + str(len(self.thetaList)*len(self.pitchList)))
 
         while not q_proj_msg.empty():
             projectionList.append(q_proj_msg.get()[1])

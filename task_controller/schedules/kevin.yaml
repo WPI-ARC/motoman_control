@@ -76,6 +76,84 @@
   bin: F
   item: mead_index_cards
   others: ['champion_copper_plus_spark_plug']
+  - action: grab
+  bin: G
+  item: rolodex_jumbo_pencil_cup
+  #item: first_years_take_and_toss_straw_cup
+  # item: munchkin_white_hot_duck_bath_toy
+  # item: kong_duck_dog_toy
+  # item: champion_copper_plus_spark_plug
+  # item: kyjen_squeakin_eggs_plush_puppies
+  # item: expo_dry_erase_board_eraser
+  # item: elmers_washable_no_run_school_glue
+  # item: "feline_greenies_dental_treats"
+  # item: "cheezit_big_original"
+  #item: crayola_64_ct
+  # item: genuine_joe_plastic_stir_sticks
+  others: []
+- action: grab
+  bin: H
+  # item: first_years_take_and_toss_straw_cup
+  #item: munchkin_white_hot_duck_bath_toy
+  # item: kong_duck_dog_toy
+  # item: champion_copper_plus_spark_plug
+  item: kyjen_squeakin_eggs_plush_puppies
+  # item: expo_dry_erase_board_eraser
+  # item: elmers_washable_no_run_school_glue
+  # item: feline_greenies_dental_treats
+  # item: "cheezit_big_original"
+  # item: crayola_64_ct
+  #item: genuine_joe_plastic_stir_sticks
+  others: []
+- action: grab
+  bin: I
+  item: oreo_mega_stuf
+  # item: first_years_take_and_toss_straw_cup
+  # item: munchkin_white_hot_duck_bath_toy
+  # item: kong_duck_dog_toy
+  # item: champion_copper_plus_spark_plug
+  # item: kyjen_squeakin_eggs_plush_puppies
+  #item: expo_dry_erase_board_eraser
+  # item: elmers_washable_no_run_school_glue
+  # item: "feline_greenies_dental_treats"
+  # item: cheezit_big_original
+  # item: crayola_64_ct
+  #item: kong_air_dog_squeakair_tennis_ball
+  others: []
+- action: grab
+  bin: J
+  # item: first_years_take_and_toss_straw_cup
+  # item: munchkin_white_hot_duck_bath_toy
+  # item: kong_duck_dog_toy
+  # item: champion_copper_plus_spark_plug
+  #item: kyjen_squeakin_eggs_plush_puppies
+  # item: expo_dry_erase_board_eraser
+  # item: elmers_washable_no_run_school_glue
+  # item: "feline_greenies_dental_treats"
+  # item: "cheezit_big_original"
+  # item: crayola_64_ct
+  # item: genuine_joe_plastic_stir_sticks
+  item: laugh_out_loud_joke_book
+  others: ['expo_dry_erase_board_eraser']
+- action: grab
+  bin: K
+  # item: first_years_take_and_toss_straw_cup
+  # item: munchkin_white_hot_duck_bath_toy
+  # item: kong_duck_dog_toy
+  # item: champion_copper_plus_spark_plug
+  # item: kyjen_squeakin_eggs_plush_puppies
+  # item: expo_dry_erase_board_eraser
+  # item: elmers_washable_no_run_school_glue
+  # item: "feline_greenies_dental_treats"
+  # item: "cheezit_big_original"
+  # item: crayola_64_ct
+  #item: highland_6539_self_stick_notes
+  item: elmers_washable_no_run_school_glue
+  others: ['kong_air_dog_squeakair_tennis_ball']
+- action: grab
+  bin: L
+  item: mead_index_cards
+  others: ['champion_copper_plus_spark_plug']
 #   # item: first_years_take_and_toss_straw_cup
 #   # item: munchkin_white_hot_duck_bath_toy
 #   # item: kong_duck_dog_toy
