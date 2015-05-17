@@ -15,6 +15,8 @@
 #define TARGET_REACHED_THRESHOLD 0.01
 #define TRAJECTORY_START_THRESHOLD 0.01
 #define EXEC_TIME_BUFFER 1.0
+#define EXEC_TIME_FRACTION 1.25
+#define REMOVE_TRAJECTORY_VELOCITIES true
 
 // Globals
 ros::ServiceClient g_execute_client;
@@ -92,21 +94,28 @@ std::vector<double> GetGroupPositions(const std::map<std::string, double>& joint
 
 std::vector<double> GetGroupVelocities(const std::map<std::string, double>& command_map, const std::vector<std::string>& group_joint_names)
 {
-    std::vector<double> group_velocities(group_joint_names.size());
-    for (size_t idx = 0; idx < group_joint_names.size(); idx++)
+    if (REMOVE_TRAJECTORY_VELOCITIES)
     {
-        const std::string joint_name = group_joint_names[idx];
-        std::map<std::string, double>::const_iterator found_joint_velocity = command_map.find(joint_name);
-        if (found_joint_velocity != command_map.end())
-        {
-            group_velocities[idx] = found_joint_velocity->second;
-        }
-        else
-        {
-            group_velocities[idx] = 0.0;
-        }
+        return std::vector<double>(group_joint_names.size(), 0.0);
     }
-    return group_velocities;
+    else
+    {
+        std::vector<double> group_velocities(group_joint_names.size());
+        for (size_t idx = 0; idx < group_joint_names.size(); idx++)
+        {
+            const std::string joint_name = group_joint_names[idx];
+            std::map<std::string, double>::const_iterator found_joint_velocity = command_map.find(joint_name);
+            if (found_joint_velocity != command_map.end())
+            {
+                group_velocities[idx] = found_joint_velocity->second;
+            }
+            else
+            {
+                group_velocities[idx] = 0.0;
+            }
+        }
+        return group_velocities;
+    }
 }
 
 std::vector<motoman_msgs::DynamicJointsGroup> BuildGroupPoints(const std::map<std::string, double>& joint_state_map, const trajectory_msgs::JointTrajectory& commanded_traj, const std::vector<std::string>& group_joint_names, const int16_t group_number)
@@ -119,7 +128,7 @@ std::vector<motoman_msgs::DynamicJointsGroup> BuildGroupPoints(const std::map<st
         std::map<std::string, double> commanded_velocity_map = GenerateNameValueMap(commanded_traj.joint_names, commanded_point.velocities, true);
         motoman_msgs::DynamicJointsGroup group_point;
         group_point.group_number = group_number;
-        group_point.time_from_start = commanded_point.time_from_start;
+        group_point.time_from_start = (commanded_point.time_from_start * EXEC_TIME_FRACTION);
         group_point.num_joints = (int16_t)group_joint_names.size();
         if (idx == 0)
         {
@@ -230,6 +239,11 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, moto
         return true;
     }
     ROS_INFO("Received trajectory with %zu points to convert and execute", req.jointTraj.points.size());
+    if (REMOVE_TRAJECTORY_VELOCITIES)
+    {
+        ROS_WARN("Trajectory velocities will be removed before execution");
+    }
+    ROS_INFO("Trajectory points will be extended by %f%%", ((EXEC_TIME_FRACTION - 1.0) * 100.0));
     // Copy the current joint states
     g_joint_state_mutex.lock();
     std::vector<sensor_msgs::JointState> current_states = g_joint_states;
@@ -397,7 +411,7 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, moto
         ROS_INFO("Trajectory execution service call returned SUCCESS, waiting for execution to finish");
     }
     // Wait for the trajectory to finish, plus a little buffer time
-    ros::Duration trajectory_exec_duration = req.jointTraj.points[req.jointTraj.points.size() - 1].time_from_start + ros::Duration(EXEC_TIME_BUFFER);
+    ros::Duration trajectory_exec_duration = (req.jointTraj.points[req.jointTraj.points.size() - 1].time_from_start * EXEC_TIME_FRACTION) + ros::Duration(EXEC_TIME_BUFFER);
     trajectory_exec_duration.sleep();
     // Now, check to see if we've reached the target
     // Copy the current joint states
