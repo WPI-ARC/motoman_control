@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+import datetime
+import os
+from random import choice
+import cPickle as pickle
 import tf
 import tf2_ros
 import math
@@ -53,6 +57,14 @@ def follow_path(group, path, collision_checking=False):
         #return False
     return group.execute(traj)
 
+def load_request(): 
+    rospy.loginfo("Loading request msg from file")
+    folderpath = os.path.join(os.path.dirname(__file__), "savedmsg")
+    filename = choice(os.listdir(folderpath))  # Load random file from directory
+    with open(folderpath + "/" + filename, 'rb') as file:
+        request = pickle.load(file)
+    return request
+
 def main():
     try:
         rospy.loginfo("Initializing...")
@@ -60,30 +72,16 @@ def main():
         arm = robot.arm_left
         rospy.init_node("online_planner_test")
         client = rospy.ServiceProxy('getGrasps_online_server', apcGraspDB)
-        item = 'expo_dry_erase_board_eraser' # Set response item
-        # item = 'cheezit_big_original'
         tfs = []
-        pts = []
 
-        msg = geometry_msgs.msg.Pose()
-        msg.position.x = 0.885315
-        msg.position.y = 0.413907
-        msg.position.z = 0.787417
-        msg.orientation.x = 0
-        msg.orientation.y = 0
-        msg.orientation.z = 0
-        msg.orientation.w = 1
+        request = load_request()
 
+        pointcloud = rospy.Publisher("/grasp_points", PointCloud2)
+        request.object_points.header.stamp = rospy.Time.now()
+        pointcloud.publish(request.object_points)
 
-
-        points = sensor_msgs.msg.PointCloud2()
-        points.data = pts
-        binnum = "B"
-
-        response = client(item, binnum, msg, points)
+        response = client(request)
         print "returned pose"
-        print response.status
-        print response.grasps
 
 
         grasps = response.grasps.grasps
@@ -108,10 +106,13 @@ def main():
         br = tf2_ros.TransformBroadcaster()
         rate = rospy.Rate(250.0)
         while (not rospy.is_shutdown()):
+            request.object_points.header.stamp = rospy.Time.now()
+            pointcloud.publish(request.object_points)
             for t in tfs:
                 t.header.stamp = rospy.Time.now()
                 br.sendTransform(t)
             rate.sleep()
+
 
         # i = 0
         # grasp = grasps[i].posegrasp        

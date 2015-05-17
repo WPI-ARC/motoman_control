@@ -7,19 +7,15 @@
   <!-- By default, we are not in debug mode -->
   <arg name="debug" default="false" />
 
+  <arg name="speed" default="slow" />
+
   <!-- Load the URDF, SRDF and other .yaml configuration files on the param server -->
   <include file="$(find motoman_sda10f_moveit_config)/launch/planning_context.launch">
     <arg name="load_robot_description" value="true"/>
   </include>
 
   <!-- If needed, broadcast static tf for robot root -->
-  <node name="base_shelf_tf" pkg="tf" type="static_transform_publisher"
-          args="1 0 0 0 0 0 /base_link /shelf 100"/>
 
-  <node name="object" pkg="tf" type="static_transform_publisher"  
-          args="-0.021 -0.14331 1.6 0 0 0 /shelf /object 100"/>
-  <!--args="0 0 0.8 0 0 0 /shelf /object 100"/>-->
-  <!--args="0 0 0.8 0 0 1.570796327 /shelf /object 100"/>-->
 
 
   <!-- We do not have a robot connected, so publish fake joint states -->
@@ -37,6 +33,10 @@
     <arg name="fake_execution" value="true"/>
     <arg name="info" value="true"/>
     <arg name="debug" value="$(arg debug)"/>
+    <arg name="load_robot_description" value="true" />
+    <arg name="joint_limits"
+         value="$(find motoman_sda10f_moveit_config)/config/joint_limits_$(arg speed).yaml" />
+    <arg name="publish_monitored_planning_scene" value="true" />
   </include>
 
   <!-- Run Rviz and load the default config to see the state of the move_group node -->
@@ -47,5 +47,13 @@
 
   <!-- If database loading was enabled, start mongodb as well -->
   <include file="$(find motoman_sda10f_moveit_config)/launch/default_warehouse_db.launch" if="$(arg db)"/>
+
+  <rosparam command="load" file="$(find task_controller)/cfg/items.yaml" />
+  <rosparam command="load" file="$(find task_controller)/cfg/shelf.yaml" />
+  <rosparam command="load" file="$(find task_controller)/cfg/shelf_collision.yaml" />
+
+  <node pkg="apc_util" type="publish_shelf_tf.py" name="publish_shelf_tf" />
+  <node pkg="apc_util" type="publish_lab.py" name="publish_lab" />
+  <node pkg="apc_util" type="publish_checkerboard.py" name="publish_checkerboard" />
 
 </launch>

@@ -470,7 +470,7 @@ class Grasping:
 
                     rospy.logdebug("score is %f. Good approach direction. Gripper is wide enough", score)
                 else:
-                    score = self.compute_score(width)
+                    score = self.compute_score(width, pitch)
                     rospy.logdebug("score is %f. Bad approach direction. Gripper not wide enough", score)
                     countbad += 1
 
