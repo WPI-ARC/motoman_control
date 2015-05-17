@@ -13,7 +13,7 @@ from geometry_msgs.msg import Pose, Point, Quaternion
 
 def add_order_bin(x, y):
     # Necessary parameters
-    bin_width, bin_depth, bin_height = 0.65, 0.4, 0.53 + 0.19 # 0.19 for the pelican box
+    bin_width, bin_depth, bin_height = 0.65, 0.4, 0.53
     interior_width, interior_depth, interior_height = 0.45, 0.29, 0.18
     wall_width, wall_depth = (bin_width-interior_width)/2, (bin_depth-interior_depth)/2
     base_height = bin_height-interior_height
