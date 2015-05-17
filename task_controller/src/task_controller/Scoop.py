@@ -105,11 +105,12 @@ class Scoop(smach.State):
         self.arm.set_planning_time(5)
         self.arm.set_planner_id("RRTConnectkConfigDefault")
         self.arm.set_pose_reference_frame("/base_link")
+        # add_shelf()
+        remove_shelf()
         plan = self.arm.plan()
-        add_shelf()
         if not self.move(plan.joint_trajectory):
             return 'Failure'
-        remove_shelf()
+        # remove_shelf()
 
         # SCOOP
         self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
@@ -133,8 +134,8 @@ class Scoop(smach.State):
         # -0.27018; -0.45943; 0.42452; 0.73192
 
         # horizontalPose.position.x += -0.297581
-        # horizontalPose.position.x += -0.307581
-        horizontalPose.position.x += -0.267581
+        horizontalPose.position.x += -0.307581
+        # horizontalPose.position.x += -0.267581
         horizontalPose.position.y += -0.011221
         horizontalPose.position.z += 0.05463
         horizontalPose.orientation.x = -0.293106
@@ -205,8 +206,8 @@ class Scoop(smach.State):
         # IN
         poses.append(deepcopy(poses[-1]))
         # poses[-1].position.x += 0.125
-        # poses[-1].position.x += 0.155
-        poses[-1].position.x += 0.115
+        poses[-1].position.x += 0.155
+        # poses[-1].position.x += 0.115
 
         # DOWN
         poses.append(deepcopy(poses[-1]))
@@ -245,6 +246,10 @@ class Scoop(smach.State):
         poses[-1].orientation.w = 0.57811
         # TODO: maybe calibrate pose orientation
 
+        # UP
+        poses.append(deepcopy(poses[-1]))
+        poses[-1].position.z += 0.10
+
         # AWAY FROM WALL
         poses.append(deepcopy(poses[-1]))
         if rightColumn:
@@ -269,7 +274,8 @@ class Scoop(smach.State):
             # THIS RELATIVE PATH WAS FOR DEMO, PROBABLY GOES TOO HIGH
             # UP
             poses.append(deepcopy(poses[-1]))
-            poses[-1].position.z += 0.05
+            # poses[-1].position.z += 0.10
+            poses[-1].position.z += 0.08
 
             # OUT + UP
             poses.append(deepcopy(poses[-1]))
@@ -278,19 +284,16 @@ class Scoop(smach.State):
 
         elif userdata.bin == "C":
             # THIS RELATIVE PATH WAS FOR DEMO, PROBABLY GOES TOO HIGH
-            # UP
-            poses.append(deepcopy(poses[-1]))
-            poses[-1].position.z += 0.1
-
             # OUT + UP
             poses.append(deepcopy(poses[-1]))
-            # poses[-1].position.x += -0.4586
             poses[-1].position.x += -0.4586
-            poses[-1].position.y += 0.02
+            # poses[-1].position.y += 0.05
             poses[-1].position.z += 0.05
 
             if not follow_path(self.arm, poses):
                 return 'Failure'
+
+            # rospy.sleep(100);
 
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                    get_current_pose().pose)]
