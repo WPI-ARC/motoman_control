@@ -7,7 +7,8 @@ from robotiq_s_model_articulated_msgs.msg import SModelRobotInput
 
 from moveit import goto_pose, follow_path, move, robot_state
 from shelf import FULL_SHELF
-from services import _grasp_generator, _gripper_control
+from services import _grasp_generator, _gripper_control, _get_cartesian_path
+from moveit_msgs.msg import RobotState
 
 
 class Gripper(object):
@@ -101,25 +102,57 @@ def generate_grasps(item, pose, shelf_pose, pointcloud, bin):
 def plan_grasps(group, grasps):
     for i, grasp in enumerate(grasps):
         rospy.loginfo("%s/%s" % (i+1, len(grasps)))
-        traj, success = group.compute_cartesian_path(
-            [grasp.approach, grasp.pregrasp],
-            0.01,  # 1cm interpolation resolution
-            0.0,  # jump_threshold disabled
-            avoid_collisions=True,
+        group.set_planner_id("RRTConnectkConfigDefault")
+        group.set_workspace([-3, -3, -3, 3, 3, 3])
+        approach_plan = None
+        for t in [1,5,30,60]:
+            group.set_planning_time(t)
+            plan = group.plan(grasp)
+            if len(plan.joint_trajectory.points) > 0:
+                approach_plan = plan
+                break
+
+        if not approach_plan:
+            rospy.logwarn("Failed to find plan to approach pose")
+
+
+        joint_state = plan.joint_trajectory.points[-1].positions
+
+        #traj, success = group.compute_cartesian_path(
+            #[grasp.approach, grasp.pregrasp],
+            #0.01,  # 1cm interpolation resolution
+            #0.0,  # jump_threshold disabled
+            #avoid_collisions=True,
+        #)
+        response = _get_cartesian_path(
+            start_state=RobotState(joint_state=joint_state),
+            waypoints=[grasp.approach, grasp.pregrasp],
+            max_step=0.01,
+            jump_threshold=0.0,
+            avoid_collisions=True
         )
+
+        traj = response.solution
+        success = response.fraction
+
+        rospy.loginfo("Cartesian path had status code: "+str(response.error_code))
+
         if success >= 1:
             rospy.loginfo("Found grasp")
-            yield grasp, traj
+            yield grasp, approach_plan, traj
 
 
-def execute_grasp(group, grasp, plan, shelf=FULL_SHELF):
+def execute_grasp(group, grasp, plan1, plan2, shelf=FULL_SHELF):
     rospy.loginfo("Moving to approach pose")
-    start = list(plan.joint_trajectory.points[0].positions)
-    if not goto_pose(group, start, [1, 5, 30, 60], shelf=shelf):
+    #start = list(plan.joint_trajectory.points[0].positions)
+    #if not goto_pose(group, start, [1, 5, 30, 60], shelf=shelf):
+    #    return False
+    if not move(group, plan1):
+        rospy.logerr("Failed to got to approach pose")
         return False
 
     rospy.loginfo("Executing cartesian approach")
-    if not move(group, plan.joint_trajectory):
+    if not move(group, plan2.joint_trajectory):
         rospy.logerr("Failed to execute approach")
         return False
 
