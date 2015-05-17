@@ -137,6 +137,13 @@ def plan_grasps(group, grasps):
 
         rospy.loginfo("Cartesian path had status code: "+str(response.error_code))
 
+        #traj, success = group.compute_cartesian_path(
+        #    [grasp.approach, grasp.pregrasp],
+        #    0.01,  # 1cm interpolation resolution
+        #    0.0,  # jump_threshold disabled
+        #    avoid_collisions=True
+        #)
+        #rospy.loginfo("Compute cartesian path returned a status code " + str(success))
         if success >= 1:
             rospy.loginfo("Found grasp")
             yield grasp, approach_plan, traj

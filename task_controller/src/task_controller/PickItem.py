@@ -38,9 +38,10 @@ class PickItem(smach.State):
         if not success:
             return 'Failure'
 
-        self.show_grasps(grasps)
+        # self.show_grasps(grasps)
 
-        with BIN(userdata.bin):
+        with PADDED_SHELF:
+        #with BIN(userdata.bin):
             grasps = plan_grasps(self.arm, grasps)
 
             try:
@@ -74,7 +75,8 @@ class PickItem(smach.State):
         import tf2_ros
         from geometry_msgs.msg import TransformStamped
         if filter:
-            with PADDED_SHELF:
+            # with PADDED_SHELF:
+            with BIN(userdata.bin):
                 grasps = list(grasp for grasp, _ in plan_grasps(self.arm, grasps))
         tfs = []
         for i in range(len(grasps)):

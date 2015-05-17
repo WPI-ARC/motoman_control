@@ -141,15 +141,18 @@ def execute_known_trajectory(group, task, bin):
             trajectory=plan.joint_trajectory,
             check_type=CheckTrajectoryValidityQuery.CHECK_ENVIRONMENT_COLLISION,
         ))
-    # collisions, success = check_collisions(CheckTrajectoryValidityQuery(
-    #     initial_state=JointState(
-    #         header=Header(stamp=rospy.Time.now()),
-    #         name=robot.sda10f.get_joints(),
-    #         position=robot.sda10f.get_current_joint_values()
-    #     ),
-    #     trajectory=plan.joint_trajectory,
-    #     check_type=CheckTrajectoryValidityQuery.CHECK_ENVIRONMENT_COLLISION,
-    # ))
+    # NO_SHELF WAS USED WHEN CALLING THE PRE-COMPUTED TRAJECTORIES,
+    # I AM UNSURE IF IT WORKS OTHERWISE -GB
+    # with NO_SHELF:
+    #     collisions, success = check_collisions(CheckTrajectoryValidityQuery(
+    #         initial_state=JointState(
+    #             header=Header(stamp=rospy.Time.now()),
+    #             name=robot.sda10f.get_joints(),
+    #             position=robot.sda10f.get_current_joint_values()
+    #         ),
+    #         trajectory=plan.joint_trajectory,
+    #         check_type=CheckTrajectoryValidityQuery.CHECK_ENVIRONMENT_COLLISION,
+    #     ))
     if not success:
         return False
     if collisions.result.status != CheckTrajectoryValidityResult.SUCCESS:
