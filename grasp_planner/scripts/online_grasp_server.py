@@ -157,7 +157,7 @@ class Grasping:
             item = '../env/indexcards.env.xml'
             self.objectheightoffset = -0.01
         elif req.item == 'oreo_mega_stuf':
-            item = '../env/oreo.env.xml'
+            item = '../env/oreo.env.xml'`
             self.objectheightoffset = -0.01
         elif req.item == 'mommys_helper_outlet_plugs':
             item = '../env/outletplugs.env.xml'
@@ -230,9 +230,9 @@ class Grasping:
         extensions = 0.15 # 15cm finger extensions
         offset = numpy.true_divide(obj_depth, 2)
         if offset > self.fingerlength + extensions:
-            offset = 0.15
-        if offset < 0.15:
-            offset = 0.15
+            offset = 0.10
+        if offset < 0.10:
+            offset = 0.10
         return edge_offset - self.fingerlength - extensions + offset # the palm is located at min_x so move out till lenght of finger to place lenght of finger at min_x. Then move in 1/4 of the total depth of object
         #return edge_offset - self.fingerlength - extensions
 
