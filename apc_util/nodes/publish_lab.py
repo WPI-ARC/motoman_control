@@ -106,7 +106,7 @@ if __name__ == '__main__':
     pose = PoseStamped()
     pose.header.frame_id = "/base_link"
     pose.header.stamp = rospy.Time.now()
-    pose.pose.position.x = -0.505
+    pose.pose.position.x = -0.72
     pose.pose.position.y = 0
     pose.pose.position.z = 1.5
     pose.pose.orientation.x = 0
