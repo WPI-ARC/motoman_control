@@ -123,6 +123,23 @@ if __name__ == '__main__':
     pose = PoseStamped()
     pose.header.frame_id = "/base_link"
     pose.header.stamp = rospy.Time.now()
+    pose.pose.position.x = -0.6
+    pose.pose.position.y = 0
+    pose.pose.position.z = 0.2
+    pose.pose.orientation.x = 0
+    pose.pose.orientation.y = 0
+    pose.pose.orientation.z = 0
+    pose.pose.orientation.w = 1
+
+    scene.add_box(
+        name="box holding wires",
+        pose=pose,
+        size=(0.6, 0.6, 0.4)
+    )
+
+    pose = PoseStamped()
+    pose.header.frame_id = "/base_link"
+    pose.header.stamp = rospy.Time.now()
     pose.pose.position.x = 0
     pose.pose.position.y = -1.4
     pose.pose.position.z = 1.5
