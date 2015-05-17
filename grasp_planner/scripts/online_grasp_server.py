@@ -34,19 +34,19 @@ class Grasping:
         self.tfList = []
 
         # Adjustable variables in planner
-        self.pitchList = numpy.linspace(0, pi/12, num=3)
+        # self.pitchList = numpy.linspace(0, 0.0872664626, num=3) # 5 deg pitch = 0.0872664626
         # self.pitchList = [pi/12]
-        # self.pitchList = [0]
+        self.pitchList = [0, 0.0872664626, 0.174532925 ] # 0deg, 5deg, 10deg
         self.thetaList = numpy.linspace(-pi/6, pi/6, num=101) # Rotation of generated projection frames
         # self.thetaList = [0]
         self.padding = 0.015  # Extra padding between object and gripper is 1 cm.
         self.fingerlength = 0.115  # palm to finger tip offset is 11.5 cm
         self.gripperwidth = 0.155 - self.padding  # gripper width is 15.5 cm
         self.z_lowerboundoffset = 0.065 - 0.02  # Palm center to bottom of hand is 6.5 cm
-        self.approachpose_offset = 0.3  # Set aproach pose to be 30cm back from the front of the bin
+        self.approachpose_offset = 0.2  # Set aproach pose to be 30cm back from the front of the bin
         # palm -15 deg offset about z-axis
         self.hand_theta = 0.261799
-        self.shelfpitch = pi/12
+        self.shelfpitch = 0.0872664626 # 5 deg pitch  = 0.0872664626
         # Transform rotation from tooltip to hand's palm. If no transforms then it grabs object at a slant
         self.Rtooltip_palm = numpy.array([[1, 0, 0, 0],
                                     [0, numpy.cos(self.hand_theta), -numpy.sin(self.hand_theta), 0],
@@ -464,6 +464,8 @@ class Grasping:
                     pregrasp_height_extra = abs(grasp_depth) * numpy.sin(pitch)
                     proj_msg.position.z = height + pregrasp_height_extra
                     approach_msg = PoseFromMatrix(TbaseIK_approach)
+                    approach_bin_entrance_position = numpy.dot(Tbaseshelf, numpy.array([[bin_min_x-0.32], [0], [0], [1]]))
+                    approach_msg.position.x = approach_bin_entrance_position[0]
                     approach_height_extra = abs(self.approachpose_offset) * numpy.sin(pitch)
                     approach_msg.position.z = height + pregrasp_height_extra + approach_height_extra
                     q_proj_msg.put((score, proj_msg))
