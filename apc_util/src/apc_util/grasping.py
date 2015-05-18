@@ -119,7 +119,7 @@ def plan_grasps(group, grasps):
         if not approach_plan:
             rospy.logwarn("Failed to find plan to approach pose")
             continue
-`
+
         joint_state = JointState(
             header=Header(),
             name=plan.joint_trajectory.joint_names,
