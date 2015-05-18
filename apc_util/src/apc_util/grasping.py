@@ -107,7 +107,7 @@ def plan_grasps(group, grasps):
         group.set_planner_id("RRTConnectkConfigDefault")
         group.set_workspace([-3, -3, -3, 3, 3, 3])
         approach_plan = None
-        for t in [1,5]:
+        for t in [1,3]:
             group.set_planning_time(t)
             plan = group.plan(grasp.approach)
             if len(plan.joint_trajectory.points) > 0:
@@ -119,7 +119,7 @@ def plan_grasps(group, grasps):
         if not approach_plan:
             rospy.logwarn("Failed to find plan to approach pose")
             continue
-
+`
         joint_state = JointState(
             header=Header(),
             name=plan.joint_trajectory.joint_names,
@@ -184,7 +184,7 @@ def execute_grasp(group, grasp, plan1, plan2, shelf=FULL_SHELF):
     poses.append(deepcopy(poses[-1]))
     poses[-1].position.z += 0.032
     poses.append(deepcopy(poses[-1]))
-    poses[-1].position.x = 0.4
+    poses[-1].position.x = 0.48
     if not follow_path(group, poses):
         return False
     return True

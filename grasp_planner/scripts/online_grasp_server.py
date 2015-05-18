@@ -131,7 +131,7 @@ class Grasping:
     def get_object_height_offset(self, req):
         if req.item == 'cheezit_big_original':
             item = '../env/cheezit.env.xml'
-            self.objectheightoffset = 0
+            self.objectheightoffset = 0.02
         elif req.item == 'kyjen_squeakin_eggs_plush_puppies':
             item = '../env/colorballs.env.xml'
             self.objectheightoffset = 0
@@ -464,7 +464,7 @@ class Grasping:
                     pregrasp_height_extra = abs(grasp_depth) * numpy.sin(pitch)
                     proj_msg.position.z = height + pregrasp_height_extra
                     approach_msg = PoseFromMatrix(TbaseIK_approach)
-                    approach_bin_entrance_position = numpy.dot(Tbaseshelf, numpy.array([[bin_min_x-0.52], [0], [0], [1]]))
+                    approach_bin_entrance_position = numpy.dot(Tbaseshelf, numpy.array([[bin_min_x-0.55], [0], [0], [1]]))
                     approach_msg.position.x = approach_bin_entrance_position[0]
                     approach_height_extra = abs(self.approachpose_offset) * numpy.sin(pitch)
                     approach_msg.position.z = height + pregrasp_height_extra + approach_height_extra
