@@ -110,17 +110,17 @@ class Scoop(smach.State):
         horizontalPose = self.convertFrameRobotToShelf(horizontalPose)
         rospy.loginfo("planning to horizontal pose")
 
-        self.arm.set_planning_time(5)
-        self.arm.set_joint_value_target(jointValues)
-        remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED
-        plan = self.arm.plan()
-        if not self.move(plan.joint_trajectory):
-            return 'Failure'
-
-        # self.arm.set_pose_target(horizontalPose)
+        # self.arm.set_planning_time(5)
+        # self.arm.set_joint_value_target(jointValues)
         # remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED
         # plan = self.arm.plan()
-        # self.move(plan.joint_trajectory)
+        # if not self.move(plan.joint_trajectory):
+        #     return 'Failure'
+
+        self.arm.set_pose_target(horizontalPose)
+        remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED
+        plan = self.arm.plan()
+        self.move(plan.joint_trajectory)
 
         # add_shelf()
         # poses = [self.convertFrameRobotToShelf(self.arm.
@@ -132,11 +132,11 @@ class Scoop(smach.State):
         # poses[-1].orientation.z = 0.49273
         # poses[-1].orientation.w = -0.47999
 
-        # # if not follow_path(self.arm, poses):
-        # #     return 'Failure'
+        # if not follow_path(self.arm, poses):
+        #     return 'Failure'
 
-        # # poses = [self.convertFrameRobotToShelf(self.arm.
-        # #                                        get_current_pose().pose)]
+        # poses = [self.convertFrameRobotToShelf(self.arm.
+        #                                        get_current_pose().pose)]
 
         # poses.append(deepcopy(poses[-1]))
         # # poses[-1].position.x += -0.02
@@ -165,8 +165,8 @@ class Scoop(smach.State):
         # #                                        get_current_pose().pose)]
 
         # poses.append(horizontalPose)
-        # # if not follow_path(self.arm, poses):
-        # #     return 'Failure'
+        # if not follow_path(self.arm, poses):
+        #     return 'Failure'
 
         # traj, success = self.arm.compute_cartesian_path(
         #     poses,
@@ -193,9 +193,9 @@ class Scoop(smach.State):
         # if not self.move(traj.joint_trajectory):
         #     return 'Failure'
 
-        remove_shelf()
-        if not execute_known_trajectory(self.arm, 'Rotate', userdata.bin):
-            return 'Failure'
+        # remove_shelf()
+        # if not execute_known_trajectory(self.arm, 'Rotate', userdata.bin):
+        #     return 'Failure'
         
         self.scoopBin(horizontalPose)
 
@@ -753,9 +753,13 @@ class Scoop(smach.State):
 
     # TODO Use calibrated values, not hardcoded
     def convertFrameRobotToShelf(self, pose):
-        pose.position.x += -1.40009583376
-        pose.position.y += -0.0841733373195
-        pose.position.z += 0.045
+        pose.position.x += -1.3535731570096812
+        pose.position.y += -0.08215183129781853
+        pose.position.z += 0.135
+        
+        # pose.position.x += -1.40009583376
+        # pose.position.y += -0.0841733373195
+        # pose.position.z += 0.045
 
         # pose.position.x += -1.4026
         # pose.position.y += -0.0797
