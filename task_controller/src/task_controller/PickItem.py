@@ -40,8 +40,8 @@ class PickItem(smach.State):
 
         # self.show_grasps(grasps)
 
-        with PADDED_SHELF:
-        #with BIN(userdata.bin):
+        #with PADDED_SHELF:
+        with BIN(userdata.bin):
             grasps = plan_grasps(self.arm, grasps)
 
             try:
