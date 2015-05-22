@@ -114,11 +114,11 @@ if __name__ == '__main__':
     pose.pose.orientation.z = 0
     pose.pose.orientation.w = 1
 
-    scene.add_box(
-        name="back wall",
-        pose=pose,
-        size=(0.01, 6, 3)
-    )
+    # scene.add_box(
+    #     name="back wall",
+    #     pose=pose,
+    #     size=(0.01, 6, 3)
+    # )
 
     pose = PoseStamped()
     pose.header.frame_id = "/base_link"
@@ -131,11 +131,11 @@ if __name__ == '__main__':
     pose.pose.orientation.z = 0
     pose.pose.orientation.w = 1
 
-    scene.add_box(
-        name="side wall",
-        pose=pose,
-        size=(6, 0.01, 3)
-    )
+    # scene.add_box(
+    #     name="side wall",
+    #     pose=pose,
+    #     size=(6, 0.01, 3)
+    # )
 
     pose = PoseStamped()
     pose.header.frame_id = "/base_link"
