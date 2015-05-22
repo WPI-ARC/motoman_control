@@ -516,10 +516,12 @@ int main(int argc, char **argv)
     {
         ROS_INFO("ConvertTrajectoryServer running in simulated execution mode");
         g_simulation_execution_pub = node_handle.advertise<trajectory_msgs::JointTrajectory>(simulation_execution_topic, 1);
+        g_simulation_execution = true;
     }
     else
     {
         ROS_INFO("ConvertTrajectoryServer running in real execution mode");
+        g_simulation_execution = false;
     }
     g_execute_client = node_handle.serviceClient<motoman_msgs::CmdJointTrajectoryEx>("/joint_path_command");
     ros::Subscriber jointStateSub = node_handle.subscribe("joint_states", 0, jointStateCallback);
