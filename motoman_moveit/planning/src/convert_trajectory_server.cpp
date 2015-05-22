@@ -19,6 +19,8 @@
 #define REMOVE_TRAJECTORY_VELOCITIES true
 
 // Globals
+bool g_simulation_execution = false;
+ros::Publisher g_simulation_execution_pub;
 ros::ServiceClient g_execute_client;
 std::vector<sensor_msgs::JointState> g_joint_states(4);
 std::mutex g_joint_state_mutex;
@@ -319,96 +321,107 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, moto
         res.success = false;
         return true;
     }
-    // Now, build a trajectory for each group
-    std::vector<std::string> left_arm_group_names(7);
-    left_arm_group_names[0] = "arm_left_joint_1_s";
-    left_arm_group_names[1] = "arm_left_joint_2_l";
-    left_arm_group_names[2] = "arm_left_joint_3_e";
-    left_arm_group_names[3] = "arm_left_joint_4_u";
-    left_arm_group_names[4] = "arm_left_joint_5_r";
-    left_arm_group_names[5] = "arm_left_joint_6_b";
-    left_arm_group_names[6] = "arm_left_joint_7_t";
-    std::vector<motoman_msgs::DynamicJointsGroup> left_arm_group_points = BuildGroupPoints(current_joint_values, req.jointTraj, left_arm_group_names, 0);
-    ROS_INFO("Generated left arm group trajectory with %zu points", left_arm_group_points.size());
-    std::vector<std::string> right_arm_group_names(7);
-    right_arm_group_names[0] = "arm_right_joint_1_s";
-    right_arm_group_names[1] = "arm_right_joint_2_l";
-    right_arm_group_names[2] = "arm_right_joint_3_e";
-    right_arm_group_names[3] = "arm_right_joint_4_u";
-    right_arm_group_names[4] = "arm_right_joint_5_r";
-    right_arm_group_names[5] = "arm_right_joint_6_b";
-    right_arm_group_names[6] = "arm_right_joint_7_t";
-    std::vector<motoman_msgs::DynamicJointsGroup> right_arm_group_points = BuildGroupPoints(current_joint_values, req.jointTraj, right_arm_group_names, 1);
-    ROS_INFO("Generated right arm group trajectory with %zu points", right_arm_group_points.size());
-    std::vector<std::string> torso_1_group_names(1);
-    torso_1_group_names[0] = "torso_joint_b1";
-    std::vector<motoman_msgs::DynamicJointsGroup> torso_1_group_points = BuildGroupPoints(current_joint_values, req.jointTraj, torso_1_group_names, 2);
-    ROS_INFO("Generated torso 1 group trajectory with %zu points", torso_1_group_points.size());
-    std::vector<std::string> torso_2_group_names(1);
-    torso_2_group_names[0] = "torso_joint_b2";
-    std::vector<motoman_msgs::DynamicJointsGroup> torso_2_group_points = BuildGroupPoints(current_joint_values, req.jointTraj, torso_2_group_names, 3);
-    ROS_INFO("Generated torso 2 group trajectory with %zu points", torso_2_group_points.size());
-    // Safety check
-    size_t expected_size = req.jointTraj.points.size();
-    if (left_arm_group_points.size() != expected_size || right_arm_group_points.size() != expected_size || torso_1_group_points.size() != expected_size || torso_2_group_points.size() != expected_size)
+    // Simulation-only execution
+    if (g_simulation_execution)
     {
-        ROS_ERROR("Failure generating trajectories for each group");
-        res.success = false;
-        return true;
+        ROS_INFO("Executing trajectory (simulation)...");
+        g_simulation_execution_pub.publish(req.jointTraj);
+        ROS_INFO("Trajectory execution started, waiting for execution to finish");
     }
-    // Now, combine the points into a single trajectory
-    std::vector<motoman_msgs::DynamicJointPoint> complete_trajectory_points;
-    for (size_t idx = 0; idx < expected_size; idx++)
-    {
-        motoman_msgs::DynamicJointPoint new_traj_point;
-        new_traj_point.groups = {left_arm_group_points[idx], right_arm_group_points[idx], torso_1_group_points[idx], torso_2_group_points[idx]};
-        new_traj_point.num_groups = 4;
-        complete_trajectory_points.push_back(new_traj_point);
-    }
-    ROS_INFO("Assembled combined trajectory with %zu points", complete_trajectory_points.size());
-    // Assemble full trajectory
-    std::vector<std::string> complete_joint_names(16);
-    complete_joint_names[0] = "arm_left_joint_1_s";
-    complete_joint_names[1] = "arm_left_joint_2_l";
-    complete_joint_names[2] = "arm_left_joint_3_e";
-    complete_joint_names[3] = "arm_left_joint_4_u";
-    complete_joint_names[4] = "arm_left_joint_5_r";
-    complete_joint_names[5] = "arm_left_joint_6_b";
-    complete_joint_names[6] = "arm_left_joint_7_t";
-    complete_joint_names[7] = "arm_right_joint_1_s";
-    complete_joint_names[8] = "arm_right_joint_2_l";
-    complete_joint_names[9] = "arm_right_joint_3_e";
-    complete_joint_names[10] = "arm_right_joint_4_u";
-    complete_joint_names[11] = "arm_right_joint_5_r";
-    complete_joint_names[12] = "arm_right_joint_6_b";
-    complete_joint_names[13] = "arm_right_joint_7_t";
-    complete_joint_names[14] = "torso_joint_b1";
-    complete_joint_names[15] = "torso_joint_b2";
-    motoman_msgs::DynamicJointTrajectory complete_trajectory;
-    complete_trajectory.header.frame_id = "/base_link";
-    complete_trajectory.joint_names = complete_joint_names;
-    complete_trajectory.points = complete_trajectory_points;
-    // Execute trajectory
-    motoman_msgs::CmdJointTrajectoryEx::Request trajectory_req;
-    trajectory_req.trajectory = complete_trajectory;
-    motoman_msgs::CmdJointTrajectoryEx::Response trajectory_res;
-    ROS_INFO("Executing trajectory...");
-    bool status = g_execute_client.call(trajectory_req, trajectory_res);
-    if (!status)
-    {
-        ROS_ERROR("Trajectory execution service call failed");
-        res.success = false;
-        return true;
-    }
-    if (trajectory_res.code.val != industrial_msgs::ServiceReturnCode::SUCCESS)
-    {
-        ROS_ERROR("Trajectory execution service call returned FAILURE");
-        res.success = false;
-        return true;
-    }
+    // Real execution
     else
     {
-        ROS_INFO("Trajectory execution service call returned SUCCESS, waiting for execution to finish");
+        // Now, build a trajectory for each group
+        std::vector<std::string> left_arm_group_names(7);
+        left_arm_group_names[0] = "arm_left_joint_1_s";
+        left_arm_group_names[1] = "arm_left_joint_2_l";
+        left_arm_group_names[2] = "arm_left_joint_3_e";
+        left_arm_group_names[3] = "arm_left_joint_4_u";
+        left_arm_group_names[4] = "arm_left_joint_5_r";
+        left_arm_group_names[5] = "arm_left_joint_6_b";
+        left_arm_group_names[6] = "arm_left_joint_7_t";
+        std::vector<motoman_msgs::DynamicJointsGroup> left_arm_group_points = BuildGroupPoints(current_joint_values, req.jointTraj, left_arm_group_names, 0);
+        ROS_INFO("Generated left arm group trajectory with %zu points", left_arm_group_points.size());
+        std::vector<std::string> right_arm_group_names(7);
+        right_arm_group_names[0] = "arm_right_joint_1_s";
+        right_arm_group_names[1] = "arm_right_joint_2_l";
+        right_arm_group_names[2] = "arm_right_joint_3_e";
+        right_arm_group_names[3] = "arm_right_joint_4_u";
+        right_arm_group_names[4] = "arm_right_joint_5_r";
+        right_arm_group_names[5] = "arm_right_joint_6_b";
+        right_arm_group_names[6] = "arm_right_joint_7_t";
+        std::vector<motoman_msgs::DynamicJointsGroup> right_arm_group_points = BuildGroupPoints(current_joint_values, req.jointTraj, right_arm_group_names, 1);
+        ROS_INFO("Generated right arm group trajectory with %zu points", right_arm_group_points.size());
+        std::vector<std::string> torso_1_group_names(1);
+        torso_1_group_names[0] = "torso_joint_b1";
+        std::vector<motoman_msgs::DynamicJointsGroup> torso_1_group_points = BuildGroupPoints(current_joint_values, req.jointTraj, torso_1_group_names, 2);
+        ROS_INFO("Generated torso 1 group trajectory with %zu points", torso_1_group_points.size());
+        std::vector<std::string> torso_2_group_names(1);
+        torso_2_group_names[0] = "torso_joint_b2";
+        std::vector<motoman_msgs::DynamicJointsGroup> torso_2_group_points = BuildGroupPoints(current_joint_values, req.jointTraj, torso_2_group_names, 3);
+        ROS_INFO("Generated torso 2 group trajectory with %zu points", torso_2_group_points.size());
+        // Safety check
+        size_t expected_size = req.jointTraj.points.size();
+        if (left_arm_group_points.size() != expected_size || right_arm_group_points.size() != expected_size || torso_1_group_points.size() != expected_size || torso_2_group_points.size() != expected_size)
+        {
+            ROS_ERROR("Failure generating trajectories for each group");
+            res.success = false;
+            return true;
+        }
+        // Now, combine the points into a single trajectory
+        std::vector<motoman_msgs::DynamicJointPoint> complete_trajectory_points;
+        for (size_t idx = 0; idx < expected_size; idx++)
+        {
+            motoman_msgs::DynamicJointPoint new_traj_point;
+            new_traj_point.groups = {left_arm_group_points[idx], right_arm_group_points[idx], torso_1_group_points[idx], torso_2_group_points[idx]};
+            new_traj_point.num_groups = 4;
+            complete_trajectory_points.push_back(new_traj_point);
+        }
+        ROS_INFO("Assembled combined trajectory with %zu points", complete_trajectory_points.size());
+        // Assemble full trajectory
+        std::vector<std::string> complete_joint_names(16);
+        complete_joint_names[0] = "arm_left_joint_1_s";
+        complete_joint_names[1] = "arm_left_joint_2_l";
+        complete_joint_names[2] = "arm_left_joint_3_e";
+        complete_joint_names[3] = "arm_left_joint_4_u";
+        complete_joint_names[4] = "arm_left_joint_5_r";
+        complete_joint_names[5] = "arm_left_joint_6_b";
+        complete_joint_names[6] = "arm_left_joint_7_t";
+        complete_joint_names[7] = "arm_right_joint_1_s";
+        complete_joint_names[8] = "arm_right_joint_2_l";
+        complete_joint_names[9] = "arm_right_joint_3_e";
+        complete_joint_names[10] = "arm_right_joint_4_u";
+        complete_joint_names[11] = "arm_right_joint_5_r";
+        complete_joint_names[12] = "arm_right_joint_6_b";
+        complete_joint_names[13] = "arm_right_joint_7_t";
+        complete_joint_names[14] = "torso_joint_b1";
+        complete_joint_names[15] = "torso_joint_b2";
+        motoman_msgs::DynamicJointTrajectory complete_trajectory;
+        complete_trajectory.header.frame_id = "/base_link";
+        complete_trajectory.joint_names = complete_joint_names;
+        complete_trajectory.points = complete_trajectory_points;
+        // Execute trajectory
+        motoman_msgs::CmdJointTrajectoryEx::Request trajectory_req;
+        trajectory_req.trajectory = complete_trajectory;
+        motoman_msgs::CmdJointTrajectoryEx::Response trajectory_res;
+        ROS_INFO("Executing trajectory (real)...");
+        bool status = g_execute_client.call(trajectory_req, trajectory_res);
+        if (!status)
+        {
+            ROS_ERROR("Trajectory execution service call failed");
+            res.success = false;
+            return true;
+        }
+        if (trajectory_res.code.val != industrial_msgs::ServiceReturnCode::SUCCESS)
+        {
+            ROS_ERROR("Trajectory execution service call returned FAILURE");
+            res.success = false;
+            return true;
+        }
+        else
+        {
+            ROS_INFO("Trajectory execution service call returned SUCCESS, waiting for execution to finish");
+        }
     }
     // Wait for the trajectory to finish, plus a little buffer time
     ros::Duration trajectory_exec_duration = (req.jointTraj.points[req.jointTraj.points.size() - 1].time_from_start * EXEC_TIME_FRACTION) + ros::Duration(EXEC_TIME_BUFFER);
@@ -496,6 +509,18 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "convert_trajectory_server");
     ros::NodeHandle node_handle;
+    ros::NodeHandle node_handle_private("~");
+    std::string simulation_execution_topic;
+    node_handle_private.param(std::string("simulation_execution_topic"), simulation_execution_topic, std::string(""));
+    if (simulation_execution_topic != "")
+    {
+        ROS_INFO("ConvertTrajectoryServer running in simulated execution mode");
+        g_simulation_execution_pub = node_handle.advertise<trajectory_msgs::JointTrajectory>(simulation_execution_topic, 1);
+    }
+    else
+    {
+        ROS_INFO("ConvertTrajectoryServer running in real execution mode");
+    }
     g_execute_client = node_handle.serviceClient<motoman_msgs::CmdJointTrajectoryEx>("/joint_path_command");
     ros::Subscriber jointStateSub = node_handle.subscribe("joint_states", 0, jointStateCallback);
     ros::ServiceServer service = node_handle.advertiseService("convert_trajectory_service", move_callback);
