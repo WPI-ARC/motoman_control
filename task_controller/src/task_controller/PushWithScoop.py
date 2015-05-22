@@ -487,11 +487,11 @@ class PushWithScoop(smach.State):
 
     # TODO Use calibrated values, not hardcoded
     def convertFrameRobotToShelf(self, pose):
-        with shelf_stamped_pose = get_shelf_pose()
+        shelf_stamped_pose = get_shelf_pose()
 
-            pose.position.x += -(shelf_stamped_pose.pose.position.x)
-            pose.position.y += -(shelf_stamped_pose.pose.position.y)
-            pose.position.z += -(shelf_stamped_pose.pose.position.z)
+        pose.position.x += -(shelf_stamped_pose.pose.position.x)
+        pose.position.y += -(shelf_stamped_pose.pose.position.y)
+        pose.position.z += -(shelf_stamped_pose.pose.position.z)
 
         # pose.position.x += -1.3535731570096812
         # pose.position.y += -0.08215183129781853
