@@ -150,13 +150,27 @@ class PushWithScoop(smach.State):
             rospy.loginfo("Start bin is L")
 
         
-        # plan, success = get_known_trajectory('Pick', startBin)
+        plan, success = get_known_trajectory('Pick', startBin)
+        if not self.move(plan.joint_trajectory):
+            return 'Failure'
+
+        # plan, success = get_known_trajectory('Dump', startBin)
         # if not self.move(plan.joint_trajectory):
         #     return 'Failure'
 
+        # plan, success = get_known_trajectory('Lift', startBin)
+        # if not self.move(plan.joint_trajectory):
+        #     return 'Failure'
+
+        # plan, success = get_known_trajectory('Home', startBin)
+        # if not self.move(plan.joint_trajectory):
+        #     return 'Failure'
+        # return 'Success'
+
+        remove_shelf()
         # if not execute_known_trajectory(self.arm, 'Pick', userdata.bin):
-        if not execute_known_trajectory(self.arm, 'Pick', startBin):
-            return 'Failure'
+        # if not execute_known_trajectory(self.arm, 'Pick', startBin):
+        #     return 'Failure'
         # remove_shelf()
         # if not execute_known_trajectory(self.arm, 'Dump', userdata.bin):
         #     return 'Failure'
@@ -180,7 +194,8 @@ class PushWithScoop(smach.State):
 
         if (userdata.bin == "A" or userdata.bin == "J"):
             verticalPose.position.x += -0.364436
-            verticalPose.position.y += 0.13305766
+            # verticalPose.position.y += 0.13305766
+            verticalPose.position.y += 0.12305766
             verticalPose.position.z += 0.027
             verticalPose.orientation.x = 0.19924
             verticalPose.orientation.y = -0.69387
@@ -200,7 +215,8 @@ class PushWithScoop(smach.State):
             # verticalPose.position.y += 0.13305766
             # verticalPose.position.z += 0.027
             verticalPose.position.x += -0.414436
-            verticalPose.position.y += 0.03305766
+            # verticalPose.position.y += 0.03305766
+            verticalPose.position.y += 0.02305766
             verticalPose.position.z += 0.15
             verticalPose.orientation.x = 0.336374
             verticalPose.orientation.y = -0.590811
@@ -221,7 +237,8 @@ class PushWithScoop(smach.State):
 
         elif (userdata.bin == "B" or userdata.bin == "K"):
             verticalPose.position.x += -0.364436
-            verticalPose.position.y += 0.13305766
+            # verticalPose.position.y += 0.13305766
+            verticalPose.position.y += 0.12305766
             verticalPose.position.z += 0.027
             verticalPose.orientation.x = 0.19924
             verticalPose.orientation.y = -0.69387
@@ -241,7 +258,8 @@ class PushWithScoop(smach.State):
             # verticalPose.position.y += 0.13305766
             # verticalPose.position.z += 0.027
             verticalPose.position.x += -0.414436
-            verticalPose.position.y += 0.03305766
+            # verticalPose.position.y += 0.03305766
+            verticalPose.position.y += 0.02305766
             verticalPose.position.z += 0.15
             verticalPose.orientation.x = 0.336374
             verticalPose.orientation.y = -0.590811
@@ -256,13 +274,18 @@ class PushWithScoop(smach.State):
             return 'Success'
 
         elif (userdata.bin == "C" or userdata.bin == "L"):
+            # verticalPose.position.x += -0.382929
+            # # verticalPose.position.y += -.12865034
+            # verticalPose.position.y += -.13865034
+            # verticalPose.position.z += 0.032
+
             verticalPose.position.x += -0.382929
-            verticalPose.position.y += -.12865034
-            verticalPose.position.z += 0.032
-            verticalPose.orientation.x = 0.19924
-            verticalPose.orientation.y = -0.69387
-            verticalPose.orientation.z = -0.14743
-            verticalPose.orientation.w = 0.6761
+            verticalPose.position.y += -.13865034
+            verticalPose.position.z += 0.052
+            verticalPose.orientation.x = 0.686353
+            verticalPose.orientation.y = 0.166894
+            verticalPose.orientation.z = -0.680383
+            verticalPose.orientation.w = -0.195307
 
             verticalPose.position.y += rightOffset
             verticalPose = self.convertFrameRobotToShelf(verticalPose)
@@ -277,8 +300,10 @@ class PushWithScoop(smach.State):
             # verticalPose.position.y += -.12865034
             # verticalPose.position.z += 0.032
             verticalPose.position.x += -0.414436
-            verticalPose.position.y += 0.03305766
-            verticalPose.position.z += 0.15
+            # verticalPose.position.y += 0.03305766
+            verticalPose.position.y += 0.02305766
+            # verticalPose.position.z += 0.15
+            verticalPose.position.z += 0.16
             verticalPose.orientation.x = -0.659937
             verticalPose.orientation.y = 0.0351767
             verticalPose.orientation.z = 0.738262
@@ -293,32 +318,32 @@ class PushWithScoop(smach.State):
 
     def pushLeftToRight(self, verticalPose):
         rospy.loginfo("planning to vertical pose")
-        add_shelf()
+        # add_shelf()
         self.startPose = self.convertFrameRobotToShelf(self.arm.
                                                        get_current_pose().pose)
-        poses = [self.startPose]
+        # poses = [self.startPose]
 
-        poses.append(self.startPose)
-        poses[-1].orientation.x = verticalPose.orientation.x
-        poses[-1].orientation.y = verticalPose.orientation.y
-        poses[-1].orientation.z = verticalPose.orientation.z
-        poses[-1].orientation.w = verticalPose.orientation.w
+        # poses.append(self.startPose)  # CHECK THIS LINE??
+        # poses[-1].orientation.x = verticalPose.orientation.x
+        # poses[-1].orientation.y = verticalPose.orientation.y
+        # poses[-1].orientation.z = verticalPose.orientation.z
+        # poses[-1].orientation.w = verticalPose.orientation.w
 
-        if not follow_path(self.arm, poses):
-            return False
-
-        poses = [self.convertFrameRobotToShelf(self.arm.
-                                              get_current_pose().pose)]
-
-        poses.append(verticalPose)
-        if not follow_path(self.arm, poses):
-            return False
-
-        # remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED HERE
-        # self.arm.set_pose_target(verticalPose)
-        # plan = self.arm.plan()
-        # if not self.move(plan.joint_trajectory):
+        # if not follow_path(self.arm, poses):
         #     return False
+
+        # poses = [self.convertFrameRobotToShelf(self.arm.
+        #                                       get_current_pose().pose)]
+
+        # poses.append(verticalPose)
+        # if not follow_path(self.arm, poses):
+        #     return False
+
+        remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED HERE
+        self.arm.set_pose_target(verticalPose)
+        plan = self.arm.plan()
+        if not self.move(plan.joint_trajectory):
+            return False
 
         rospy.loginfo("Going along inside left wall")
         remove_shelf()
@@ -377,32 +402,32 @@ class PushWithScoop(smach.State):
 
     def pushRightToLeft(self, verticalPose):
         rospy.loginfo("planning to vertical pose")
-        add_shelf()
-        self.startPose = self.convertFrameRobotToShelf(self.arm.
-                                                       get_current_pose().pose)
-        poses = [self.startPose]
+        # add_shelf()
+        # self.startPose = self.convertFrameRobotToShelf(self.arm.
+        #                                                get_current_pose().pose)
+        # poses = [self.startPose]
 
-        poses.append(self.startPose)
-        poses[-1].orientation.x = verticalPose.orientation.x
-        poses[-1].orientation.y = verticalPose.orientation.y
-        poses[-1].orientation.z = verticalPose.orientation.z
-        poses[-1].orientation.w = verticalPose.orientation.w
+        # poses.append(self.startPose)
+        # poses[-1].orientation.x = verticalPose.orientation.x
+        # poses[-1].orientation.y = verticalPose.orientation.y
+        # poses[-1].orientation.z = verticalPose.orientation.z
+        # poses[-1].orientation.w = verticalPose.orientation.w
 
-        if not follow_path(self.arm, poses):
-            return False
-
-        poses = [self.convertFrameRobotToShelf(self.arm.
-                                              get_current_pose().pose)]
-
-        poses.append(verticalPose)
-        if not follow_path(self.arm, poses):
-            return False
-
-        # remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED HERE
-        # self.arm.set_pose_target(verticalPose)
-        # plan = self.arm.plan()
-        # if not self.move(plan.joint_trajectory):
+        # if not follow_path(self.arm, poses):
         #     return False
+
+        # poses = [self.convertFrameRobotToShelf(self.arm.
+        #                                       get_current_pose().pose)]
+
+        # poses.append(verticalPose)
+        # if not follow_path(self.arm, poses):
+        #     return False
+
+        remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED HERE
+        self.arm.set_pose_target(verticalPose)
+        plan = self.arm.plan()
+        if not self.move(plan.joint_trajectory):
+            return False
 
         rospy.loginfo("Going along inside right wall")
         remove_shelf()
@@ -462,8 +487,16 @@ class PushWithScoop(smach.State):
 
     # TODO Use calibrated values, not hardcoded
     def convertFrameRobotToShelf(self, pose):
-        pose.position.x += -1.40009583376
-        pose.position.y += -0.0841733373195
-        pose.position.z += 0.045
+        pose.position.x += -1.3535731570096812
+        pose.position.y += -0.08215183129781853
+        pose.position.z += 0.135
+
+        # pose.position.x += -1.39485775456
+        # pose.position.y += -0.0744959997413
+        # pose.position.z += 0.045
+
+        # pose.position.x += -1.40009583376
+        # pose.position.y += -0.0841733373195
+        # pose.position.z += 0.045
 
         return pose

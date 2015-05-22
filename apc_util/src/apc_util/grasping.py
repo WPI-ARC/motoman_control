@@ -7,7 +7,10 @@ from robotiq_s_model_articulated_msgs.msg import SModelRobotInput
 
 from moveit import goto_pose, follow_path, move, robot_state
 from shelf import FULL_SHELF
-from services import _grasp_generator, _gripper_control
+from services import _grasp_generator, _gripper_control, _get_cartesian_path
+from moveit_msgs.msg import RobotState
+from sensor_msgs.msg import JointState
+from std_msgs.msg import Header
 
 
 class Gripper(object):
@@ -101,26 +104,75 @@ def generate_grasps(item, pose, shelf_pose, pointcloud, bin):
 def plan_grasps(group, grasps):
     for i, grasp in enumerate(grasps):
         rospy.loginfo("%s/%s" % (i+1, len(grasps)))
-        traj, success = group.compute_cartesian_path(
-            [grasp.approach, grasp.pregrasp],
-            0.01,  # 1cm interpolation resolution
-            0.0,  # jump_threshold disabled
+        group.set_planner_id("RRTConnectkConfigDefault")
+        group.set_workspace([-3, -3, -3, 3, 3, 3])
+        approach_plan = None
+        for t in [1,3]:
+            group.set_planning_time(t)
+            plan = group.plan(grasp.approach)
+            if len(plan.joint_trajectory.points) > 0:
+                print "FOUND PLAN"
+                approach_plan = plan
+                break
+            print "FAILED PLAN " + str(t)
+
+        if not approach_plan:
+            rospy.logwarn("Failed to find plan to approach pose")
+            continue
+
+        joint_state = JointState(
+            header=Header(),
+            name=plan.joint_trajectory.joint_names,
+            position=plan.joint_trajectory.points[-1].positions,
+            velocity=plan.joint_trajectory.points[-1].velocities,
+            effort=plan.joint_trajectory.points[-1].effort
+        )
+        #traj, success = group.compute_cartesian_path(
+            #[grasp.approach, grasp.pregrasp],
+            #0.01,  # 1cm interpolation resolution
+            #0.0,  # jump_threshold disabled
+            #avoid_collisions=True,
+        #)
+
+        response = _get_cartesian_path(
+            #header=Header(),
+            group_name=group.get_name(),
+            start_state=RobotState(joint_state=joint_state),
+            waypoints=[grasp.pregrasp],#[grasp.approach, grasp.pregrasp],
+            max_step=0.01,
+            jump_threshold=0.0,
             avoid_collisions=True
         )
-        rospy.loginfo("Compute cartesian path returned a status code " + str(success))
-        if success >= 1:
+
+
+        print "Fraction: ", response.fraction
+
+        rospy.loginfo("Cartesian path had status code: "+str(response.error_code))
+        rospy.loginfo("Cartesian ")
+
+        #traj, success = group.compute_cartesian_path(
+        #    [grasp.approach, grasp.pregrasp],
+        #    0.01,  # 1cm interpolation resolution
+        #    0.0,  # jump_threshold disabled
+        #    avoid_collisions=True
+        #)
+        #rospy.loginfo("Compute cartesian path returned a status code " + str(success))
+        if response.fraction >= 1:
             rospy.loginfo("Found grasp")
-            yield grasp, traj
+            yield grasp, approach_plan, response.solution
 
 
-def execute_grasp(group, grasp, plan, shelf=FULL_SHELF):
+def execute_grasp(group, grasp, plan1, plan2, shelf=FULL_SHELF):
     rospy.loginfo("Moving to approach pose")
-    start = list(plan.joint_trajectory.points[0].positions)
-    if not goto_pose(group, start, [1, 5, 30, 60], shelf=shelf):
+    #start = list(plan.joint_trajectory.points[0].positions)
+    #if not goto_pose(group, start, [1, 5, 30, 60], shelf=shelf):
+    #    return False
+    if not move(group, plan1.joint_trajectory):
+        rospy.logerr("Failed to got to approach pose")
         return False
 
     rospy.loginfo("Executing cartesian approach")
-    if not move(group, plan.joint_trajectory):
+    if not move(group, plan2.joint_trajectory):
         rospy.logerr("Failed to execute approach")
         return False
 
@@ -132,7 +184,7 @@ def execute_grasp(group, grasp, plan, shelf=FULL_SHELF):
     poses.append(deepcopy(poses[-1]))
     poses[-1].position.z += 0.032
     poses.append(deepcopy(poses[-1]))
-    poses[-1].position.x = 0.40
+    poses[-1].position.x = 0.48
     if not follow_path(group, poses):
         return False
     return True

@@ -37,13 +37,13 @@ class Grasping:
         # self.pitchList = numpy.linspace(0, 0.0872664626, num=3) # 5 deg pitch = 0.0872664626
         # self.pitchList = [pi/12]
         self.pitchList = [0, 0.0872664626, 0.174532925 ] # 0deg, 5deg, 10deg
-        self.thetaList = numpy.linspace(-pi/6, pi/6, num=101) # Rotation of generated projection frames
+        self.thetaList = numpy.linspace(-pi/8, pi/8, num=101) # Rotation of generated projection frames
         # self.thetaList = [0]
         self.padding = 0.015  # Extra padding between object and gripper is 1 cm.
         self.fingerlength = 0.115  # palm to finger tip offset is 11.5 cm
         self.gripperwidth = 0.155 - self.padding  # gripper width is 15.5 cm
         self.z_lowerboundoffset = 0.065 - 0.02  # Palm center to bottom of hand is 6.5 cm
-        self.approachpose_offset = 0.2  # Set aproach pose to be 30cm back from the front of the bin
+        self.approachpose_offset = 0.3  # Set aproach pose to be 30cm back from the front of the bin
         # palm -15 deg offset about z-axis
         self.hand_theta = 0.261799
         self.shelfpitch = 0.0872664626 # 5 deg pitch  = 0.0872664626
@@ -131,79 +131,79 @@ class Grasping:
     def get_object_height_offset(self, req):
         if req.item == 'cheezit_big_original':
             item = '../env/cheezit.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0.02
         elif req.item == 'kyjen_squeakin_eggs_plush_puppies':
             item = '../env/colorballs.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0
         elif req.item == 'crayola_64_ct':
             item = '../env/crayon.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0
         elif req.item == 'feline_greenies_dental_treats':
             item = '../env/dentaltreat.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0
         elif req.item == 'expo_dry_erase_board_eraser':
             item = '../env/eraser.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0
         elif req.item == 'elmers_washable_no_run_school_glue':
             item = '../env/glue.env.xml'
-            self.objectheightoffset = -0.05
+            self.objectheightoffset = 0
         elif req.item == 'sharpie_accent_tank_style_highlighters':
             item = '../env/highlighters.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0
         elif req.item == 'mark_twain_huckleberry_finn':
             item = '../env/huckfinn.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0
         elif req.item == 'mead_index_cards':
             item = '../env/indexcards.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0
         elif req.item == 'oreo_mega_stuf':
             item = '../env/oreo.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0
         elif req.item == 'mommys_helper_outlet_plugs':
             item = '../env/outletplugs.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0
         elif req.item == 'paper_mate_12_count_mirado_black_warrior':
             item = '../env/pencil.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0
         elif req.item == 'rolodex_jumbo_pencil_cup':
             item = '../env/pencilcup.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0
         elif req.item == 'kong_duck_dog_toy':
             item = '../env/plushduck.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0
         elif req.item == 'kong_sitting_frog_dog_toy':
             item = '../env/plushfrog.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0
         elif req.item == 'munchkin_white_hot_duck_bath_toy':
             item = '../env/rubberduck.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0
         elif req.item == 'safety_works_safety_glasses':
             item = '../env/safetyglasses.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0
         elif req.item == 'stanley_66_052':
             item = '../env/screwdrivers.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0
         elif req.item == 'champion_copper_plus_spark_plug':
             item = '../env/sparkplug.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0
         elif req.item == 'highland_6539_self_stick_notes':
             item = '../env/stickynotes.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0
         elif req.item == 'genuine_joe_plastic_stir_sticks':
             item = '../env/stirsticks.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0
         elif req.item == 'first_years_take_and_toss_straw_cup':
             item = '../env/strawcups.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0
         elif req.item == 'kong_air_dog_squeakair_tennis_ball':
             item = '../env/tennisball.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0
         elif req.item == 'laugh_out_loud_joke_book':
             item = '../env/huckfinn.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0
         elif req.item == 'dr_browns_bottle_brush':
             item = '../env/huckfinn.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0
         else:
             rospy.logerr("could not find scene xml for object: %s", req.item)
             self.status = False
@@ -228,11 +228,11 @@ class Grasping:
         obj_depth = abs(max_x-min_x)
         edge_offset = min_x
         extensions = 0.15 # 15cm finger extensions
-        offset = numpy.true_divide(obj_depth, 4)
-        if offset > self.fingerlength + extensions:
-            offset = 0.10
-        if offset < 0.10:
-            offset = 0.10
+        offset = numpy.true_divide(obj_depth, 2)
+        if offset > (self.fingerlength + extensions):
+            offset = 0.15
+        if offset < 0.15:
+            offset = 0.15
         return edge_offset - self.fingerlength - extensions + offset # the palm is located at min_x so move out till lenght of finger to place lenght of finger at min_x. Then move in 1/4 of the total depth of object
         #return edge_offset - self.fingerlength - extensions
 
@@ -250,7 +250,7 @@ class Grasping:
     def compute_score(self, width, pitch):
         fscore = numpy.true_divide(width, self.gripperwidth)
         gscore = abs(pitch)
-        weight = 0.6
+        weight = 0.4
         score = (1-weight)*fscore - weight*gscore
         if score < 0:
             score = 0
@@ -464,7 +464,7 @@ class Grasping:
                     pregrasp_height_extra = abs(grasp_depth) * numpy.sin(pitch)
                     proj_msg.position.z = height + pregrasp_height_extra
                     approach_msg = PoseFromMatrix(TbaseIK_approach)
-                    approach_bin_entrance_position = numpy.dot(Tbaseshelf, numpy.array([[bin_min_x-0.32], [0], [0], [1]]))
+                    approach_bin_entrance_position = numpy.dot(Tbaseshelf, numpy.array([[bin_min_x-0.55], [0], [0], [1]]))
                     approach_msg.position.x = approach_bin_entrance_position[0]
                     approach_height_extra = abs(self.approachpose_offset) * numpy.sin(pitch)
                     approach_msg.position.z = height + pregrasp_height_extra + approach_height_extra

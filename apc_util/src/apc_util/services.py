@@ -8,6 +8,7 @@ from grasp_planner.srv import apcGraspDB
 from gripper_srv.srv import gripper
 from motoman_moveit.srv import convert_trajectory_server
 from moveit_msgs.srv import GetPlanningScene
+from moveit_msgs.srv import GetCartesianPath
 
 _publish_pointcloud_collision = rospy.ServiceProxy("publish_pointcloud_collision", PublishPointcloudCollision)
 _take_sample = rospy.ServiceProxy("take_sample", TakeSample)
@@ -19,6 +20,7 @@ _get_known_trajectory = rospy.ServiceProxy("/trajlib", GetTrajectory)
 _grasp_generator = rospy.ServiceProxy('getGrasps_online_server', apcGraspDB)
 _gripper_control = rospy.ServiceProxy("/left/command_gripper", gripper)
 _get_planning_scene = rospy.ServiceProxy('/get_planning_scene', GetPlanningScene)
+_get_cartesian_path = rospy.ServiceProxy('/compute_cartesian_path', GetCartesianPath)
 
 services = [
     _publish_pointcloud_collision,
@@ -31,6 +33,7 @@ services = [
     _grasp_generator,
     _gripper_control,
     _get_planning_scene,
+    _get_cartesian_path,
 ]
 
 

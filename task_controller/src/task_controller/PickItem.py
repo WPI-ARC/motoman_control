@@ -40,18 +40,18 @@ class PickItem(smach.State):
 
         # self.show_grasps(grasps)
 
-        with PADDED_SHELF:
-        #with BIN(userdata.bin):
+        #with PADDED_SHELF:
+        with BIN(userdata.bin):
             grasps = plan_grasps(self.arm, grasps)
 
             try:
-                grasp, plan = grasps.next()
+                grasp, plan1, plan2 = grasps.next()
                 rospy.loginfo("Grasp: %s" % grasp)
             except StopIteration:
                 rospy.logwarn("No online grasps found.")
                 return "Failure"
 
-            if not execute_grasp(self.arm, grasp, plan, shelf=NO_SHELF):
+            if not execute_grasp(self.arm, grasp, plan1, plan2, shelf=NO_SHELF):
                 return "Failure"
 
         pose = PoseStamped()
