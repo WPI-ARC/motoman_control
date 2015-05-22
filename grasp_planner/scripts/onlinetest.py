@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+import datetime
+import os
+from random import choice
+import cPickle as pickle
 import tf
 import tf2_ros
 import math
@@ -53,6 +57,14 @@ def follow_path(group, path, collision_checking=False):
         #return False
     return group.execute(traj)
 
+def load_request(): 
+    rospy.loginfo("Loading request msg from file")
+    folderpath = os.path.join(os.path.dirname(__file__), "savedmsg")
+    filename = choice(os.listdir(folderpath))  # Load random file from directory
+    with open(folderpath + "/" + filename, 'rb') as file:
+        request = pickle.load(file)
+    return request
+
 def main():
     try:
         rospy.loginfo("Initializing...")
@@ -60,33 +72,20 @@ def main():
         arm = robot.arm_left
         rospy.init_node("online_planner_test")
         client = rospy.ServiceProxy('getGrasps_online_server', apcGraspDB)
-        item = 'expo_dry_erase_board_eraser' # Set response item
-        # item = 'cheezit_big_original'
         tfs = []
-        pts = []
 
-        msg = geometry_msgs.msg.Pose()
-        msg.position.x = 0.885315
-        msg.position.y = 0.413907
-        msg.position.z = 0.787417
-        msg.orientation.x = 0
-        msg.orientation.y = 0
-        msg.orientation.z = 0
-        msg.orientation.w = 1
+        request = load_request()
 
+        pointcloud = rospy.Publisher("/grasp_points", PointCloud2)
+        request.object_points.header.stamp = rospy.Time.now()
+        pointcloud.publish(request.object_points)
 
-
-        points = sensor_msgs.msg.PointCloud2()
-        points.data = pts
-        binnum = "B"
-
-        response = client(item, binnum, msg, points)
+        response = client(request)
         print "returned pose"
-        print response.status
-        print response.grasps
 
 
         grasps = response.grasps.grasps
+
         for i in range(len(grasps)):
             grasp = grasps[i].pregrasp        
             t = geometry_msgs.msg.TransformStamped()
@@ -108,13 +107,16 @@ def main():
         br = tf2_ros.TransformBroadcaster()
         rate = rospy.Rate(250.0)
         while (not rospy.is_shutdown()):
+            request.object_points.header.stamp = rospy.Time.now()
+            pointcloud.publish(request.object_points)
             for t in tfs:
                 t.header.stamp = rospy.Time.now()
                 br.sendTransform(t)
             rate.sleep()
 
+
         # i = 0
-        # grasp = grasps[i].posegrasp        
+        # grasp = grasps[i].pregrasp        
         # t = geometry_msgs.msg.TransformStamped()
         # t.header.stamp = rospy.Time.now()
         # t.header.frame_id = "base_link"
@@ -122,7 +124,7 @@ def main():
         # t.transform.translation = grasp.position
         # t.transform.rotation = grasp.orientation
         # tfs.append(t)
-        # approach = grasps[i].poseapproach
+        # approach = grasps[i].approach
         # t = geometry_msgs.msg.TransformStamped()
         # t.header.stamp = rospy.Time.now()
         # t.header.frame_id = "base_link"
@@ -137,13 +139,15 @@ def main():
         #         tf.header.stamp = rospy.Time.now()
         #         br.sendTransform(tf)                
         #     rate.sleep()
+        #     request.object_points.header.stamp = rospy.Time.now()
+        #     pointcloud.publish(request.object_points)
 
-        rospy.loginfo("Trying to move to initial pose...")
-        approachpose = grasps[i].poseapproach
-        pregrasppose = grasps[i].posegrasp
+        # rospy.loginfo("Trying to move to initial pose...")
+        # approachpose = grasps[i].approach
+        # pregrasppose = grasps[i].pregrasp
         
-        arm.set_planner_id("RRTstarkConfigDefault")
-        arm.set_workspace([-3, -3, -3, 3, 3, 3])
+        # arm.set_planner_id("RRTConnectkConfigDefault")
+        # arm.set_workspace([-3, -3, -3, 3, 3, 3])
         # if not goto_pose(arm, approachpose, [1, 5, 30]): #move to approach
         #     sys.exit(1)
 

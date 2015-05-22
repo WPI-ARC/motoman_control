@@ -38,19 +38,20 @@ class PickItem(smach.State):
         if not success:
             return 'Failure'
 
-        self.show_grasps(grasps)
+        # self.show_grasps(grasps)
 
+        #with PADDED_SHELF:
         with BIN(userdata.bin):
             grasps = plan_grasps(self.arm, grasps)
 
             try:
-                grasp, plan = grasps.next()
+                grasp, plan1, plan2 = grasps.next()
                 rospy.loginfo("Grasp: %s" % grasp)
             except StopIteration:
                 rospy.logwarn("No online grasps found.")
                 return "Failure"
 
-            if not execute_grasp(self.arm, grasp, plan, shelf=NO_SHELF):
+            if not execute_grasp(self.arm, grasp, plan1, plan2, shelf=NO_SHELF):
                 return "Failure"
 
         pose = PoseStamped()
@@ -74,7 +75,8 @@ class PickItem(smach.State):
         import tf2_ros
         from geometry_msgs.msg import TransformStamped
         if filter:
-            with PADDED_SHELF:
+            # with PADDED_SHELF:
+            with BIN(userdata.bin):
                 grasps = list(grasp for grasp, _ in plan_grasps(self.arm, grasps))
         tfs = []
         for i in range(len(grasps)):

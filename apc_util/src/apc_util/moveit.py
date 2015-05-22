@@ -20,14 +20,17 @@ LEFT_NAMES = ["torso_joint_b1", "arm_left_joint_1_s", "arm_left_joint_2_l", "arm
 #              -0.8355313237647156, -0.6598546685936744, 2.244587644488423]
 
 # LEFT_HOME side position, currently being used for testing scooping
-LEFT_HOME = [0.0, -1.00305645, -1.49978651, 0.45750031, -2.17721628,
-             0.45096816, -1.20433976, -1.55814993]
+# LEFT_HOME = [0.0, -1.00305645, -1.49978651, 0.45750031, -2.17721628,
+#              0.45096816, -1.20433976, -1.55814993]
+LEFT_HOME = [0.0, -1.0030189752578735, -1.3676973581314087, 0.4575970768928528, -2.1772351264953613, 
+             0.4510055184364319, -1.2042508125305176, -1.5581035614013672]
 
 RIGHT_NAMES = ["torso_joint_b1", "arm_right_joint_1_s", "arm_right_joint_2_l", "arm_right_joint_3_e",
               "arm_right_joint_4_u", "arm_right_joint_5_r", "arm_right_joint_6_b", "arm_right_joint_7_t"]
 RIGHT_HOME = [0.0, -1.0030564513590334, -1.49978651413566, 0.457500317369117, -2.1772162870743323,
               0.4509681667487428, -1.2043397683221861, -1.5581499385881046]
-
+# RIGHT_HOME = [0.0, -1.003053069114685, -1.3010714054107666, 0.45768821239471436, -2.1770224571228027,
+#               0.4510662853717804, -1.2044178247451782, -1.5581636428833008]
 
 def move(group, traj):
     robot_state.wait_to_continue()
@@ -128,7 +131,19 @@ def execute_known_trajectory(group, task, bin):
     if not success:
         return False
 
-    with SIMPLE_SHELF:
+    # with SIMPLE_SHELF:
+    #     collisions, success = check_collisions(CheckTrajectoryValidityQuery(
+    #         initial_state=JointState(
+    #             header=Header(stamp=rospy.Time.now()),
+    #             name=robot.sda10f.get_joints(),
+    #             position=robot.sda10f.get_current_joint_values()
+    #         ),
+    #         trajectory=plan.joint_trajectory,
+    #         check_type=CheckTrajectoryValidityQuery.CHECK_ENVIRONMENT_COLLISION,
+    #     ))
+    # NO_SHELF WAS USED WHEN CALLING THE PRE-COMPUTED TRAJECTORIES,
+    # I AM UNSURE IF IT WORKS OTHERWISE -GB
+    with NO_SHELF:
         collisions, success = check_collisions(CheckTrajectoryValidityQuery(
             initial_state=JointState(
                 header=Header(stamp=rospy.Time.now()),
