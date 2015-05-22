@@ -1,20 +1,24 @@
 <?xml version="1.0"?>
 <launch>
   <!-- Trajectory Execution Server -->
-  <node name="convert_trajectory_server" pkg="motoman_moveit" type="convert_trajectory_server" output="screen"/>
+  <node name="convert_trajectory_server" pkg="motoman_moveit" type="convert_trajectory_server" output="screen" >
+    <param name="simulation_execution_topic" type="string" value="joint_path_command" />
+  </node>
   <arg name="speed" default="slow" />
     
   <!-- Vision Code -->
-  <!-- <include file="$(find apc_vision)/launch/apc_vision.launch"/>
--->
+   <include file="$(find apc_vision)/launch/apc_vision.launch">
+    <arg name="sim" value="true" />
+    </include>
+
 
   <!-- Grasping and Gripper Cade -->
 <!--  <node ns="left" pkg="gripper_srv" type="SModelTcpNode.py" name="gripper_tcp_node" args="10.0.0.10"/> -->
   <!-- <node ns="right" pkg="gripper_srv" type="SModelTcpNode.py" name="gripper_tcp_node" args="10.0.0.11"/> -->
-<!--  <node ns="left" pkg="gripper_srv" type="gripper_controller.py" name="gripper_server" args="left"/> -->
-  <!-- <node ns="right" pkg="gripper_srv" type="gripper_controller.py" name="gripper_server" args="right"/> -->
-<!--  <node pkg="grasp_planner" type="online_grasp_server.py" name="online_grasp_server" />
- --> 
+ <node ns="left" pkg="gripper_srv" type="gripper_controller.py" name="gripper_server" args="left"/>
+  <node ns="right" pkg="gripper_srv" type="gripper_controller.py" name="gripper_server" args="right"/>
+ <node pkg="grasp_planner" type="online_grasp_server.py" name="online_grasp_server" />
+ 
   <!-- The planning and execution components of MoveIt! configured to run -->
   <!-- using the ROS-Industrial interface. -->
   <rosparam command="load" file="$(find motoman_sda10f_support)/config/joint_names_sda10f.yaml"/>
@@ -26,7 +30,7 @@
     <arg name="joint_limits"
          value="$(find motoman_sda10f_moveit_config)/config/joint_limits_$(arg speed).yaml" />
     <arg name="publish_monitored_planning_scene" value="true" />
-    <!-- <arg name="publish_monitored_planning_scene" value="false" /> -->
+    <arg name="fake_execution" value="true"/>
   </include>
 
   <!-- the "sim" argument controls whether we connect to a Simulated or Real robot -->
@@ -65,19 +69,11 @@
     <arg name="config" value="true"/>
   </include>
   
-  <!-- <include file="$(find motoman_sda10f_moveit_config)/launch/default_warehouse_db.launch" /> -->
   <node pkg="trajlib" type="trajectory_server.py" name="trajectory_server" />
   <node pkg="trajectory_verifier" type="trajectory_verifier_node" name="trajectory_verifier" output="screen"/>
 
   <rosparam command="load" file="$(find task_controller)/cfg/items.yaml" />
-<!--  <node pkg="apc_util" type="publish_pointcloud_collision_server" name="publish_pointcloud_collision_server" /> -->
-
-  <!-- We do not have a robot connected, so publish fake joint states -->
-<!--  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
-    <param name="/use_gui" value="true"/> 
-    <rosparam param="/source_list">[/move_group/fake_controller_joint_states]</rosparam>
-  </node>
--->
+ <node pkg="apc_util" type="publish_pointcloud_collision_server" name="publish_pointcloud_collision_server" />
 
   <!-- Environment models -->
   <rosparam command="load" file="$(find task_controller)/cfg/shelf.yaml" />
