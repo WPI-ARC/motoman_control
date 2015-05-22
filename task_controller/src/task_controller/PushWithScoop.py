@@ -6,7 +6,7 @@ from copy import deepcopy
 from motoman_moveit.srv import convert_trajectory_server
 
 from apc_util.moveit import follow_path, goto_pose, execute_known_trajectory, get_known_trajectory
-from apc_util.shelf import bin_pose, add_shelf, remove_shelf, Shelf
+from apc_util.shelf import bin_pose, add_shelf, remove_shelf, Shelf, get_shelf_pose
 from apc_util.smach import on_exception
 
 
@@ -487,9 +487,15 @@ class PushWithScoop(smach.State):
 
     # TODO Use calibrated values, not hardcoded
     def convertFrameRobotToShelf(self, pose):
-        pose.position.x += -1.3535731570096812
-        pose.position.y += -0.08215183129781853
-        pose.position.z += 0.135
+        with shelf_stamped_pose = get_shelf_pose()
+
+            pose.position.x += -(shelf_stamped_pose.pose.position.x)
+            pose.position.y += -(shelf_stamped_pose.pose.position.y)
+            pose.position.z += -(shelf_stamped_pose.pose.position.z)
+
+        # pose.position.x += -1.3535731570096812
+        # pose.position.y += -0.08215183129781853
+        # pose.position.z += 0.135
 
         # pose.position.x += -1.39485775456
         # pose.position.y += -0.0744959997413
