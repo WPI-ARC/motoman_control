@@ -232,6 +232,24 @@ bool CheckVelocities(const trajectory_msgs::JointTrajectory& traj)
     }
 }
 
+trajectory_msgs::JointTrajectory GenerateFullTrajectory(const std::map<std::string, double>& current_joint_values, const trajectory_msgs::JointTrajectory& partial_joint_trajectory, const std::vector<std::string>& complete_joint_names)
+{
+    trajectory_msgs::JointTrajectory full_trajectory;
+    full_trajectory.header = partial_joint_trajectory.header;
+    full_trajectory.joint_names = complete_joint_names;
+    for (size_t idx = 0; idx < partial_joint_trajectory.points.size(); idx++)
+    {
+        const trajectory_msgs::JointTrajectoryPoint& partial_point = partial_joint_trajectory.points[idx];
+        std::map<std::string, double> commanded_position_map = GenerateNameValueMap(partial_joint_trajectory.joint_names, partial_point.positions);
+        std::map<std::string, double> commanded_velocity_map = GenerateNameValueMap(partial_joint_trajectory.joint_names, partial_point.velocities, true);
+        trajectory_msgs::JointTrajectoryPoint full_point;
+        full_point.positions = GetGroupPositions(current_joint_values, commanded_position_map, complete_joint_names);
+        full_point.velocities = GetGroupVelocities(commanded_velocity_map, complete_joint_names);
+        full_trajectory.points.push_back(full_point);
+    }
+    return full_trajectory;
+}
+
 bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, motoman_moveit::convert_trajectory_server::Response &res)
 {
     if (req.jointTraj.points.size() == 0)
@@ -324,8 +342,27 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, moto
     // Simulation-only execution
     if (g_simulation_execution)
     {
+        ROS_INFO("Generated full-robot trajectory");
+        std::vector<std::string> complete_joint_names(16);
+        complete_joint_names[0] = "arm_left_joint_1_s";
+        complete_joint_names[1] = "arm_left_joint_2_l";
+        complete_joint_names[2] = "arm_left_joint_3_e";
+        complete_joint_names[3] = "arm_left_joint_4_u";
+        complete_joint_names[4] = "arm_left_joint_5_r";
+        complete_joint_names[5] = "arm_left_joint_6_b";
+        complete_joint_names[6] = "arm_left_joint_7_t";
+        complete_joint_names[7] = "arm_right_joint_1_s";
+        complete_joint_names[8] = "arm_right_joint_2_l";
+        complete_joint_names[9] = "arm_right_joint_3_e";
+        complete_joint_names[10] = "arm_right_joint_4_u";
+        complete_joint_names[11] = "arm_right_joint_5_r";
+        complete_joint_names[12] = "arm_right_joint_6_b";
+        complete_joint_names[13] = "arm_right_joint_7_t";
+        complete_joint_names[14] = "torso_joint_b1";
+        complete_joint_names[15] = "torso_joint_b2";
+        trajectory_msgs::JointTrajectory full_trajectory = GenerateFullTrajectory(current_joint_values, req.jointTraj, complete_joint_names);
         ROS_INFO("Executing trajectory (simulation)...");
-        g_simulation_execution_pub.publish(req.jointTraj);
+        g_simulation_execution_pub.publish(full_trajectory);
         ROS_INFO("Trajectory execution started, waiting for execution to finish");
     }
     // Real execution
