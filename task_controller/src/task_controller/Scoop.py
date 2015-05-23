@@ -839,11 +839,11 @@ class Scoop(smach.State):
         full_req.query = query
         full_res = planner_client.call(full_req)
 
-        if full_res == 0:
+        if full_res.status == 0:
             rospy.loginfo("Constrained Path returned successful")
-            return True
+            return self.move(full_res.path)
         else:
-            rospy.logerr("Constrained Path returned failure : " + full_res)
+            rospy.logerr("Constrained Path returned failure, status: " + full_res.status)
             return False
 
 
