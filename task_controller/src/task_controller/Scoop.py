@@ -120,6 +120,7 @@ class Scoop(smach.State):
         horizontalPose.orientation.y = -0.512959
         horizontalPose.orientation.z = 0.403541
         horizontalPose.orientation.w = 0.698654
+        # TODO: calibrate orientation?
 
         # FIX
         leftOffset = -0.001
@@ -142,9 +143,9 @@ class Scoop(smach.State):
         horizontalPose = self.convertFrameRobotToShelf(horizontalPose)
         rospy.loginfo("planning to horizontal pose")
 
-        # self.arm.set_planning_time(5)
         # self.arm.set_joint_value_target(jointConfigHor)
         # remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED
+        # add_shelf()
         # plan = self.arm.plan()
         # if not self.move(plan.joint_trajectory):
         #     return 'Failure'
@@ -691,19 +692,19 @@ class Scoop(smach.State):
 
         # return right arm to home position
         add_shelf()
-        jointConfigHor = [0, 0, 0, 0, 0, 0, 0, 0, 0]
-        jointConfigHor[0] = 0.0  # Torso
-        jointConfigHor[1] = 1.699523295294849
-        jointConfigHor[2] = -0.6448955832339801
-        jointConfigHor[3] = -0.06852598822491722
-        jointConfigHor[4] = -2.3331612363309975
-        jointConfigHor[5] = -0.3915515016420941
-        jointConfigHor[6] = 0.15148041914194765
-        jointConfigHor[7] = 0.4944912570006051
+        jointConfigHome = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        jointConfigHome[0] = 0.0  # Torso
+        jointConfigHome[1] = 1.699523295294849
+        jointConfigHome[2] = -0.6448955832339801
+        jointConfigHome[3] = -0.06852598822491722
+        jointConfigHome[4] = -2.3331612363309975
+        jointConfigHome[5] = -0.3915515016420941
+        jointConfigHome[6] = 0.15148041914194765
+        jointConfigHome[7] = 0.4944912570006051
 
         # this is currently done instead of goto_pose to use joint values
         self.arm.set_planning_time(5)
-        self.arm.set_joint_value_target(jointConfigHor)
+        self.arm.set_joint_value_target(jointConfigHome)
         plan = self.arm.plan()
         rospy.loginfo("moving right arm to home position")
         if not self.move(plan.joint_trajectory):
