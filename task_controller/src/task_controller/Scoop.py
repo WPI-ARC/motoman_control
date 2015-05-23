@@ -32,50 +32,83 @@ class Scoop(smach.State):
         # REMOVE THIS UNLESS 'PushWithScoop' IS CALLING EVERYTHING
         # return 'Success'
 
-        jointValues = [0, 0, 0, 0, 0, 0, 0, 0]
-        
-        if userdata.bin == "A":
-            jointValues = [2.608074188232422, -0.29658669233322144, 0.8934586644172668, 1.7289633750915527, 1.573803424835205, 1.2867212295532227, 1.4699939489364624, -2.8265552520751953]
+        targetBin = userdata.bin
+        jointConfigHor = [0, 0, 0, 0, 0, 0, 0, 0]
 
-        elif userdata.bin == "B":
-            pass
-            # jointValues = 
+        # TODO: THESE ARE MOSTLY VERTICAL POSES, CHANGE TO HORIZONTAL POSES IF NEEDED
+        if targetBin == "A":  # pose is horizontal
+            jointConfigHor = [2.608074188232422, -0.29658669233322144,
+                           0.8934586644172668, 1.7289633750915527,
+                           1.573803424835205, 1.2867212295532227,
+                           1.4699939489364624, -2.8265552520751953]
 
-        elif userdata.bin == "C":
-            pass
-            # jointValues = 
+        elif targetBin == "B":  # pose is horizontal
+            jointConfigHor = [-2.5886653285200394, -2.374620051506527,
+                           1.8133726045423784, -1.8764388649633008,
+                           0.9006129161380904, -0.7376122309261526,
+                           -1.8880190429049368, -1.4743091056932842]
 
-        elif userdata.bin == "D":
-            jointValues = [2.9667019844055176, 2.7412068843841553, 0.09522612392902374, -1.1803146600723267, 2.2825026512145996, 1.8705755472183228, 1.8874949216842651, -2.919917583465576]
+        elif targetBin == "C":
+            jointConfigHor = [0.10225791436341165, 0.7835974930475644,
+                           -1.6773199945660098, 1.49905452509214,
+                           1.3427193003920177, 3.1189284019155186,
+                           -1.4674104840922055, -0.9027630644540776]
 
-        elif userdata.bin == "E":
-            jointValues = [2.9667019844055176, 1.4224945306777954, -0.7801656126976013, -0.2995363175868988, 2.195582151412964, 1.864424467086792, 1.6602683067321777, 2.5383474826812744]
+        elif targetBin == "D":
+            jointConfigHor = [2.9667019844055176, 2.7412068843841553,
+                           0.09522612392902374, -1.1803146600723267,
+                           2.2825026512145996, 1.8705755472183228,
+                           1.8874949216842651, -2.919917583465576]
 
-        elif userdata.bin == "F":
-            jointValues = [1.5194422006607056,1.810523509979248, -1.2088792324066162, 1.3328773975372314, -1.8696491718292236, 1.8829082250595093, -1.2678426504135132, 1.606799840927124]
+        elif targetBin == "E":
+            jointConfigHor = [2.9667019844055176, 1.4224945306777954,
+                           -0.7801656126976013, -0.2995363175868988,
+                           2.195582151412964, 1.864424467086792,
+                           1.6602683067321777, 2.5383474826812744]
 
-        elif userdata.bin == "G":
-            pass
-            # jointValues = 
+        elif targetBin == "F":
+            jointConfigHor = [1.5194422006607056,1.810523509979248,
+                           -1.2088792324066162, 1.3328773975372314,
+                           -1.8696491718292236, 1.8829082250595093,
+                           -1.2678426504135132, 1.606799840927124]
 
-        elif userdata.bin == "H":
-            jointValues = [2.966156482696533, 1.8770301342010498, 1.2306787967681885, -0.586269199848175, 2.2546935081481934, 1.669684886932373, 1.7160991430282593, 0.7149554491043091]
+        elif targetBin == "G":
+            jointConfigHor = [1.5194422006607056,1.810523509979248,
+                           -1.2088792324066162, 1.3328773975372314,
+                           -1.8696491718292236, 1.8829082250595093,
+                           -1.2678426504135132, 1.606799840927124]
 
-        elif userdata.bin == "I":
-            jointValues = [1.5194591283798218, 1.251114845275879, -1.8047455549240112, 2.224393606185913, -1.9810069799423218, 1.1204286813735962, -1.827457070350647, 0.8016403913497925]
+        elif targetBin == "H":
+            jointConfigHor = [2.966156482696533, 1.8770301342010498,
+                           1.2306787967681885, -0.586269199848175,
+                           2.2546935081481934, 1.669684886932373,
+                           1.7160991430282593, 0.7149554491043091]
 
-        elif userdata.bin == "J":
-            jointValues = [2.608074188232422, 0.4578932821750641, 1.8810696601867676, -0.5525216460227966, 1.9467278718948364, 0.23977181315422058, 0.7547944784164429, -0.43715447187423706]
+        elif targetBin == "I":
+            jointConfigHor = [1.5194591283798218, 1.251114845275879,
+                           -1.8047455549240112, 2.224393606185913,
+                           -1.9810069799423218, 1.1204286813735962,
+                           -1.827457070350647, 0.8016403913497925]
 
-        elif userdata.bin == "K":
-            jointValues = [2.9667019844055176, -0.873210072517395, -0.5380352735519409, 2.7276151180267334, -2.2068514823913574, 1.085071086883545, 1.8169622421264648, 1.6070705652236938]
+        elif targetBin == "J":
+            jointConfigHor = [2.608074188232422, 0.4578932821750641,
+                           1.8810696601867676, -0.5525216460227966,
+                           1.9467278718948364, 0.23977181315422058,
+                           0.7547944784164429, -0.43715447187423706]
 
-        elif userdata.bin == "L":
-            jointValues = [1.7551809549331665, 0.04665006324648857, -1.8453619480133057, 1.8693605661392212, -1.189427375793457, 1.5698546171188354, -1.871213436126709, 0.8811066150665283]
+        elif targetBin == "K":
+            jointConfigHor = [2.9667019844055176, -0.873210072517395,
+                           -0.5380352735519409, 2.7276151180267334,
+                           -2.2068514823913574, 1.085071086883545,
+                           1.8169622421264648, 1.6070705652236938]
 
+        elif targetBin == "L":
+            jointConfigHor = [1.7551809549331665, 0.04665006324648857,
+                           -1.8453619480133057, 1.8693605661392212,
+                           -1.189427375793457, 1.5698546171188354,
+                           -1.871213436126709, 0.8811066150665283]
 
-
-        rospy.loginfo("Trying to scoop from bin '"+userdata.bin+"' ")
+        rospy.loginfo("Trying to scoop from bin '"+targetBin+"' ")
 
         # SCOOP
         self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
@@ -83,8 +116,8 @@ class Scoop(smach.State):
         self.arm.set_planner_id("RRTConnectkConfigDefault")
         self.arm.set_pose_reference_frame("/shelf")
 
-        # Pose relative to bin used for robustness
-        horizontalPose = bin_pose(userdata.bin).pose
+        # horiztonal pose relative to bin
+        horizontalPose = bin_pose(targetBin).pose
         horizontalPose.position.x += -0.307581
         horizontalPose.position.y += -0.011221
         horizontalPose.position.z += 0.05463
@@ -93,120 +126,47 @@ class Scoop(smach.State):
         horizontalPose.orientation.z = 0.403541
         horizontalPose.orientation.w = 0.698654
 
+        # FIX
         leftOffset = -0.001
         middleOffset = -0.002
         rightOffset = 0.050
 
-        if (userdata.bin == "A" or userdata.bin == "D" or
-                userdata.bin == "G" or userdata.bin == "J"):
+        if (targetBin == "A" or targetBin == "D" or
+                targetBin == "G" or targetBin == "J"):
             horizontalPose.position.y += leftOffset
 
-        elif (userdata.bin == "B" or userdata.bin == "E" or
-                userdata.bin == "H" or userdata.bin == "K"):
+        elif (targetBin == "B" or targetBin == "E" or
+                targetBin == "H" or targetBin == "K"):
             horizontalPose.position.y += middleOffset
 
-        elif (userdata.bin == "C" or userdata.bin == "F" or
-                userdata.bin == "I" or userdata.bin == "L"):
+        elif (targetBin == "C" or targetBin == "F" or
+                targetBin == "I" or targetBin == "L"):
             horizontalPose.position.y += rightOffset
             self.rightColumn = True
-
-
 
         horizontalPose = self.convertFrameRobotToShelf(horizontalPose)
         rospy.loginfo("planning to horizontal pose")
 
         # self.arm.set_planning_time(5)
-        # self.arm.set_joint_value_target(jointValues)
+        # self.arm.set_joint_value_target(jointConfigHor)
         # remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED
         # plan = self.arm.plan()
         # if not self.move(plan.joint_trajectory):
         #     return 'Failure'
 
+        # # TODO: REPLACE WITH CONSISTENT PLAN
+        # # planning to pose means any/all subsequent cartesian paths could fail
         self.arm.set_pose_target(horizontalPose)
         remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED
         plan = self.arm.plan()
         self.move(plan.joint_trajectory)
-
-        # add_shelf()
-        # poses = [self.convertFrameRobotToShelf(self.arm.
-        #                                        get_current_pose().pose)]
-        # poses.append(deepcopy(poses[-1]))
-        # # poses[-1].position.x += 0.02
-        # poses[-1].orientation.x = -0.50011
-        # poses[-1].orientation.y = 0.52604
-        # poses[-1].orientation.z = 0.49273
-        # poses[-1].orientation.w = -0.47999
-
-        # if not follow_path(self.arm, poses):
-        #     return 'Failure'
-
-        # poses = [self.convertFrameRobotToShelf(self.arm.
-        #                                        get_current_pose().pose)]
-
-        # poses.append(deepcopy(poses[-1]))
-        # # poses[-1].position.x += -0.02
-        # poses[-1].orientation.x = -0.69119
-        # poses[-1].orientation.y = 0.043994
-        # poses[-1].orientation.z = 0.72117
-        # poses[-1].orientation.w = -0.015311
-
-        # # if not follow_path(self.arm, poses):
-        # #     return 'Failure'
-
-        # # poses = [self.convertFrameRobotToShelf(self.arm.
-        #                                        # get_current_pose().pose)]
-
-        # poses.append(deepcopy(poses[-1]))
-        # # poses[-1].position.x += 0.02
-        # poses[-1].orientation.x = horizontalPose.orientation.x
-        # poses[-1].orientation.y = horizontalPose.orientation.y
-        # poses[-1].orientation.z = horizontalPose.orientation.z
-        # poses[-1].orientation.w = horizontalPose.orientation.w
-
-        # # if not follow_path(self.arm, poses):
-        # #     return 'Failure'
-
-        # # poses = [self.convertFrameRobotToShelf(self.arm.
-        # #                                        get_current_pose().pose)]
-
-        # poses.append(horizontalPose)
-        # if not follow_path(self.arm, poses):
-        #     return 'Failure'
-
-        # traj, success = self.arm.compute_cartesian_path(
-        #     poses,
-        #     0.01,  # 1cm interpolation resolution
-        #     0.0,  # jump_threshold disabled
-        # )
-
-        # if success < 1:
-        #     rospy.logerr(
-        #         "Cartesian trajectory could not be completed. Only solved for: '"
-        #         + str(success) + "'..."
-        #     )
-        #     return 'Failure'
-
-        # points = traj.joint_trajectory.points
-        # speedRatio = 3.0
-
-        # for point in points:
-        #     for vel in points.velocities:
-        #         vel /= speedRatio
-        #     point.time_from_start *= speedRatio
-
-
-        # if not self.move(traj.joint_trajectory):
-        #     return 'Failure'
-
-        # remove_shelf()
-        # if not execute_known_trajectory(self.arm, 'Rotate', userdata.bin):
-        #     return 'Failure'
         
-        self.scoopBin(horizontalPose)
+        if not self.scoopBin(horizontalPose):
+            return 'Failure'
 
         rospy.loginfo("planning cartesian path out of bin")
 
-        if userdata.bin == "A":
+        if targetBin == "A":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -245,7 +205,7 @@ class Scoop(smach.State):
             if not follow_path(self.arm, poses):
                 return 'Failure'
 
-        elif userdata.bin == "B":
+        elif targetBin == "B":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -284,7 +244,7 @@ class Scoop(smach.State):
             if not follow_path(self.arm, poses):
                 return 'Failure'
 
-        elif userdata.bin == "C":
+        elif targetBin == "C":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -323,7 +283,7 @@ class Scoop(smach.State):
             if not follow_path(self.arm, poses):
                 return 'Failure'
 
-        elif userdata.bin == "D":
+        elif targetBin == "D":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -362,7 +322,7 @@ class Scoop(smach.State):
             if not follow_path(self.arm, poses):
                 return 'Failure'
 
-        elif userdata.bin == "E":
+        elif targetBin == "E":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -401,7 +361,7 @@ class Scoop(smach.State):
             if not follow_path(self.arm, poses):
                 return 'Failure'
 
-        elif userdata.bin == "F":
+        elif targetBin == "F":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -440,7 +400,7 @@ class Scoop(smach.State):
             if not follow_path(self.arm, poses):
                 return 'Failure'
 
-        elif userdata.bin == "G":
+        elif targetBin == "G":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -479,7 +439,7 @@ class Scoop(smach.State):
             if not follow_path(self.arm, poses):
                 return 'Failure'
 
-        elif userdata.bin == "H":
+        elif targetBin == "H":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -518,7 +478,7 @@ class Scoop(smach.State):
             if not follow_path(self.arm, poses):
                 return 'Failure'
 
-        elif userdata.bin == "I":
+        elif targetBin == "I":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -557,7 +517,7 @@ class Scoop(smach.State):
             if not follow_path(self.arm, poses):
                 return 'Failure'
 
-        elif userdata.bin == "J":
+        elif targetBin == "J":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -596,7 +556,7 @@ class Scoop(smach.State):
             if not follow_path(self.arm, poses):
                 return 'Failure'
 
-        elif userdata.bin == "K":
+        elif targetBin == "K":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -635,7 +595,7 @@ class Scoop(smach.State):
             if not follow_path(self.arm, poses):
                 return 'Failure'
 
-        elif userdata.bin == "L":
+        elif targetBin == "L":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -748,19 +708,19 @@ class Scoop(smach.State):
 
         # return right arm to home position
         add_shelf()
-        jointValues = [0, 0, 0, 0, 0, 0, 0, 0, 0]
-        jointValues[0] = 0.0  # Torso
-        jointValues[1] = 1.699523295294849
-        jointValues[2] = -0.6448955832339801
-        jointValues[3] = -0.06852598822491722
-        jointValues[4] = -2.3331612363309975
-        jointValues[5] = -0.3915515016420941
-        jointValues[6] = 0.15148041914194765
-        jointValues[7] = 0.4944912570006051
+        jointConfigHor = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        jointConfigHor[0] = 0.0  # Torso
+        jointConfigHor[1] = 1.699523295294849
+        jointConfigHor[2] = -0.6448955832339801
+        jointConfigHor[3] = -0.06852598822491722
+        jointConfigHor[4] = -2.3331612363309975
+        jointConfigHor[5] = -0.3915515016420941
+        jointConfigHor[6] = 0.15148041914194765
+        jointConfigHor[7] = 0.4944912570006051
 
         # this is currently done instead of goto_pose to use joint values
         self.arm.set_planning_time(5)
-        self.arm.set_joint_value_target(jointValues)
+        self.arm.set_joint_value_target(jointConfigHor)
         plan = self.arm.plan()
         rospy.loginfo("moving right arm to home position")
         if not self.move(plan.joint_trajectory):
@@ -845,7 +805,7 @@ class Scoop(smach.State):
             # STILL NEED TO TEST THIS
 
         if not follow_path(self.arm, poses):
-                return 'Failure'
+                return False
 
         return True
 
