@@ -309,20 +309,21 @@ class PushWithScoop(smach.State):
                                                        get_current_pose().pose)
         poses = [self.startPose]
 
-        poses.append(self.startPose)
-        poses[-1].orientation.x = verticalPose.orientation.x
-        poses[-1].orientation.y = verticalPose.orientation.y
-        poses[-1].orientation.z = verticalPose.orientation.z
-        poses[-1].orientation.w = verticalPose.orientation.w
+        # poses.append(self.startPose)
+        # poses[-1].orientation.x = verticalPose.orientation.x
+        # poses[-1].orientation.y = verticalPose.orientation.y
+        # poses[-1].orientation.z = verticalPose.orientation.z
+        # poses[-1].orientation.w = verticalPose.orientation.w
 
-        if not follow_path(self.arm, poses):
-            return False
+        # if not follow_path(self.arm, poses):
+        #     return False
 
-        poses = [self.convertFrameRobotToShelf(self.arm.
-                                              get_current_pose().pose)]
+        # poses = [self.convertFrameRobotToShelf(self.arm.
+        #                                       get_current_pose().pose)]
 
         poses.append(verticalPose)
         if not follow_path(self.arm, poses):
+            rospy.loginfo("FAILED planning to vertical pose")
             return False
 
         # remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED HERE
@@ -341,7 +342,7 @@ class PushWithScoop(smach.State):
         poses.append(deepcopy(poses[-1]))
         xDist = 0.12
         poses[-1].position.x += xDist
-        if isLeftToRight:
+        if self.isLeftToRight:
             poses[-1].position.y += 0.05
         else:
             poses[-1].position.y += -0.05
@@ -359,6 +360,7 @@ class PushWithScoop(smach.State):
             poses[-1].position.z += -xDist*0.0875  # 5 degrees
 
         if not follow_path(self.arm, poses):
+            rospy.loginfo("FAILED Going along inside wall")
             return False
 
         poses = [self.convertFrameRobotToShelf(self.arm.
