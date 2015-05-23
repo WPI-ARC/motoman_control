@@ -10,7 +10,8 @@ from motoman_moveit.srv import convert_trajectory_server
 
 from std_msgs.msg import *
 
-from apc_util.moveit import follow_path, goto_pose, execute_known_trajectory
+from apc_util.moveit import follow_path
+from apc_util.moveit import goto_pose, execute_known_trajectory
 from apc_util.shelf import bin_pose, add_shelf, remove_shelf, Shelf, get_shelf_pose
 from apc_util.smach import on_exception
 # from constrained_path_generator.msg import *
@@ -35,14 +36,14 @@ class Scoop(smach.State):
 
     @on_exception(failure_state="Failure")
     def execute(self, userdata):
-        # REMOVE THIS UNLESS 'PushWithScoop' IS CALLING EVERYTHING
+        # COMMENT OUT THIS RETURN UNLESS 'PushWithScoop' IS CALLING EVERYTHING
         # return 'Success'
 
         targetBin = userdata.bin
         jointConfigHor = [0, 0, 0, 0, 0, 0, 0, 0]
 
         # TODO: THESE ARE MOSTLY VERTICAL POSES, CHANGE TO HORIZONTAL POSES IF NEEDED
-        if targetBin == "A":
+        if targetBin == "A":  # THIS CONFIG IS WRONG, VERY FAR INSIDE SHELF
             jointConfigHor = [-2.9180621618059956, -0.020495417364615614,
                               -1.285681453955754, -2.8463861700045063,
                               -0.5254213067909062, 2.07194501960422,
@@ -163,233 +164,235 @@ class Scoop(smach.State):
             return 'Failure'
         rospy.loginfo("moved to horizontal pose")        
         
-        # if not self.scoopBin(horizontalPose):
-        #     return 'Failure'
-        # # rospy.sleep(100)
+        if not self.scoopBin(horizontalPose):
+            return 'Failure'
+        # rospy.sleep(100)
 
-        # rospy.loginfo("planning cartesian path out of bin")
+        rospy.loginfo("planning cartesian path out of bin")
 
-        # if targetBin == "A":
-        #     poses = [self.convertFrameRobotToShelf(self.arm.
-        #                                        get_current_pose().pose)]
-        #     # OUT + UP
-        #     poses.append(deepcopy(poses[-1]))
-        #     poses[-1].position.x += -0.4586
-        #     # poses[-1].position.y += 0.05
-        #     poses[-1].position.z += 0.05
+        if targetBin == "A":
+            poses = [self.convertFrameRobotToShelf(self.arm.
+                                               get_current_pose().pose)]
+            # OUT + UP
+            poses.append(deepcopy(poses[-1]))
+            poses[-1].position.x += -0.4586
+            # poses[-1].position.y += 0.05
+            poses[-1].position.z += 0.05
 
-        #     rospy.loginfo("planning cartesian path out of bin")
-        #     if not follow_path(self.arm, poses):
-        #         return 'Failure'
+            rospy.loginfo("planning cartesian path out of bin")
+            if not follow_path(self.arm, poses):
+                return 'Failure'
 
-        #     # poses = [self.convertFrameRobotToShelf(self.arm.
-        #     #                                        get_current_pose().pose)]
+            # poses = [self.convertFrameRobotToShelf(self.arm.
+            #                                        get_current_pose().pose)]
 
-        #     # poses.append(deepcopy(poses[-1]))
-        #     # poses[-1].position.z += 0.05
+            # poses.append(deepcopy(poses[-1]))
+            # poses[-1].position.z += 0.05
 
-        #     # rospy.loginfo("planning cartesian path to final bin pose")
-        #     # if not follow_path(self.arm, poses):
-        #     #     return 'Failure'
+            # rospy.loginfo("planning cartesian path to final bin pose")
+            # if not follow_path(self.arm, poses):
+            #     return 'Failure'
 
-        # elif targetBin == "B":
-        #     poses = [self.convertFrameRobotToShelf(self.arm.
-        #                                        get_current_pose().pose)]
-        #     # OUT + UP
-        #     poses.append(deepcopy(poses[-1]))
-        #     poses[-1].position.x += -0.4586
-        #     # poses[-1].position.y += 0.05
-        #     poses[-1].position.z += 0.05
+        elif targetBin == "B":
+            poses = [self.convertFrameRobotToShelf(self.arm.
+                                               get_current_pose().pose)]
+            # OUT + UP
+            poses.append(deepcopy(poses[-1]))
+            poses[-1].position.x += -0.4586
+            # poses[-1].position.y += 0.05
+            poses[-1].position.z += 0.05
 
-        #     rospy.loginfo("planning cartesian path out of bin")
-        #     if not follow_path(self.arm, poses):
-        #         return 'Failure'
+            rospy.loginfo("planning cartesian path out of bin")
+            if not follow_path(self.arm, poses):
+                return 'Failure'
 
-        #     poses = [self.convertFrameRobotToShelf(self.arm.
-        #                                            get_current_pose().pose)]
+            poses = [self.convertFrameRobotToShelf(self.arm.
+                                                   get_current_pose().pose)]
 
-        #     poses.append(deepcopy(poses[-1]))
-        #     poses[-1].position.z += 0.05
+            poses.append(deepcopy(poses[-1]))
+            poses[-1].position.z += 0.05
 
-        #     rospy.loginfo("planning cartesian path to final bin pose")
-        #     if not follow_path(self.arm, poses):
-        #         return 'Failure'
+            rospy.loginfo("planning cartesian path to final bin pose")
+            if not follow_path(self.arm, poses):
+                return 'Failure'
 
-        #     poses = [self.convertFrameRobotToShelf(self.arm.
-        #                                            get_current_pose().pose)]            
+            poses = [self.convertFrameRobotToShelf(self.arm.
+                                                   get_current_pose().pose)]            
 
-        #     poses.append(deepcopy(poses[-1]))
-        #     # To right side of shelf
-        #     poses[-1].position.y = -0.686495  # INCLUDES CURRENT SHELF CALIBRATION as of Saturday night
-        #     poses[-1].position.z += -0.05
-        #     poses[-1].orientation.x = -0.36667
-        #     poses[-1].orientation.y = -0.648119
-        #     poses[-1].orientation.z = 0.333549
-        #     poses[-1].orientation.w = 0.578135
+            poses.append(deepcopy(poses[-1]))
+            # To right side of shelf
+            poses[-1].position.y = -0.686495  # INCLUDES CURRENT SHELF CALIBRATION as of Saturday night
+            poses[-1].position.z += -0.05
+            poses[-1].orientation.x = -0.36667
+            poses[-1].orientation.y = -0.648119
+            poses[-1].orientation.z = 0.333549
+            poses[-1].orientation.w = 0.578135
 
-        #     rospy.loginfo("planning cartesian path to pre-dumping pose")
-        #     if not follow_path(self.arm, poses):
-        #         return 'Failure'
+            rospy.loginfo("planning cartesian path to pre-dumping pose")
+            if not follow_path(self.arm, poses):
+                return 'Failure'
 
-        # elif targetBin == "C":
-        #     poses = [self.convertFrameRobotToShelf(self.arm.
-        #                                        get_current_pose().pose)]
-        #     # OUT + UP
-        #     poses.append(deepcopy(poses[-1]))
-        #     poses[-1].position.x += -0.4586
-        #     # poses[-1].position.y += 0.05
-        #     poses[-1].position.z += 0.05
+        elif targetBin == "C":
+            poses = [self.convertFrameRobotToShelf(self.arm.
+                                               get_current_pose().pose)]
+            # OUT + UP
+            poses.append(deepcopy(poses[-1]))
+            poses[-1].position.x += -0.4586
+            # poses[-1].position.y += 0.05
+            poses[-1].position.z += 0.05
 
-        #     rospy.loginfo("planning cartesian path out of bin")
-        #     if not follow_path(self.arm, poses):
-        #         return 'Failure'
+            rospy.loginfo("planning cartesian path out of bin")
+            if not follow_path(self.arm, poses):
+                return 'Failure'
 
-        #     poses = [self.convertFrameRobotToShelf(self.arm.
-        #                                            get_current_pose().pose)]
+            poses = [self.convertFrameRobotToShelf(self.arm.
+                                                   get_current_pose().pose)]
 
-        #     poses.append(deepcopy(poses[-1]))
-        #     poses[-1].position.z += 0.05
+            poses.append(deepcopy(poses[-1]))
+            poses[-1].position.z += 0.05
 
-        #     rospy.loginfo("planning cartesian path to final bin pose")
-        #     if not follow_path(self.arm, poses):
-        #         return 'Failure'
+            rospy.loginfo("planning cartesian path to final bin pose")
+            if not follow_path(self.arm, poses):
+                return 'Failure'
 
-        #     poses = [self.convertFrameRobotToShelf(self.arm.
-        #                                            get_current_pose().pose)]            
+            poses = [self.convertFrameRobotToShelf(self.arm.
+                                                   get_current_pose().pose)]            
 
-        #     poses.append(deepcopy(poses[-1]))
-        #     # To right side of shelf
-        #     poses[-1].position.y = -0.686495  # INCLUDES CURRENT SHELF CALIBRATION as of Saturday night
-        #     poses[-1].position.z += -0.05
-        #     poses[-1].orientation.x = -0.36667
-        #     poses[-1].orientation.y = -0.648119
-        #     poses[-1].orientation.z = 0.333549
-        #     poses[-1].orientation.w = 0.578135
+            poses.append(deepcopy(poses[-1]))
+            # To right side of shelf
+            poses[-1].position.y = -0.686495  # INCLUDES CURRENT SHELF CALIBRATION as of Saturday night
+            poses[-1].position.z += -0.05
+            poses[-1].orientation.x = -0.36667
+            poses[-1].orientation.y = -0.648119
+            poses[-1].orientation.z = 0.333549
+            poses[-1].orientation.w = 0.578135
 
-        #     rospy.loginfo("planning cartesian path to pre-dumping pose")
-        #     if not follow_path(self.arm, poses):
-        #         return 'Failure'
+            rospy.loginfo("planning cartesian path to pre-dumping pose")
+            if not follow_path(self.arm, poses):
+                return 'Failure'
 
-        # elif targetBin == "D":
-        #     poses = [self.convertFrameRobotToShelf(self.arm.
-        #                                        get_current_pose().pose)]
-        #     # OUT + UP
-        #     poses.append(deepcopy(poses[-1]))
-        #     poses[-1].position.x += -0.4586
-        #     # poses[-1].position.y += 0.05
-        #     poses[-1].position.z += 0.05
+        elif targetBin == "D":
+            poses = [self.convertFrameRobotToShelf(self.arm.
+                                               get_current_pose().pose)]
+            # OUT + UP
+            poses.append(deepcopy(poses[-1]))
+            poses[-1].position.x += -0.4586
+            # poses[-1].position.y += 0.05
+            poses[-1].position.z += 0.05
 
-        #     rospy.loginfo("planning cartesian path out of bin")
-        #     if not follow_path(self.arm, poses):
-        #         return 'Failure'
+            rospy.loginfo("planning cartesian path out of bin")
+            if not follow_path(self.arm, poses):
+                return 'Failure'
 
-        # elif targetBin == "E":
-        #     poses = [self.convertFrameRobotToShelf(self.arm.
-        #                                        get_current_pose().pose)]
-        #     # OUT + UP
-        #     poses.append(deepcopy(poses[-1]))
-        #     poses[-1].position.x += -0.4586
-        #     # poses[-1].position.y += 0.05
-        #     poses[-1].position.z += 0.05
+        elif targetBin == "E":
+            poses = [self.convertFrameRobotToShelf(self.arm.
+                                               get_current_pose().pose)]
+            # OUT + UP
+            poses.append(deepcopy(poses[-1]))
+            poses[-1].position.x += -0.4586
+            # poses[-1].position.y += 0.05
+            poses[-1].position.z += 0.05
 
-        #     rospy.loginfo("planning cartesian path out of bin")
-        #     if not follow_path(self.arm, poses):
-        #         return 'Failure'
+            rospy.loginfo("planning cartesian path out of bin")
+            if not follow_path(self.arm, poses):
+                return 'Failure'
 
-        # elif targetBin == "F":
-        #     poses = [self.convertFrameRobotToShelf(self.arm.
-        #                                        get_current_pose().pose)]
-        #     # OUT + UP
-        #     poses.append(deepcopy(poses[-1]))
-        #     poses[-1].position.x += -0.4586
-        #     # poses[-1].position.y += 0.05
-        #     poses[-1].position.z += 0.05
+        elif targetBin == "F":
+            poses = [self.convertFrameRobotToShelf(self.arm.
+                                               get_current_pose().pose)]
+            # OUT + UP
+            poses.append(deepcopy(poses[-1]))
+            poses[-1].position.x += -0.4586
+            # poses[-1].position.y += 0.05
+            poses[-1].position.z += 0.05
 
-        #     rospy.loginfo("planning cartesian path out of bin")
-        #     if not follow_path(self.arm, poses):
-        #         return 'Failure'
+            rospy.loginfo("planning cartesian path out of bin")
+            if not follow_path(self.arm, poses):
+                return 'Failure'
 
-        # elif targetBin == "G":
-        #     poses = [self.convertFrameRobotToShelf(self.arm.
-        #                                        get_current_pose().pose)]
-        #     # OUT + UP
-        #     poses.append(deepcopy(poses[-1]))
-        #     poses[-1].position.x += -0.4586
-        #     # poses[-1].position.y += 0.05
-        #     poses[-1].position.z += 0.05
+        elif targetBin == "G":
+            poses = [self.convertFrameRobotToShelf(self.arm.
+                                               get_current_pose().pose)]
+            # OUT + UP
+            poses.append(deepcopy(poses[-1]))
+            poses[-1].position.x += -0.4586
+            # poses[-1].position.y += 0.05
+            poses[-1].position.z += 0.05
 
-        #     rospy.loginfo("planning cartesian path out of bin")
-        #     if not follow_path(self.arm, poses):
-        #         return 'Failure'
+            rospy.loginfo("planning cartesian path out of bin")
+            if not follow_path(self.arm, poses):
+                return 'Failure'
 
-        # elif targetBin == "H":
-        #     poses = [self.convertFrameRobotToShelf(self.arm.
-        #                                        get_current_pose().pose)]
-        #     # OUT + UP
-        #     poses.append(deepcopy(poses[-1]))
-        #     poses[-1].position.x += -0.4586
-        #     # poses[-1].position.y += 0.05
-        #     poses[-1].position.z += 0.05
+        elif targetBin == "H":
+            poses = [self.convertFrameRobotToShelf(self.arm.
+                                               get_current_pose().pose)]
+            # OUT + UP
+            poses.append(deepcopy(poses[-1]))
+            poses[-1].position.x += -0.4586
+            # poses[-1].position.y += 0.05
+            poses[-1].position.z += 0.05
 
-        #     rospy.loginfo("planning cartesian path out of bin")
-        #     if not follow_path(self.arm, poses):
-        #         return 'Failure'
+            rospy.loginfo("planning cartesian path out of bin")
+            if not follow_path(self.arm, poses):
+                return 'Failure'
 
-        # elif targetBin == "I":
-        #     poses = [self.convertFrameRobotToShelf(self.arm.
-        #                                        get_current_pose().pose)]
-        #     # OUT + UP
-        #     poses.append(deepcopy(poses[-1]))
-        #     poses[-1].position.x += -0.4586
-        #     # poses[-1].position.y += 0.05
-        #     poses[-1].position.z += 0.05
+        elif targetBin == "I":
+            poses = [self.convertFrameRobotToShelf(self.arm.
+                                               get_current_pose().pose)]
+            # OUT + UP
+            poses.append(deepcopy(poses[-1]))
+            poses[-1].position.x += -0.4586
+            # poses[-1].position.y += 0.05
+            poses[-1].position.z += 0.05
 
-        #     rospy.loginfo("planning cartesian path out of bin")
-        #     if not follow_path(self.arm, poses):
-        #         return 'Failure'
+            rospy.loginfo("planning cartesian path out of bin")
+            if not follow_path(self.arm, poses):
+                return 'Failure'
 
-        # elif targetBin == "J":
-        #     poses = [self.convertFrameRobotToShelf(self.arm.
-        #                                        get_current_pose().pose)]
-        #     # OUT + UP
-        #     poses.append(deepcopy(poses[-1]))
-        #     poses[-1].position.x += -0.4586
-        #     # poses[-1].position.y += 0.05
-        #     poses[-1].position.z += 0.05
+        elif targetBin == "J":
+            poses = [self.convertFrameRobotToShelf(self.arm.
+                                               get_current_pose().pose)]
+            # OUT + UP
+            poses.append(deepcopy(poses[-1]))
+            poses[-1].position.x += -0.4586
+            # poses[-1].position.y += 0.05
+            poses[-1].position.z += 0.05
 
-        #     rospy.loginfo("planning cartesian path out of bin")
-        #     if not follow_path(self.arm, poses):
-        #         return 'Failure'
+            rospy.loginfo("planning cartesian path out of bin")
+            if not follow_path(self.arm, poses):
+                return 'Failure'
 
-        # elif targetBin == "K":
-        #     poses = [self.convertFrameRobotToShelf(self.arm.
-        #                                        get_current_pose().pose)]
-        #     # OUT + UP
-        #     poses.append(deepcopy(poses[-1]))
-        #     poses[-1].position.x += -0.4586
-        #     # poses[-1].position.y += 0.05
-        #     poses[-1].position.z += 0.05
+        elif targetBin == "K":
+            poses = [self.convertFrameRobotToShelf(self.arm.
+                                               get_current_pose().pose)]
+            # OUT + UP
+            poses.append(deepcopy(poses[-1]))
+            poses[-1].position.x += -0.4586
+            # poses[-1].position.y += 0.05
+            poses[-1].position.z += 0.05
 
-        #     rospy.loginfo("planning cartesian path out of bin")
-        #     if not follow_path(self.arm, poses):
-        #         return 'Failure'
+            rospy.loginfo("planning cartesian path out of bin")
+            if not follow_path(self.arm, poses):
+                return 'Failure'
 
-        # elif targetBin == "L":
-        #     poses = [self.convertFrameRobotToShelf(self.arm.
-        #                                        get_current_pose().pose)]
-        #     # OUT + UP
-        #     poses.append(deepcopy(poses[-1]))
-        #     poses[-1].position.x += -0.4586
-        #     # poses[-1].position.y += 0.05
-        #     poses[-1].position.z += 0.05
+        elif targetBin == "L":
+            poses = [self.convertFrameRobotToShelf(self.arm.
+                                               get_current_pose().pose)]
+            # OUT + UP
+            poses.append(deepcopy(poses[-1]))
+            poses[-1].position.x += -0.4586
+            # poses[-1].position.y += 0.05
+            poses[-1].position.z += 0.05
 
-        #     rospy.loginfo("planning cartesian path out of bin")
-        #     if not follow_path(self.arm, poses):
-        #         return 'Failure'
+            rospy.loginfo("planning cartesian path out of bin")
+            if not follow_path(self.arm, poses):
+                return 'Failure'
 
-        # rospy.loginfo("made it out")
-        # rospy.sleep(3)
-        # return 'Failure'
+        #######################################################################
+        rospy.loginfo("made it out")
+        rospy.sleep(3)
+        return 'Failure'
+        #######################################################################
 
         target_pose = Pose()
         target_pose.position.x = 0.472985  # 0.482178
@@ -424,6 +427,7 @@ class Scoop(smach.State):
         poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
 
+        # TODO: FIX THIS STUFF
         # Tilt little by little
         poses.append(deepcopy(poses[-1]))
         poses[-1].position.x = 0.472985  # 0.482178
@@ -491,19 +495,6 @@ class Scoop(smach.State):
         pose.position.y += -(shelf_stamped_pose.pose.position.y)
         pose.position.z += -(shelf_stamped_pose.pose.position.z)
 
-
-        # pose.position.x += -1.3535731570096812
-        # pose.position.y += -0.08215183129781853
-        # pose.position.z += 0.135
-        
-        # pose.position.x += -1.40009583376
-        # pose.position.y += -0.0841733373195
-        # pose.position.z += 0.045
-
-        # pose.position.x += -1.4026
-        # pose.position.y += -0.0797
-        # pose.position.z += 0.045   # 0.048???
-
         return pose
 
     def scoopBin(self, horizontalPose):
@@ -512,6 +503,20 @@ class Scoop(smach.State):
         rospy.loginfo("planning cartesian path into bin")
         poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
+
+        # # START
+        # poses.append(horizontalPose)
+
+        # SPLITTING THIS WAYPOINT INTO 2 PARTS IS UNTESTED!!!!!!!!!!!
+        # START
+        poses.append(deepcopy(poses[-1]))
+        # poses[-1].position.x = horizontalPose.position.x
+        # poses[-1].position.y = horizontalPose.position.y
+        # poses[-1].position.z = horizontalPose.position.z
+        poses[-1].orientation.x = horizontalPose.orientation.x
+        poses[-1].orientation.y = horizontalPose.orientation.y
+        poses[-1].orientation.z = horizontalPose.orientation.z
+        poses[-1].orientation.w = horizontalPose.orientation.w
 
         # START
         poses.append(horizontalPose)
@@ -537,11 +542,26 @@ class Scoop(smach.State):
         poses.append(deepcopy(poses[-1]))
         poses[-1].position.z += -0.1018
 
+        # # ROTATE BACK/LIFT UP
+        # poses.append(deepcopy(poses[-1]))
+        # poses[-1].position.x += 0.0059
+        # poses[-1].position.y += 0.0
+        # poses[-1].position.z += -0.0370
+        # poses[-1].orientation.x = -0.36665
+        # poses[-1].orientation.y = -0.64811
+        # poses[-1].orientation.z = 0.33362
+        # poses[-1].orientation.w = 0.57811
+        # # TODO: maybe calibrate pose orientation
+
+        # SPLITTING THIS WAYPOINT INTO 2 PARTS IS UNTESTED!!!!!!!!!!!
         # ROTATE BACK/LIFT UP
         poses.append(deepcopy(poses[-1]))
         poses[-1].position.x += 0.0059
         poses[-1].position.y += 0.0
         poses[-1].position.z += -0.0370
+
+        # ROTATE BACK/LIFT UP
+        poses.append(deepcopy(poses[-1]))
         poses[-1].orientation.x = -0.36665
         poses[-1].orientation.y = -0.64811
         poses[-1].orientation.z = 0.33362
@@ -634,3 +654,26 @@ def make_vector(x, y, z):
     new_vector.z = z
     return new_vector
 
+# def follow_path(group, path, collision_checking=True):
+#     """Follows a cartesian path using a linear interpolation of the given
+#     `path`. The `collision_checking` parameter controls whether or not
+#     to check the path for collisions with the environment."""
+#     traj, success = group.compute_cartesian_path(
+#         path,
+#         0.01,  # 1cm interpolation resolution
+#         0.0,  # jump_threshold
+#         avoid_collisions=collision_checking,
+#     )
+
+#     if success < 1:
+#         rospy.logerr(
+#             "Cartesian trajectory could not be completed. Only solved for: '"
+#             + str(success) + "'..."
+#         )
+#         return False
+
+#     if move(group, traj.joint_trajectory):
+#         return True
+#     else:
+#         rospy.logerr("Failed to execute cartesian path")
+#         return False
