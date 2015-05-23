@@ -3,6 +3,7 @@ import smach
 import math
 
 from geometry_msgs.msg import *
+from sensor_msgs.msg import *
 
 from copy import deepcopy
 # from geometry_msgs.msg import Pose, Point, Quaternion
@@ -16,6 +17,8 @@ from constrained_path_generator.srv import *
 
 
 class Scoop(smach.State):
+    joint_states = []
+
 
     def __init__(self, robot):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],
@@ -810,6 +813,19 @@ class Scoop(smach.State):
 
         return True
 
+
+
+    #Callback to get joint values from current robot state
+    def jointStateCallback(self, msg):
+        if(msg.name[0] == "arm_left_joint_1_s"):
+            joint_states[0] = msg
+        if(msg.name[0] == "arm_right_joint_1_s"):
+            joint_states[1] = msg
+        if(msg.name[0] == "torso_joint_b1"):
+            joint_states[2] = msg
+        if(msg.name[0] == "torso_joint_b2"):
+            joint_states[3] = msg
+
     def follow_constrained_path(self, wypts):
         result = False
         planner_client = rospy.ServiceProxy("plan_constrained_path". PlanConstrainedPath)
@@ -828,7 +844,13 @@ class Scoop(smach.State):
         query.planning_time = 5.0
         query.max_cspace_jump = 0.05
         query.task_space_step_size = 0.025
-        query.initial_state.joint_state = self.arm.get_current_joint_values()
+
+        query.initial_state.joint_state = JointState(header=Header(stamp=rospy.Time.now()),
+                                                        name=robot.sda10f.get_joints(),
+                                                        position=robot.sda10f.get_current_joint_values() )
+
+
+
         query.path_orientation_constraint = make_quaternion(-0.36665, -0.64811, 0.33362, 0.57811)
         query.path_angle_tolerance = make_vector(0.01, 0.01, 2*math.pi)
         query.path_position_tolerance = make_vector(0.02, 0.02, 0.02)
@@ -882,3 +904,4 @@ def make_vector(x, y, z):
     new_vector.y = y
     new_vector.z = z
     return new_vector
+
