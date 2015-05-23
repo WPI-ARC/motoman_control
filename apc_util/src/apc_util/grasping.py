@@ -190,9 +190,11 @@ def execute_grasp(group, grasp, plan1, plan2, shelf=FULL_SHELF):
     if not move(group, plan2.joint_trajectory):
         rospy.logerr("Failed to execute approach")
         return False
-
     if not gripper.grab():
+        rospy.loginfo("Executing cartesian retreat")
+        follow_path(group, [grasp.approach]) # If grasp fails, move back to approach pose
         return False
+
 
     rospy.loginfo("Executing cartesian retreat")
     poses = [group.get_current_pose().pose]
@@ -200,6 +202,7 @@ def execute_grasp(group, grasp, plan1, plan2, shelf=FULL_SHELF):
     poses[-1].position.z += 0.032
     poses.append(deepcopy(poses[-1]))
     poses[-1].position.x = 0.48
+
     if not follow_path(group, poses):
         return False
     return True
