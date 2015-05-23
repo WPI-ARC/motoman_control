@@ -40,7 +40,7 @@ class PushWithScoop(smach.State):
         verticalPose.position.y += 0.12305766
         verticalPose.position.z += 0.027
 
-        verticalPose.position.x += 0.10
+        # verticalPose.position.x += 0.10
                
         jointConfigVert = [0, 0, 0, 0, 0, 0, 0, 0]
 
@@ -75,6 +75,7 @@ class PushWithScoop(smach.State):
                            1.3427193003920177, 3.1189284019155186,
                            -1.4674104840922055, -0.9027630644540776]
             startBin = "C"
+            self.isLeftToRight = False
             rospy.loginfo("Start bin is C")
             verticalPose.position.x += 0.000
             verticalPose.position.y += 0.000
@@ -114,6 +115,7 @@ class PushWithScoop(smach.State):
             startBin = "F"
             rospy.loginfo("Start bin is F")
             self.shortRow = True
+            self.isLeftToRight = False
             verticalPose.position.x += 0.000
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
@@ -152,6 +154,7 @@ class PushWithScoop(smach.State):
             startBin = "I"
             rospy.loginfo("Start bin is I")
             self.shortRow = True
+            self.isLeftToRight = False
             verticalPose.position.x += 0.000
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
@@ -186,6 +189,7 @@ class PushWithScoop(smach.State):
                            -1.189427375793457, 1.5698546171188354,
                            -1.871213436126709, 0.8811066150665283]
             startBin = "L"
+            self.isLeftToRight = False
             rospy.loginfo("Start bin is L")
             verticalPose.position.x += 0.000
             verticalPose.position.y += 0.000
@@ -250,9 +254,9 @@ class PushWithScoop(smach.State):
 
         # TODO: FIX THIS ##################################################################
         # currently calls get_known_trajectory directly to bypass trajectory validation
-        plan, success = get_known_trajectory('Pick', startBin)
-        if not self.move(plan.joint_trajectory):
-            return 'Failure'
+        # plan, success = get_known_trajectory('Pick', startBin)
+        # if not self.move(plan.joint_trajectory):
+        #     return 'Failure'
 
         # plan, success = get_known_trajectory('Dump', startBin)
         # if not self.move(plan.joint_trajectory):
@@ -288,10 +292,10 @@ class PushWithScoop(smach.State):
         self.arm.set_planning_time(15)
         self.arm.set_planner_id("RRTConnectkConfigDefault")
         # add_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED HERE
-        # self.arm.set_joint_value_target(jointConfigVert)
-        # plan = self.arm.plan()
-        # if not self.move(plan.joint_trajectory):
-        #     return 'Failure'
+        self.arm.set_joint_value_target(jointConfigVert)
+        plan = self.arm.plan()
+        if not self.move(plan.joint_trajectory):
+            return 'Failure'
 
         self.arm.set_pose_reference_frame("/shelf")
 
@@ -345,8 +349,8 @@ class PushWithScoop(smach.State):
                                                get_current_pose().pose)]
 
         poses.append(deepcopy(poses[-1]))
-        # xDist = 0.12
-        xDist = 0.02
+        xDist = 0.12
+        # xDist = 0.02
         poses[-1].position.x += xDist
         if self.isLeftToRight:
             poses[-1].position.y += 0.05
@@ -390,23 +394,74 @@ class PushWithScoop(smach.State):
 
         poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
-        rospy.loginfo("Removing tray from bin")
+        rospy.loginfo("(reverse) Pushing items to side")
+        # adjust orientation?
         poses.append(deepcopy(poses[-1]))
-        # poses[-1].position.y += 0.05
-        # poses[-1].position.x += -0.50 # WORKS FOR BINS A,B,C?
-        poses[-1].position.x += -0.40
-        if self.shortRow:
-            poses[-1].position.z += xDist*0.0875
-            if self.isLeftToRight:
-                poses[-1].position.y += 0.05
-            else:
-                poses[-1].position.y += -0.05
-
-        poses.append(self.startPose)
+        if self.isLeftToRight:
+            poses[-1].position.y += 0.10
+        else:
+            poses[-1].position.y += -0.10
+        # if self.middleColumn:
+        #     if self.isLeftToRight:
+        #         poses[-1].position.y += -0.05
+        #     else:
+        #         poses[-1].position.y += 0.05
 
         if not follow_path(self.arm, poses):
             return False
 
+        rospy.loginfo("(reverse) Going along inside wall")
+        remove_shelf()
+
+        poses = [self.convertFrameRobotToShelf(self.arm.
+                                               get_current_pose().pose)]
+
+        poses.append(deepcopy(poses[-1]))
+        xDist = -0.12
+        # xDist = -0.02
+        poses[-1].position.x += xDist
+        if self.isLeftToRight:
+            poses[-1].position.y += -0.05
+        else:
+            poses[-1].position.y += 0.05
+        if self.shortRow:
+            poses[-1].position.z += xDist*0.0875  # 5 degrees
+
+        poses.append(deepcopy(poses[-1]))
+        xDist = -0.35
+        poses[-1].position.x += xDist
+        if self.isLeftToRight:
+            poses[-1].position.y += -0.03
+        else:
+            poses[-1].position.y += 0.03
+        if self.shortRow:
+            poses[-1].position.z += xDist*0.0875  # 5 degrees
+
+        if not follow_path(self.arm, poses):
+            rospy.loginfo("FAILED Going along inside wall")
+            return False
+
+
+        # poses = [self.convertFrameRobotToShelf(self.arm.
+        #                                        get_current_pose().pose)]
+        # rospy.loginfo("Removing tray from bin")
+        # # poses.append(deepcopy(poses[-1]))
+        # # # poses[-1].position.y += 0.05
+        # # # poses[-1].position.x += -0.50 # WORKS FOR BINS A,B,C?
+        # # poses[-1].position.x += -0.40
+        # # if self.shortRow:
+        # #     poses[-1].position.z += xDist*0.0875
+        # #     if self.isLeftToRight:
+        # #         poses[-1].position.y += 0.05
+        # #     else:
+        # #         poses[-1].position.y += -0.05
+
+        # poses.append(self.startPose)
+
+        # if not follow_path(self.arm, poses):
+        #     return False
+
+        rospy.loginfo("planning to vertical config")
         add_shelf()
         self.arm.set_joint_value_target(jointConfigVert)
         plan = self.arm.plan()
