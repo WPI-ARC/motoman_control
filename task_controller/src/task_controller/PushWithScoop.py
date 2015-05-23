@@ -39,64 +39,9 @@ class PushWithScoop(smach.State):
         verticalPose.position.x += -0.364436
         verticalPose.position.y += 0.12305766
         verticalPose.position.z += 0.027
-        
-        # FIX
-        leftOffset = -0.000
-        middleOffset = -0.000
-        rightOffset = 0.000
 
-        if self.isLeftToRight:
-            if self.shortRow:  # D, E, G, H
-                verticalPose.orientation.x = 0.336374
-                verticalPose.orientation.y = -0.590811
-                verticalPose.orientation.z = -0.250799
-                verticalPose.orientation.w = 0.689126
-                # TODO: calibrate orientation?
-                verticalPose.position.x += -0.050
-                verticalPose.position.y += -0.100
-                verticalPose.position.z += 0.123
-                verticalPose.position.y += leftOffset
-                if self.middleColumn:
-                    verticalPose.position.y += middleOffset
-
-            else:  # A, B, J, K
-                verticalPose.orientation.x = 0.19924
-                verticalPose.orientation.y = -0.69387
-                verticalPose.orientation.z = -0.14743
-                verticalPose.orientation.w = 0.6761
-                # TODO: calibrate orientation?
-                verticalPose.position.x += 0.000
-                verticalPose.position.y += 0.000
-                verticalPose.position.z += 0.000
-                verticalPose.position.y += leftOffset
-                if self.middleColumn:
-                    verticalPose.position.y += middleOffset
-
-        else:
-            if self.shortRow:  # F, I
-                verticalPose.orientation.x = -0.659937
-                verticalPose.orientation.y = 0.0351767
-                verticalPose.orientation.z = 0.738262
-                verticalPose.orientation.w = 0.13496
-                # TODO: calibrate orientation?
-                verticalPose.position.x += -0.050
-                verticalPose.position.y += -0.100
-                verticalPose.position.z += 0.133
-                verticalPose.position.y += rightOffset
-
-            else:  # C, L
-                verticalPose.orientation.x = 0.686353
-                verticalPose.orientation.y = 0.166894
-                verticalPose.orientation.z = -0.680383
-                verticalPose.orientation.w = -0.195307
-                # TODO: calibrate orientation?
-                verticalPose.position.x += -0.018493
-                verticalPose.position.y += -.261708
-                verticalPose.position.z += 0.025
-                verticalPose.position.y += rightOffset
-
-
-        
+        verticalPose.position.x += 0.10
+               
         jointConfigVert = [0, 0, 0, 0, 0, 0, 0, 0]
 
         if targetBin == "A":  # pose is horizontal
@@ -117,9 +62,9 @@ class PushWithScoop(smach.State):
                            1.8133726045423784, -1.8764388649633008,
                            0.9006129161380904, -0.7376122309261526,
                            -1.8880190429049368, -1.4743091056932842]
-            startBin = "C"
+            startBin = "B"
             self.isLeftToRight = True
-            rospy.loginfo("Start bin is C")
+            rospy.loginfo("Start bin is B")
             verticalPose.position.x += 0.000
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
@@ -246,6 +191,60 @@ class PushWithScoop(smach.State):
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
 
+        # FIX
+        leftOffset = -0.000
+        middleOffset = -0.000
+        rightOffset = 0.000
+
+        if self.isLeftToRight:
+            if self.shortRow:  # D, E, G, H
+                verticalPose.orientation.x = 0.336374
+                verticalPose.orientation.y = -0.590811
+                verticalPose.orientation.z = -0.250799
+                verticalPose.orientation.w = 0.689126
+                # TODO: calibrate orientation?
+                verticalPose.position.x += -0.050
+                verticalPose.position.y += -0.100
+                verticalPose.position.z += 0.123
+                verticalPose.position.y += leftOffset
+                if self.middleColumn:
+                    verticalPose.position.y += middleOffset
+
+            else:  # A, B, J, K
+                verticalPose.orientation.x = 0.19924
+                verticalPose.orientation.y = -0.69387
+                verticalPose.orientation.z = -0.14743
+                verticalPose.orientation.w = 0.6761
+                # TODO: calibrate orientation?
+                verticalPose.position.x += 0.000
+                verticalPose.position.y += 0.000
+                verticalPose.position.z += 0.000
+                verticalPose.position.y += leftOffset
+                if self.middleColumn:
+                    verticalPose.position.y += middleOffset
+
+        elif not self.isLeftToRight:
+            if self.shortRow:  # F, I
+                verticalPose.orientation.x = -0.659937
+                verticalPose.orientation.y = 0.0351767
+                verticalPose.orientation.z = 0.738262
+                verticalPose.orientation.w = 0.13496
+                # TODO: calibrate orientation?
+                verticalPose.position.x += -0.050
+                verticalPose.position.y += -0.100
+                verticalPose.position.z += 0.133
+                verticalPose.position.y += rightOffset
+
+            else:  # C, L
+                verticalPose.orientation.x = 0.686353
+                verticalPose.orientation.y = 0.166894
+                verticalPose.orientation.z = -0.680383
+                verticalPose.orientation.w = -0.195307
+                # TODO: calibrate orientation?
+                verticalPose.position.x += -0.018493
+                verticalPose.position.y += -.261708
+                verticalPose.position.z += 0.025
+                verticalPose.position.y += rightOffset
 
         rospy.loginfo("Moving to home pose")
 
@@ -297,23 +296,26 @@ class PushWithScoop(smach.State):
         self.arm.set_pose_reference_frame("/shelf")
 
         verticalPose = self.convertFrameRobotToShelf(verticalPose)
-        if not self.pushToSide(verticalPose):
+        if not self.pushToSide(verticalPose, jointConfigVert):
             return 'Failure'
         return 'Success'
 
-    def pushToSide(self, verticalPose):
+    def pushToSide(self, verticalPose, jointConfigVert):
         rospy.loginfo("planning to vertical pose")
         # add_shelf()
-        remove_shelf()
+        # remove_shelf()
         self.startPose = self.convertFrameRobotToShelf(self.arm.
                                                        get_current_pose().pose)
-        poses = [self.startPose]
+        # poses = [self.startPose]
 
         # poses.append(self.startPose)
-        # poses[-1].orientation.x = verticalPose.orientation.x
-        # poses[-1].orientation.y = verticalPose.orientation.y
-        # poses[-1].orientation.z = verticalPose.orientation.z
-        # poses[-1].orientation.w = verticalPose.orientation.w
+        # # poses[-1].orientation.x = verticalPose.orientation.x
+        # # poses[-1].orientation.y = verticalPose.orientation.y
+        # # poses[-1].orientation.z = verticalPose.orientation.z
+        # # poses[-1].orientation.w = verticalPose.orientation.w
+        # poses[-1].position.x = verticalPose.position.x
+        # poses[-1].position.y = verticalPose.position.y
+        # poses[-1].position.z = verticalPose.position.z
 
         # if not follow_path(self.arm, poses):
         #     return False
@@ -321,17 +323,20 @@ class PushWithScoop(smach.State):
         # poses = [self.convertFrameRobotToShelf(self.arm.
         #                                       get_current_pose().pose)]
 
-        poses.append(verticalPose)
-        if not follow_path(self.arm, poses):
-            rospy.loginfo("FAILED planning to vertical pose")
-            return False
+        # # poses.append(verticalPose)
+        # # poses[-1].position.x += -0.10
 
-        # remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED HERE
-        # rospy.sleep(1.0)
-        # self.arm.set_pose_target(verticalPose)
-        # plan = self.arm.plan()
-        # if not self.move(plan.joint_trajectory):
+        # poses.append(verticalPose)
+        # if not follow_path(self.arm, poses):
+        #     rospy.loginfo("FAILED planning to vertical pose")
         #     return False
+
+        remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED HERE
+        rospy.sleep(1.0)
+        self.arm.set_pose_target(verticalPose)
+        plan = self.arm.plan()
+        if not self.move(plan.joint_trajectory):
+            return False
 
         rospy.loginfo("Going along inside wall")
         remove_shelf()
@@ -340,7 +345,8 @@ class PushWithScoop(smach.State):
                                                get_current_pose().pose)]
 
         poses.append(deepcopy(poses[-1]))
-        xDist = 0.12
+        # xDist = 0.12
+        xDist = 0.02
         poses[-1].position.x += xDist
         if self.isLeftToRight:
             poses[-1].position.y += 0.05
@@ -401,6 +407,13 @@ class PushWithScoop(smach.State):
         if not follow_path(self.arm, poses):
             return False
 
+        add_shelf()
+        self.arm.set_joint_value_target(jointConfigVert)
+        plan = self.arm.plan()
+        if not self.move(plan.joint_trajectory):
+            return False
+
+        rospy.loginfo("PushWithScoop Success!")
         return True
 
     def convertFrameRobotToShelf(self, pose):
