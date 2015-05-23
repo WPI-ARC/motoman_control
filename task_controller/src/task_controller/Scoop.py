@@ -5,6 +5,8 @@ import math
 from geometry_msgs.msg import *
 from moveit_msgs.msg import *
 
+from tf import transformations
+
 from copy import deepcopy
 from motoman_moveit.srv import convert_trajectory_server
 
@@ -378,18 +380,35 @@ class Scoop(smach.State):
 
         #######################################################################
         rospy.loginfo("made it out")
-        # rospy.sleep(3)
         # return 'Failure'
         #######################################################################
 
-        target_pose = Pose()
-        target_pose.position.x = 0.472985  # 0.482178
-        target_pose.position.y = -0.351667  # -0.335627
-        target_pose.position.z = 0.753171  # 0.706449
-        target_pose.orientation.x = -0.164656  # -0.198328
-        target_pose.orientation.y = 0.766477  # 0.759802
-        target_pose.orientation.z = -0.591483  # -0.598499
-        target_pose.orientation.w = -0.188543  # -0.158639
+        # target_pose = Pose()
+        # target_pose.position.x = 0.472985  # 0.482178
+        # target_pose.position.y = -0.351667  # -0.335627
+        # target_pose.position.z = 0.753171  # 0.706449
+        # target_pose.orientation.x = -0.164656  # -0.198328
+        # target_pose.orientation.y = 0.766477  # 0.759802
+        # target_pose.orientation.z = -0.591483  # -0.598499
+        # target_pose.orientation.w = -0.188543  # -0.158639
+
+        target_pose = self.convertFrameRobotToShelf(self.arm.get_current_pose().pose)
+        target_pose.position.z -= 0.7
+
+
+        q1 = transformations.quaternion_about_axis(-math.pi/2, (0, 0, 1))
+        q2 = [ target_pose.orientation.x, target_pose.orientation.y, target_pose.orientation.z,
+                             target_pose.orientation.w ]
+
+        q3 = transformations.quaternion_multiply(q1, q2)
+
+        target_pose.orientation.x = q3[0]
+        target_pose.orientation.y = q3[1]
+        target_pose.orientation.z = q3[2]
+        target_pose.orientation.w = q3[3]
+
+
+
 
         rospy.loginfo("Trying to follow constrained path")
 
