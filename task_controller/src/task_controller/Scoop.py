@@ -1,5 +1,8 @@
 import rospy
 import smach
+import math
+
+from geometry_msgs.msg import *
 
 from copy import deepcopy
 # from geometry_msgs.msg import Pose, Point, Quaternion
@@ -8,6 +11,8 @@ from motoman_moveit.srv import convert_trajectory_server
 from apc_util.moveit import follow_path, goto_pose, execute_known_trajectory
 from apc_util.shelf import bin_pose, add_shelf, remove_shelf, Shelf, get_shelf_pose
 from apc_util.smach import on_exception
+from constrained_path_generator.msg import *
+from constrained_path_generator.srv import *
 
 
 class Scoop(smach.State):
@@ -631,23 +636,35 @@ class Scoop(smach.State):
                 return 'Failure'
 
 
-        poses = [self.convertFrameRobotToShelf(self.arm.
-                                               get_current_pose().pose)]
+        target_pose = Pose()
+        target_pose.position.x = 0.472985  # 0.482178
+        target_pose.position.y = -0.351667  # -0.335627
+        target_pose.position.z = 0.753171  # 0.706449
+        target_pose.orientation.x = -0.164656  # -0.198328
+        target_pose.orientation.y = 0.766477  # 0.759802
+        target_pose.orientation.z = -0.591483  # -0.598499
+        target_pose.orientation.w = -0.188543  # -0.158639
 
-        # To order bin
-        poses.append(deepcopy(poses[-1]))
-        poses[-1].position.x = 0.472985  # 0.482178
-        poses[-1].position.y = -0.351667  # -0.335627
-        poses[-1].position.z = 0.753171  # 0.706449
-        poses[-1].orientation.x = -0.164656  # -0.198328
-        poses[-1].orientation.y = 0.766477  # 0.759802
-        poses[-1].orientation.z = -0.591483  # -0.598499
-        poses[-1].orientation.w = -0.188543  # -0.158639
-        poses[-1] = self.convertFrameRobotToShelf(poses[-1])
-
-        rospy.loginfo("planning cartesian path to dumping pose")
-        if not follow_path(self.arm, poses):
+        rospy.loginfo("Trying to follow constrained path")
+        if not self.follow_constrained_path([target_pose]):
             return 'Failure'
+
+        # poses = [self.convertFrameRobotToShelf(self.arm.
+        #                                        get_current_pose().pose)]
+        # # To order bin
+        # poses.append(deepcopy(poses[-1]))
+        # poses[-1].position.x = 0.472985  # 0.482178
+        # poses[-1].position.y = -0.351667  # -0.335627
+        # poses[-1].position.z = 0.753171  # 0.706449
+        # poses[-1].orientation.x = -0.164656  # -0.198328
+        # poses[-1].orientation.y = 0.766477  # 0.759802
+        # poses[-1].orientation.z = -0.591483  # -0.598499
+        # poses[-1].orientation.w = -0.188543  # -0.158639
+        # poses[-1] = self.convertFrameRobotToShelf(poses[-1])
+        #
+        # rospy.loginfo("planning cartesian path to dumping pose")
+        # if not follow_path(self.arm, poses):
+        #     return 'Failure'
 
         poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
@@ -792,3 +809,76 @@ class Scoop(smach.State):
                 return False
 
         return True
+
+    def follow_constrained_path(self, wypts):
+        result = False
+        planner_client = rospy.ServiceProxy("plan_constrained_path". PlanConstrainedPath)
+
+        waypoints = []
+        for pt in wypts:
+            waypoints.append(make_pose_stamped((pt.position.x, pt.position.y, pt.position.z),
+                                               (pt.orientation.x, pt.orientation.y, pt.orientation.z, pt.orientation.w),
+                                                "/shelf"))
+
+        query = PlanConstrainedPathQuery()
+        query.path_type = PlanConstrainedPathQuery.CHECK_ENVIRONMENT_COLLISIONS | PlanConstrainedPathQuery.CARTESIAN_IK | PlanConstrainedPathQuery.PLAN | PlanConstrainedPathQuery.FOLLOW_WAYPOINTS | PlanConstrainedPathQuery.FOLLOW_ORIENTATION_CONSTRAINTS
+        query.waypoints = waypoints
+        query.group_name = "arm_left_torso"
+        query.target_link = "arm_left_link_7_t"
+        query.planning_time = 5.0
+        query.max_cspace_jump = 0.05
+        query.task_space_step_size = 0.025
+        query.initial_state.joint_state = self.arm.get_current_joint_values()
+        query.path_orientation_constraint = make_quaternion(-0.36665, -0.64811, 0.33362, 0.57811)
+        query.path_angle_tolerance = make_vector(0.01, 0.01, 2*math.pi)
+        query.path_position_tolerance = make_vector(0.02, 0.02, 0.02)
+        query.goal_angle_tolerance = make_vector(0.01, 0.01, 0.01)
+        query.goal_position_tolerance = make_vector(0.01, 0.01, 0.01)
+
+        full_req = PlanConstrainedPathRequest()
+        full_req.query = query
+        full_res = planner_client.call(full_req)
+
+        if full_res == 0:
+            rospy.loginfo("Constrained Path returned successful")
+            return True
+        else:
+            rospy.logerr("Constrained Path returned failure : " + full_res)
+            return False
+
+
+
+def make_pose((px, py, pz), (rx, ry, rz, rw)):
+    new_pose = Pose()
+    new_pose.position.x = px
+    new_pose.position.y = py
+    new_pose.position.z = pz
+    new_pose.orientation.x = rx
+    new_pose.orientation.y = ry
+    new_pose.orientation.z = rz
+    new_pose.orientation.w = rw
+    return new_pose
+
+
+def make_pose_stamped((px, py, pz), (rx, ry, rz, rw), frame):
+    pose_stamped = PoseStamped()
+    pose_stamped.pose = make_pose((px, py, pz), (rx, ry, rz, rw))
+    pose_stamped.header.frame_id = frame
+    return pose_stamped
+
+
+def make_quaternion(w, x, y, z):
+    new_quat = Quaternion()
+    new_quat.w = w
+    new_quat.x = x
+    new_quat.y = y
+    new_quat.z = z
+    return new_quat
+
+
+def make_vector(x, y, z):
+    new_vector = Vector3()
+    new_vector.x = x
+    new_vector.y = y
+    new_vector.z = z
+    return new_vector

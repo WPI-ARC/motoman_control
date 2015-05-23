@@ -10,6 +10,7 @@ from apc_util.shelf import bin_pose, add_shelf, remove_shelf, Shelf, get_shelf_p
 from apc_util.smach import on_exception
 
 
+
 class PushWithScoop(smach.State):
 
     def __init__(self, robot):
@@ -308,7 +309,11 @@ class PushWithScoop(smach.State):
                                                        get_current_pose().pose)
         poses = [self.startPose]
 
+<<<<<<< HEAD
+        poses.append(self.startPose)  # CHECK THIS LINE??
+=======
         poses.append(self.startPose)
+>>>>>>> 37fdd2d3a4bd5ba1ba53ad1a1c97d30ad870acd0
         poses[-1].orientation.x = verticalPose.orientation.x
         poses[-1].orientation.y = verticalPose.orientation.y
         poses[-1].orientation.z = verticalPose.orientation.z
@@ -324,8 +329,11 @@ class PushWithScoop(smach.State):
         if not follow_path(self.arm, poses):
             return False
 
+<<<<<<< HEAD
+=======
         # # TODO: REPLACE WITH CONSISTENT PLAN
         # # planning to pose means any/all subsequent cartesian paths could fail
+>>>>>>> 37fdd2d3a4bd5ba1ba53ad1a1c97d30ad870acd0
         # remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED HERE
         # rospy.sleep(1.0)
         # self.arm.set_pose_target(verticalPose)
