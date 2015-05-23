@@ -10,6 +10,7 @@ from apc_util.shelf import bin_pose, add_shelf, remove_shelf, Shelf, get_shelf_p
 from apc_util.smach import on_exception
 
 
+
 class PushWithScoop(smach.State):
 
     def __init__(self, robot):
@@ -310,30 +311,30 @@ class PushWithScoop(smach.State):
         # add_shelf()
         self.startPose = self.convertFrameRobotToShelf(self.arm.
                                                        get_current_pose().pose)
-        # poses = [self.startPose]
+        poses = [self.startPose]
 
-        # poses.append(self.startPose)  # CHECK THIS LINE??
-        # poses[-1].orientation.x = verticalPose.orientation.x
-        # poses[-1].orientation.y = verticalPose.orientation.y
-        # poses[-1].orientation.z = verticalPose.orientation.z
-        # poses[-1].orientation.w = verticalPose.orientation.w
+        poses.append(self.startPose)  # CHECK THIS LINE??
+        poses[-1].orientation.x = verticalPose.orientation.x
+        poses[-1].orientation.y = verticalPose.orientation.y
+        poses[-1].orientation.z = verticalPose.orientation.z
+        poses[-1].orientation.w = verticalPose.orientation.w
 
-        # if not follow_path(self.arm, poses):
-        #     return False
-
-        # poses = [self.convertFrameRobotToShelf(self.arm.
-        #                                       get_current_pose().pose)]
-
-        # poses.append(verticalPose)
-        # if not follow_path(self.arm, poses):
-        #     return False
-
-        remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED HERE
-        rospy.sleep(1.0)
-        self.arm.set_pose_target(verticalPose)
-        plan = self.arm.plan()
-        if not self.move(plan.joint_trajectory):
+        if not follow_path(self.arm, poses):
             return False
+
+        poses = [self.convertFrameRobotToShelf(self.arm.
+                                              get_current_pose().pose)]
+
+        poses.append(verticalPose)
+        if not follow_path(self.arm, poses):
+            return False
+
+        # remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED HERE
+        # rospy.sleep(1.0)
+        # self.arm.set_pose_target(verticalPose)
+        # plan = self.arm.plan()
+        # if not self.move(plan.joint_trajectory):
+        #     return False
 
         rospy.loginfo("Going along inside wall")
         remove_shelf()
