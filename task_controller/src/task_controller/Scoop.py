@@ -6,7 +6,7 @@ from copy import deepcopy
 from motoman_moveit.srv import convert_trajectory_server
 
 from apc_util.moveit import follow_path, goto_pose, execute_known_trajectory
-from apc_util.shelf import bin_pose, add_shelf, remove_shelf, Shelf
+from apc_util.shelf import bin_pose, add_shelf, remove_shelf, Shelf, get_shelf_pose
 from apc_util.smach import on_exception
 
 
