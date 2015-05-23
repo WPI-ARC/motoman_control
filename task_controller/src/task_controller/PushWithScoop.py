@@ -322,30 +322,30 @@ class PushWithScoop(smach.State):
         return 'Success'
 
     def pushToSide(self, verticalPose, jointConfigVert):
+        # START
         rospy.loginfo("going to vertical pose")
-        # add_shelf()
-        # remove_shelf()
         self.startPose = self.convertFrameRobotToShelf(self.arm.
                                                        get_current_pose().pose)
         poses = [self.startPose]
 
-        poses.append(self.startPose)
-        # poses[-1].position.x = verticalPose.position.x
-        # poses[-1].position.y = verticalPose.position.y
-        # poses[-1].position.z = verticalPose.position.z
-        poses[-1].orientation.x = verticalPose.orientation.x
-        poses[-1].orientation.y = verticalPose.orientation.y
-        poses[-1].orientation.z = verticalPose.orientation.z
-        poses[-1].orientation.w = verticalPose.orientation.w
+        # poses.append(self.startPose)
+        # # poses[-1].position.x = verticalPose.position.x
+        # # poses[-1].position.y = verticalPose.position.y
+        # # poses[-1].position.z = verticalPose.position.z
+        # poses[-1].orientation.x = verticalPose.orientation.x
+        # poses[-1].orientation.y = verticalPose.orientation.y
+        # poses[-1].orientation.z = verticalPose.orientation.z
+        # poses[-1].orientation.w = verticalPose.orientation.w
 
-        if not follow_path(self.arm, poses):
-            # rospy.loginfo("FAILED going to vertical position")
-            rospy.loginfo("FAILED going to vertical orientation")
-            # rospy.sleep(10)
-            return False
+        # if not follow_path(self.arm, poses):
+        #     # rospy.loginfo("FAILED going to vertical position")
+        #     rospy.loginfo("FAILED going to vertical orientation")
+        #     # rospy.sleep(10)
+        #     return False
 
-        poses = [self.convertFrameRobotToShelf(self.arm.
-                                              get_current_pose().pose)]
+        # 
+        # poses = [self.convertFrameRobotToShelf(self.arm.
+        #                                       get_current_pose().pose)]
 
         # poses.append(verticalPose)
         # poses[-1].position.x += -0.10
@@ -364,12 +364,12 @@ class PushWithScoop(smach.State):
         #     rospy.loginfo("FAILED going to vertical pose")
         #     return False
 
+        # IN
         rospy.loginfo("Going along inside wall")
         remove_shelf()
-
         poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
-
+        
         poses.append(deepcopy(poses[-1]))
         xDist = 0.12
         # xDist = 0.02
@@ -396,10 +396,10 @@ class PushWithScoop(smach.State):
             # rospy.sleep(10)
             return False
 
+        # PUSH
+        rospy.loginfo("Pushing items to side")
         poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
-
-        rospy.loginfo("Pushing items to side")
         # adjust orientation?
         poses.append(deepcopy(poses[-1]))
         if self.isLeftToRight:
@@ -417,9 +417,10 @@ class PushWithScoop(smach.State):
             # rospy.sleep(10)
             return False
 
+        # (reverse) PUSH
+        rospy.loginfo("(reverse) Pushing items to side")
         poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
-        rospy.loginfo("(reverse) Pushing items to side")
         # adjust orientation?
         poses.append(deepcopy(poses[-1]))
         if self.isLeftToRight:
@@ -437,9 +438,8 @@ class PushWithScoop(smach.State):
             # rospy.sleep(10)
             return False
 
+        # OUT
         rospy.loginfo("(reverse) Going along inside wall")
-        remove_shelf()
-
         poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
 
@@ -469,7 +469,7 @@ class PushWithScoop(smach.State):
             # rospy.sleep(10)
             return False
 
-
+        # BACK TO START
         # poses = [self.convertFrameRobotToShelf(self.arm.
         #                                        get_current_pose().pose)]
         # rospy.loginfo("Removing tray from bin")
@@ -489,6 +489,7 @@ class PushWithScoop(smach.State):
         # if not follow_path(self.arm, poses):
         #     return False
 
+        # BACK TO VERTICAL CONFIG
         rospy.loginfo("going back to vertical config")
         add_shelf()
         self.arm.set_joint_value_target(jointConfigVert)
