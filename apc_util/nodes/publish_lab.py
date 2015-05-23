@@ -131,11 +131,11 @@ if __name__ == '__main__':
     pose.pose.orientation.z = 0
     pose.pose.orientation.w = 1
 
-    scene.add_box(
-        name="box holding wires",
-        pose=pose,
-        size=(0.8, 0.8, 0.6)
-    )
+    # scene.add_box(
+    #     name="box holding wires",
+    #     pose=pose,
+    #     size=(0.8, 0.8, 0.6)
+    # )
 
     pose = PoseStamped()
     pose.header.frame_id = "/base_link"
@@ -182,11 +182,11 @@ if __name__ == '__main__':
     pose.pose.orientation.z = 0
     pose.pose.orientation.w = 1
 
-    scene.add_box(
-        name="ceiling",
-        pose=pose,
-        size=(6, 6, 0.1)
-    )
+    # scene.add_box(
+    #     name="ceiling",
+    #     pose=pose,
+    #     size=(6, 6, 0.1)
+    # )
 
     add_order_bin(0.5, 0.2)
 
