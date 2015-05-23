@@ -83,5 +83,5 @@
   <node pkg="apc_util" type="publish_checkerboard.py" name="publish_checkerboard" />
 
 
-  <node pkg="task_controller" type="motoman_controller.py" name="motoman_controller" />
+  <node pkg="task_controller" type="motoman_controller.py" name="motoman_controller" output="screen"/>
 </launch>
