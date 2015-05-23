@@ -751,7 +751,6 @@ class Scoop(smach.State):
 
         return 'Success'
 
-    # TODO Use calibrated values, not hardcoded
     def convertFrameRobotToShelf(self, pose):
         shelf_stamped_pose = get_shelf_pose()
 

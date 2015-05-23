@@ -4,7 +4,7 @@
   <node name="convert_trajectory_server" pkg="motoman_moveit" type="convert_trajectory_server" output="screen" >
     <param name="simulation_execution_topic" type="string" value="joint_path_command" />
   </node>
-  <arg name="speed" default="slow" />
+  <arg name="speed" default="fast" />
     
   <!-- Vision Code -->
    <include file="$(find apc_vision)/launch/apc_vision.launch">

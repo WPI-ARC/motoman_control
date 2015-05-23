@@ -27,43 +27,32 @@ class PushWithScoop(smach.State):
 
     @on_exception(failure_state="Failure")
     def execute(self, userdata):
+        targetBin = userdata.bin
         startBin = "C"
 
         add_shelf()
-        # rospy.loginfo("Trying to scoop from bin '"+userdata.bin+"' section '"
-        #               + userdata.section+"' with arm '"+userdata.arm+"'...")
-        rospy.loginfo("Trying to push with scoop in bin '"+userdata.bin+"' ")
+        rospy.loginfo("Trying to push with scoop in bin '"+targetBin+"' ")
 
         rospy.loginfo("Moving to home pose")
         jointValues = [0, 0, 0, 0, 0, 0, 0, 0]
 
-        if userdata.bin == "A":
-            jointValues = [-2.494322617213551, 0.5236253858745525,
-                           -1.58927266388269, -1.5760277304868606,
-                           -0.8813624307206954, -0.6095330671746702,
-                           1.8744956287775745, 2.176790229329603]
-            # ALTERNATE TORSO CONFIG
-            # jointValues = [2.9664804935455322, 1.6219801902770996,
-            #                -0.7816655039787292, 2.7299845218658447,
-            #                -1.3203777074813843, -1.796731948852539,
-            #                1.7229489088058472, 1.5853843688964844]
+        if targetBin == "A":
+            jointValues = [2.608074188232422, -0.29658669233322144,
+                           0.8934586644172668, 1.7289633750915527,
+                           1.573803424835205, 1.2867212295532227,
+                           1.4699939489364624, -2.8265552520751953]
             startBin = "A"
             rospy.loginfo("Start bin is A")
 
-        elif userdata.bin == "B":
+        elif targetBin == "B":
             jointValues = [-2.5886653285200394, -2.374620051506527,
                            1.8133726045423784, -1.8764388649633008,
                            0.9006129161380904, -0.7376122309261526,
                            -1.8880190429049368, -1.4743091056932842]
-            # ALTERNATE TORSO CONFIG
-            # jointValues = [2.9664804935455322, -1.9493999481201172,
-            #                1.2783514261245728, -2.9258782863616943,
-            #                1.1115436553955078, -1.4286524057388306,
-            #                -1.9131321907043457, -1.917506217956543]
             startBin = "C"
             rospy.loginfo("Start bin is C")
 
-        elif userdata.bin == "C":
+        elif targetBin == "C":
             jointValues = [0.10225791436341165, 0.7835974930475644,
                            -1.6773199945660098, 1.49905452509214,
                            1.3427193003920177, 3.1189284019155186,
@@ -71,81 +60,81 @@ class PushWithScoop(smach.State):
             startBin = "C"
             rospy.loginfo("Start bin is C")
 
-        elif userdata.bin == "D":
-            jointValues = [-2.9304159179992215, -1.188145482834881,
-                           1.2413950394903648, 1.448796166496277,
-                           2.1197289875770853, -0.2957380340693733,
-                           0.22356084880954222, 2.779410685704981]
+        elif targetBin == "D":
+            jointValues = [2.9667019844055176, 2.7412068843841553,
+                           0.09522612392902374, -1.1803146600723267,
+                           2.2825026512145996, 1.8705755472183228,
+                           1.8874949216842651, -2.919917583465576]
             startBin = "D"
             rospy.loginfo("Start bin is D")
             self.shortRow = True
 
-        elif userdata.bin == "E":
-            jointValues = [-2.617078223150794, -1.1700249924714978,
-                           1.8999579332309542, -1.098277334234239,
-                           -1.7992468515858204, 2.3379186721820004,
-                           0.4868876973376934, 2.4699605634819988]
+        elif targetBin == "E":
+            jointValues = [2.9667019844055176, 1.4224945306777954,
+                           -0.7801656126976013, -0.2995363175868988,
+                           2.195582151412964, 1.864424467086792,
+                           1.6602683067321777, 2.5383474826812744]
             startBin = "E"
             rospy.loginfo("Start bin is E")
             self.shortRow = True
 
-        elif userdata.bin == "F":
-            jointValues = [0.24514562009995183, 0.6469494458388144,
-                           -1.0091301947299118, 0.9320973548089223,
-                           1.992558226545299, 2.471672159247223,
-                           -1.5916865933053375, -0.1546854272462241]
+        elif targetBin == "F":
+            jointValues = [1.5194422006607056,1.810523509979248,
+                           -1.2088792324066162, 1.3328773975372314,
+                           -1.8696491718292236, 1.8829082250595093,
+                           -1.2678426504135132, 1.606799840927124]
             startBin = "F"
             rospy.loginfo("Start bin is F")
             self.shortRow = True
 
-        elif userdata.bin == "G":
-            jointValues = [-2.849710887732425, -1.8455983324002612,
-                           0.423630514960432, -0.9114784023155666,
-                           -2.217974920357377, 1.7475936923018869,
-                           -0.7608672375929674, -1.9079153926250387]
+        elif targetBin == "G":
+            jointValues = [1.5194422006607056,1.810523509979248,
+                           -1.2088792324066162, 1.3328773975372314,
+                           -1.8696491718292236, 1.8829082250595093,
+                           -1.2678426504135132, 1.606799840927124]
             startBin = "G"
             rospy.loginfo("Start bin is G")
             self.shortRow = True
 
-        elif userdata.bin == "H":
-            jointValues = [-2.8232615277416735, 0.6046811180302917,
-                           -1.3199900812523193, -2.9213054464463113,
-                           -1.6166655544412436, 1.680257377517132,
-                           -1.54861721727236, -2.147159909325972]
+        elif targetBin == "H":
+            jointValues = [2.966156482696533, 1.8770301342010498,
+                           1.2306787967681885, -0.586269199848175,
+                           2.2546935081481934, 1.669684886932373,
+                           1.7160991430282593, 0.7149554491043091]
             startBin = "H"
             rospy.loginfo("Start bin is H")
             self.shortRow = True
 
-        elif userdata.bin == "I":
-            jointValues = [-0.2684631401271395, -0.5944761002154216,
-                           1.025978429821326, 2.5126240735616863,
-                           2.163912575069292, 1.741182533849802,
-                           -1.895858443577232, 0.38680147950133437]
+        elif targetBin == "I":
+            jointValues = [1.5194591283798218, 1.251114845275879,
+                           -1.8047455549240112, 2.224393606185913,
+                           -1.9810069799423218, 1.1204286813735962,
+                           -1.827457070350647, 0.8016403913497925]
             startBin = "I"
             rospy.loginfo("Start bin is I")
             self.shortRow = True
 
-        elif userdata.bin == "J":
-            jointValues = [-1.8638487643791364, 0.03964241835102434,
-                           -1.3264222668862966, -0.42707390465510126,
-                           1.5590911109617618, 1.6030578531357988,
-                           0.1145294217592958, 2.0083975636970286]
+        elif targetBin == "J":
+            jointValues = [2.608074188232422, 0.4578932821750641,
+                           1.8810696601867676, -0.5525216460227966,
+                           1.9467278718948364, 0.23977181315422058,
+                           0.7547944784164429, -0.43715447187423706]
             startBin = "J"
             rospy.loginfo("Start bin is J")
 
-        elif userdata.bin == "K":
-            jointValues = [0.6461938727094164, -1.3830831244973643,
-                           1.095973358496806, 0.45177256217465794,
-                           -2.2491703946246178, 2.1547659742086287,
-                           1.5037163344320572, -2.16208327232433]
+        elif targetBin == "K":
+            jointValues = [2.9667019844055176, -0.873210072517395,
+                           -0.5380352735519409, 2.7276151180267334,
+                           -2.2068514823913574, 1.085071086883545,
+                           1.8169622421264648, 1.6070705652236938]
             startBin = "K"
             rospy.loginfo("Start bin is K")
 
-        elif userdata.bin == "L":
-            jointValues = [-0.2858043091428526, -1.5302684719380377,
-                           1.4227702644339293, -2.1745498037104967,
-                           2.218658549291765, -0.6976578836771063,
-                           0.46488220398513513, 2.908319709480955]
+        elif targetBin == "L":
+            jointValues = [1.7551809549331665, 0.04665006324648857,
+                           -1.8453619480133057, 1.8693605661392212,
+                           -1.189427375793457, 1.5698546171188354,
+                           -1.871213436126709, 0.8811066150665283]
             startBin = "L"
             rospy.loginfo("Start bin is L")
 
@@ -168,16 +157,16 @@ class PushWithScoop(smach.State):
         # return 'Success'
 
         remove_shelf()
-        # if not execute_known_trajectory(self.arm, 'Pick', userdata.bin):
+        # if not execute_known_trajectory(self.arm, 'Pick', targetBin):
         # if not execute_known_trajectory(self.arm, 'Pick', startBin):
         #     return 'Failure'
         # remove_shelf()
-        # if not execute_known_trajectory(self.arm, 'Dump', userdata.bin):
+        # if not execute_known_trajectory(self.arm, 'Dump', targetBin):
         #     return 'Failure'
         # add_shelf()
-        # if not execute_known_trajectory(self.arm, 'Lift', userdata.bin):
+        # if not execute_known_trajectory(self.arm, 'Lift', targetBin):
         #     return 'Failure'
-        # if not execute_known_trajectory(self.arm, 'Home', userdata.bin):
+        # if not execute_known_trajectory(self.arm, 'Home', targetBin):
         #     return 'Failure'
         # return 'Success'
 
@@ -185,14 +174,14 @@ class PushWithScoop(smach.State):
         self.arm.set_planner_id("RRTConnectkConfigDefault")
         self.arm.set_pose_reference_frame("/shelf")
 
-        verticalPose = bin_pose(userdata.bin).pose
+        verticalPose = bin_pose(targetBin).pose
 
         # FIX
         leftOffset = -0.001
         middleOffset = -0.002
         rightOffset = 0.001
 
-        if (userdata.bin == "A" or userdata.bin == "J"):
+        if (targetBin == "A" or targetBin == "J"):
             verticalPose.position.x += -0.364436
             # verticalPose.position.y += 0.13305766
             verticalPose.position.y += 0.12305766
@@ -204,13 +193,13 @@ class PushWithScoop(smach.State):
 
             verticalPose.position.y += leftOffset
             verticalPose = self.convertFrameRobotToShelf(verticalPose)
-            if not self.pushLeftToRight(verticalPose):
+            if not self.pushToSide(verticalPose, True):
                 return 'Failure'
 
             return 'Success'
 
         # SHORT BINS
-        elif (userdata.bin == "D" or userdata.bin == "G"):
+        elif (targetBin == "D" or targetBin == "G"):
             # verticalPose.position.x += -0.364436
             # verticalPose.position.y += 0.13305766
             # verticalPose.position.z += 0.027
@@ -230,12 +219,12 @@ class PushWithScoop(smach.State):
             # rospy.loginfo("verticalPose z: " + str(verticalPose.position.z))
 
             verticalPose = self.convertFrameRobotToShelf(verticalPose)
-            if not self.pushLeftToRight(verticalPose):
+            if not self.pushToSide(verticalPose, True):
                 return 'Failure'
 
             return 'Success'
 
-        elif (userdata.bin == "B" or userdata.bin == "K"):
+        elif (targetBin == "B" or targetBin == "K"):
             verticalPose.position.x += -0.364436
             # verticalPose.position.y += 0.13305766
             verticalPose.position.y += 0.12305766
@@ -247,13 +236,13 @@ class PushWithScoop(smach.State):
 
             verticalPose.position.y += middleOffset
             verticalPose = self.convertFrameRobotToShelf(verticalPose)
-            if not self.pushLeftToRight(verticalPose):
+            if not self.pushToSide(verticalPose, True):
                 return 'Failure'
 
             return 'Success'
 
         # SHORT BINS
-        elif (userdata.bin == "E" or userdata.bin == "H"):
+        elif (targetBin == "E" or targetBin == "H"):
             # verticalPose.position.x += -0.364436
             # verticalPose.position.y += 0.13305766
             # verticalPose.position.z += 0.027
@@ -268,12 +257,12 @@ class PushWithScoop(smach.State):
 
             verticalPose.position.y += middleOffset
             verticalPose = self.convertFrameRobotToShelf(verticalPose)
-            if not self.pushLeftToRight(verticalPose):
+            if not self.pushToSide(verticalPose, True):
                 return 'Failure'
 
             return 'Success'
 
-        elif (userdata.bin == "C" or userdata.bin == "L"):
+        elif (targetBin == "C" or targetBin == "L"):
             # verticalPose.position.x += -0.382929
             # # verticalPose.position.y += -.12865034
             # verticalPose.position.y += -.13865034
@@ -289,13 +278,13 @@ class PushWithScoop(smach.State):
 
             verticalPose.position.y += rightOffset
             verticalPose = self.convertFrameRobotToShelf(verticalPose)
-            if not self.pushRightToLeft(verticalPose):
+            if not self.pushToSide(verticalPose, False):
                 return 'Failure'
 
             return 'Success'
 
         # SHORT BINS
-        elif (userdata.bin == "I" or userdata.bin == "F"):
+        elif (targetBin == "I" or targetBin == "F"):
             # verticalPose.position.x += -0.382929
             # verticalPose.position.y += -.12865034
             # verticalPose.position.z += 0.032
@@ -311,12 +300,12 @@ class PushWithScoop(smach.State):
 
             verticalPose.position.y += rightOffset
             verticalPose = self.convertFrameRobotToShelf(verticalPose)
-            if not self.pushRightToLeft(verticalPose):
+            if not self.pushToSide(verticalPose, False):
                 return 'Failure'
 
             return 'Success'
 
-    def pushLeftToRight(self, verticalPose):
+    def pushToSide(self, verticalPose, isLeftToRight):
         rospy.loginfo("planning to vertical pose")
         # add_shelf()
         self.startPose = self.convertFrameRobotToShelf(self.arm.
@@ -340,12 +329,13 @@ class PushWithScoop(smach.State):
         #     return False
 
         remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED HERE
+        rospy.sleep(1.0)
         self.arm.set_pose_target(verticalPose)
         plan = self.arm.plan()
         if not self.move(plan.joint_trajectory):
             return False
 
-        rospy.loginfo("Going along inside left wall")
+        rospy.loginfo("Going along inside wall")
         remove_shelf()
 
         poses = [self.convertFrameRobotToShelf(self.arm.
@@ -354,98 +344,20 @@ class PushWithScoop(smach.State):
         poses.append(deepcopy(poses[-1]))
         xDist = 0.12
         poses[-1].position.x += xDist
-        poses[-1].position.y += 0.05
-        if self.shortRow:
-            poses[-1].position.z += -xDist*0.0875  # 5 degrees
-
-        poses.append(deepcopy(poses[-1]))
-        xDist = 0.35
-        poses[-1].position.x += xDist
-        poses[-1].position.y += 0.03
-        if self.shortRow:
-            poses[-1].position.z += -xDist*0.0875  # 5 degrees
-
-        if not follow_path(self.arm, poses):
-            return False
-
-        poses = [self.convertFrameRobotToShelf(self.arm.
-                                               get_current_pose().pose)]
-
-        rospy.loginfo("Pushing items to right side")
-        # adjust orientation?
-        poses.append(deepcopy(poses[-1]))
-        poses[-1].position.y += -0.10
-        if self.middleColumn:
-            # poses[-1].position.y += -0.05
-            pass
-
-        if not follow_path(self.arm, poses):
-            return False
-
-        poses = [self.convertFrameRobotToShelf(self.arm.
-                                               get_current_pose().pose)]
-        rospy.loginfo("Removing from bin ")
-        poses.append(deepcopy(poses[-1]))
-        # poses[-1].position.y += 0.05
-        # poses[-1].position.x += -0.50 # WORKS FOR BINS A,B,C?
-        poses[-1].position.x += -0.40
-        if self.shortRow:
-            poses[-1].position.z += xDist*0.0875
+        if isLeftToRight:
             poses[-1].position.y += 0.05
-
-        poses.append(self.startPose)
-
-        if not follow_path(self.arm, poses):
-            return False
-
-        return True
-
-    def pushRightToLeft(self, verticalPose):
-        rospy.loginfo("planning to vertical pose")
-        # add_shelf()
-        # self.startPose = self.convertFrameRobotToShelf(self.arm.
-        #                                                get_current_pose().pose)
-        # poses = [self.startPose]
-
-        # poses.append(self.startPose)
-        # poses[-1].orientation.x = verticalPose.orientation.x
-        # poses[-1].orientation.y = verticalPose.orientation.y
-        # poses[-1].orientation.z = verticalPose.orientation.z
-        # poses[-1].orientation.w = verticalPose.orientation.w
-
-        # if not follow_path(self.arm, poses):
-        #     return False
-
-        # poses = [self.convertFrameRobotToShelf(self.arm.
-        #                                       get_current_pose().pose)]
-
-        # poses.append(verticalPose)
-        # if not follow_path(self.arm, poses):
-        #     return False
-
-        remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED HERE
-        self.arm.set_pose_target(verticalPose)
-        plan = self.arm.plan()
-        if not self.move(plan.joint_trajectory):
-            return False
-
-        rospy.loginfo("Going along inside right wall")
-        remove_shelf()
-
-        poses = [self.convertFrameRobotToShelf(self.arm.
-                                               get_current_pose().pose)]
-
-        poses.append(deepcopy(poses[-1]))
-        xDist = 0.12
-        poses[-1].position.x += xDist
-        poses[-1].position.y += -0.05
+        else:
+            poses[-1].position.y += -0.05
         if self.shortRow:
             poses[-1].position.z += -xDist*0.0875  # 5 degrees
 
         poses.append(deepcopy(poses[-1]))
         xDist = 0.35
         poses[-1].position.x += xDist
-        poses[-1].position.y += -0.03
+        if isLeftToRight:
+            poses[-1].position.y += 0.03
+        else:
+            poses[-1].position.y += -0.03
         if self.shortRow:
             poses[-1].position.z += -xDist*0.0875  # 5 degrees
 
@@ -455,10 +367,13 @@ class PushWithScoop(smach.State):
         poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
 
-        rospy.loginfo("Pushing items to left side")
+        rospy.loginfo("Pushing items to side")
         # adjust orientation?
         poses.append(deepcopy(poses[-1]))
-        poses[-1].position.y += 0.10
+        if isLeftToRight:
+            poses[-1].position.y += -0.10
+        else:
+            poses[-1].position.y += 0.10
         if self.middleColumn:
             # poses[-1].position.y += -0.05
             pass
@@ -468,15 +383,17 @@ class PushWithScoop(smach.State):
 
         poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
-
-        rospy.loginfo("Removing from bin ")
+        rospy.loginfo("Removing tray from bin")
         poses.append(deepcopy(poses[-1]))
         # poses[-1].position.y += 0.05
         # poses[-1].position.x += -0.50 # WORKS FOR BINS A,B,C?
         poses[-1].position.x += -0.40
         if self.shortRow:
             poses[-1].position.z += xDist*0.0875
-            poses[-1].position.y += -0.05
+            if isLeftToRight:
+                poses[-1].position.y += 0.05
+            else:
+                poses[-1].position.y += -0.05
 
         poses.append(self.startPose)
 
@@ -485,7 +402,6 @@ class PushWithScoop(smach.State):
 
         return True
 
-    # TODO Use calibrated values, not hardcoded
     def convertFrameRobotToShelf(self, pose):
         shelf_stamped_pose = get_shelf_pose()
 

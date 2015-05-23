@@ -227,7 +227,8 @@ def bin_pose(bin, bin_x=1.32, bin_y=0, bin_z=-0.01):
     MiddleBin_width = 0.300
     RightBin_width = 0.240
 
-    WorkBase_Height = 0.820
+    # WorkBase_Height = 0.820
+    WorkBase_Height = 0.820 - 0.090
     BottomLay_Height = 0.230
     SecndLayer_Height = 0.230
     ThirdLayer_Height = 0.220

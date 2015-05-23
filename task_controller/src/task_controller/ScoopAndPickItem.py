@@ -12,7 +12,8 @@ def ScoopAndPickItem(robot):
     sm = smach.StateMachine(
         outcomes=['Success', 'Failure', 'Fatal'],
         input_keys=['sm_input', 'bin', 'item'],
-        output_keys=['output']
+        # output_keys=['output']
+        output_keys=[]
     )
 
     # Populate the state machine from the modules
