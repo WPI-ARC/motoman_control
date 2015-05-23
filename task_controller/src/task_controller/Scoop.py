@@ -10,7 +10,7 @@ from motoman_moveit.srv import convert_trajectory_server
 
 from std_msgs.msg import *
 
-from apc_util.moveit import follow_path
+from apc_util.moveit import follow_path, move
 from apc_util.moveit import goto_pose, execute_known_trajectory
 from apc_util.shelf import bin_pose, add_shelf, remove_shelf, Shelf, get_shelf_pose
 from apc_util.smach import on_exception
@@ -390,8 +390,8 @@ class Scoop(smach.State):
 
         #######################################################################
         rospy.loginfo("made it out")
-        rospy.sleep(3)
-        return 'Failure'
+        # rospy.sleep(3)
+        # return 'Failure'
         #######################################################################
 
         target_pose = Pose()
@@ -404,7 +404,7 @@ class Scoop(smach.State):
         target_pose.orientation.w = -0.188543  # -0.158639
 
         rospy.loginfo("Trying to follow constrained path")
-        if not self.follow_constrained_path([target_pose]):
+        if not self.follow_constrained_path(target_pose):
             return 'Failure'
 
         # poses = [self.convertFrameRobotToShelf(self.arm.
@@ -587,7 +587,7 @@ class Scoop(smach.State):
 
     def follow_constrained_path(self, target_pose):
         constraints = Constraints()
-        orientation_constraint = OrientationConstraint( header=Header(stamp=rospy.Time.now()),
+        orientation_constraint = OrientationConstraint( header=Header(stamp=rospy.Time.now(), frame_id="/shelf"),
                                                         orientation=make_quaternion(-0.36665, -0.64811, 0.33362, 0.57811),
                                                         link_name="arm_right_link_7_t",
                                                         absolute_x_axis_tolerance=0.05,
@@ -595,12 +595,12 @@ class Scoop(smach.State):
                                                         absolute_z_axis_tolerance=2*math.pi,
                                                         weight=10   )
 
-        position_constraint = PositionConstraint(   header=Header(stamp=rospy.Time.now()),
-                                                    link_name="arm_right_link_7_t",
-                                                    target_point_offset=make_vector(0.01, 0.01, 0.01),
-                                                    weight=9    )
+        # position_constraint = PositionConstraint(   header=Header(stamp=rospy.Time.now(), frame_id="/shelf"),
+        #                                             link_name="arm_right_link_7_t",
+        #                                             target_point_offset=make_vector(0.01, 0.01, 0.01),
+        #                                             weight=9    )
 
-        constraints.position_constraints.append(position_constraint)
+        # constraints.position_constraints.append(position_constraint)
         constraints.orientation_constraints.append(orientation_constraint)
         self.arm.set_path_constraints(constraints)
         self.arm.set_goal_tolerance(0.01)
@@ -608,12 +608,14 @@ class Scoop(smach.State):
         self.arm.set_planning_time(30)
         rospy.loginfo("planning constrained path")
         plan = self.arm.plan()
-        result = self.move(plan.joint_trajectory)
+        result = move(self.arm, plan.joint_trajectory)
 
         if result:
             rospy.loginfo("constrained path moved successfully")
         else:
             rospy.logerr("constrained path failed to move")
+
+        self.arm.clear_path_constraints()
 
         return result
 
