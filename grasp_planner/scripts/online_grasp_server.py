@@ -42,7 +42,7 @@ class Grasping:
         self.padding = 0.015  # Extra padding between object and gripper is 1 cm.
         self.fingerlength = 0.115  # palm to finger tip offset is 11.5 cm
         self.gripperwidth = 0.155 - self.padding  # gripper width is 15.5 cm
-        self.z_lowerboundoffset = 0.065 - 0.02  # Palm center to bottom of hand is 6.5 cm
+        self.z_lowerboundoffset = 0.065 # Palm center to bottom of hand is 6.5 cm
         self.approachpose_offset = 0.2  # Set aproach pose to be 30cm back from the front of the bin
         # palm -15 deg offset about z-axis
         self.hand_theta = 0.261799
@@ -236,8 +236,8 @@ class Grasping:
         return edge_offset - self.fingerlength - extensions + offset # the palm is located at min_x so move out till lenght of finger to place lenght of finger at min_x. Then move in 1/4 of the total depth of object
         #return edge_offset - self.fingerlength - extensions
 
-    def compute_height(self, bin_min_z):
-        return bin_min_z + self.z_lowerboundoffset + self.objectheightoffset  # minus 5cm height as magic number adjustment. Should have to do this if binmin z is correct
+    def compute_height(self, bin_min_z, shelf_frame_height):
+        return shelf_frame_height + bin_min_z + self.z_lowerboundoffset + self.objectheightoffset  # minus 5cm height as magic number adjustment. Should have to do this if binmin z is correct
         #return bin_min_z + self.z_lowerboundoffset
 
     def compute_approach_offset(self, projection_x, bin_min_x, theta):
@@ -417,7 +417,7 @@ class Grasping:
                     score = self.compute_score(width, pitch)
 
                     grasp_depth = self.compute_depth(min_x, max_x)  # set how far hand should go past front edge of object
-                    height = self.compute_height(bin_min_z)  # select the height so bottom of object and also hand won't collide wit shelf lip. may need to take into acount the max_z and objects height to see if object will hit top of shelf.
+                    height = self.compute_height(bin_min_z, Tbaseshelf[2,3])  # select the height so bottom of object and also hand won't collide wit shelf lip. may need to take into acount the max_z and objects height to see if object will hit top of shelf.
                     approach_offset = self.compute_approach_offset(Trans_shelfobj[0], bin_min_x, theta)
 
                     rospy.logdebug("score: "+str(score))
