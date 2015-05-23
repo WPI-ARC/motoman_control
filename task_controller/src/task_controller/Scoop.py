@@ -3,10 +3,9 @@ import smach
 import math
 
 from geometry_msgs.msg import *
-from sensor_msgs.msg import *
+from moveit_msgs.msg import *
 
 from copy import deepcopy
-# from geometry_msgs.msg import Pose, Point, Quaternion
 from motoman_moveit.srv import convert_trajectory_server
 
 from std_msgs.msg import *
@@ -14,8 +13,8 @@ from std_msgs.msg import *
 from apc_util.moveit import follow_path, goto_pose, execute_known_trajectory
 from apc_util.shelf import bin_pose, add_shelf, remove_shelf, Shelf, get_shelf_pose
 from apc_util.smach import on_exception
-from constrained_path_generator.msg import *
-from constrained_path_generator.srv import *
+# from constrained_path_generator.msg import *
+# from constrained_path_generator.srv import *
 
 
 class Scoop(smach.State):
@@ -566,59 +565,37 @@ class Scoop(smach.State):
 
         return True
 
+    def follow_constrained_path(self, target_pose):
+        constraints = Constraints()
+        orientation_constraint = OrientationConstraint( header=Header(stamp=rospy.Time.now()),
+                                                        orientation=make_quaternion(-0.36665, -0.64811, 0.33362, 0.57811),
+                                                        link_name="arm_right_link_7_t",
+                                                        absolute_x_axis_tolerance=0.05,
+                                                        absolute_y_axis_tolerance=0.05,
+                                                        absolute_z_axis_tolerance=2*math.pi,
+                                                        weight=10   )
 
+        position_constraint = PositionConstraint(   header=Header(stamp=rospy.Time.now()),
+                                                    link_name="arm_right_link_7_t",
+                                                    target_point_offset=make_vector(0.01, 0.01, 0.01),
+                                                    weight=9    )
 
-    #Callback to get joint values from current robot state
-    def jointStateCallback(self, msg):
-        if(msg.name[0] == "arm_left_joint_1_s"):
-            joint_states[0] = msg
-        if(msg.name[0] == "arm_right_joint_1_s"):
-            joint_states[1] = msg
-        if(msg.name[0] == "torso_joint_b1"):
-            joint_states[2] = msg
-        if(msg.name[0] == "torso_joint_b2"):
-            joint_states[3] = msg
+        constraints.position_constraints.append(position_constraint)
+        constraints.orientation_constraints.append(orientation_constraint)
+        self.arm.set_path_constraints(constraints)
+        self.arm.set_goal_tolerance(0.01)
+        self.arm.set_pose_target(target_pose)
+        self.arm.set_planning_time(30)
+        rospy.loginfo("planning constrained path")
+        plan = self.arm.plan()
+        result = self.move(plan.joint_trajectory)
 
-    def follow_constrained_path(self, wypts):
-        result = False
-        planner_client = rospy.ServiceProxy("plan_constrained_path", PlanConstrainedPath)
-
-        waypoints = []
-        for pt in wypts:
-            waypoints.append(make_pose_stamped(pt.position.x, pt.position.y, pt.position.z,
-                                               pt.orientation.x, pt.orientation.y, pt.orientation.z, pt.orientation.w,
-                                                "/shelf"))
-
-        query = PlanConstrainedPathQuery()
-        query.path_type = PlanConstrainedPathQuery.CHECK_ENVIRONMENT_COLLISIONS | PlanConstrainedPathQuery.CARTESIAN_IK | PlanConstrainedPathQuery.PLAN | PlanConstrainedPathQuery.FOLLOW_WAYPOINTS | PlanConstrainedPathQuery.FOLLOW_ORIENTATION_CONSTRAINTS
-        query.waypoints = waypoints
-        query.group_name = "arm_left_torso"
-        query.target_link = "arm_left_link_7_t"
-        query.planning_time = 5.0
-        query.max_cspace_jump = 0.05
-        query.task_space_step_size = 0.025
-
-        query.initial_state.joint_state = JointState(header=Header(stamp=rospy.Time.now()),
-                                                        name=self.robot.sda10f.get_joints(),
-                                                        position=self.robot.sda10f.get_current_joint_values() )
-        query.path_orientation_constraint = make_quaternion(-0.36665, -0.64811, 0.33362, 0.57811)
-        query.path_angle_tolerance = make_vector(0.01, 0.01, 2*math.pi)
-        query.path_position_tolerance = make_vector(0.02, 0.02, 0.02)
-        query.goal_angle_tolerance = make_vector(0.01, 0.01, 0.01)
-        query.goal_position_tolerance = make_vector(0.01, 0.01, 0.01)
-
-        full_req = PlanConstrainedPathRequest(query)
-
-        rospy.loginfo("calling constrained planner")
-        # rospy.loginfo(waypoints)
-        full_res = planner_client.call(full_req)
-
-        if full_res.status == 0:
-            rospy.loginfo("Constrained Path returned successful")
-            return self.move(full_res.path)
+        if result:
+            rospy.loginfo("constrained path moved successfully")
         else:
-            rospy.logerr("Constrained Path returned failure, status: " + full_res.status)
-            return False
+            rospy.logerr("constrained path failed to move")
+
+        return result
 
 
 
