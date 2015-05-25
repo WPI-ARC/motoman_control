@@ -48,11 +48,15 @@ class Shelf(object):
         rospy.loginfo("Adding shelf: %s" % self.quality)
         if self.quality != Shelf.NONE:
             add_shelf(self.quality)
+        else:
+            rospy.logwarn("Not adding shelf of quality NONE")
 
     def __exit__(self, type, value, tb):
         rospy.loginfo("Removing shelf: %s" % self.quality)
         if self.quality != Shelf.NONE:
             remove_shelf()
+        else:
+            rospy.logwarn("Not removing shelf of quality NONE")
 
 NO_SHELF = Shelf(Shelf.NONE)
 SIMPLE_SHELF = Shelf(Shelf.SIMPLE)
