@@ -14,7 +14,7 @@ from std_msgs.msg import *
 
 from apc_util.moveit import follow_path, move
 from apc_util.moveit import goto_pose, execute_known_trajectory
-from apc_util.shelf import bin_pose, add_shelf, remove_shelf, Shelf, get_shelf_pose
+from apc_util.shelf import bin_pose, bin_pose_tray, add_shelf, remove_shelf, Shelf, get_shelf_pose, NO_SHELF, SIMPLE_SHELF, FULL_SHELF, PADDED_SHELF
 from apc_util.smach import on_exception
 # from constrained_path_generator.msg import *
 # from constrained_path_generator.srv import *
@@ -39,23 +39,32 @@ class Scoop(smach.State):
     @on_exception(failure_state="Failure")
     def execute(self, userdata):
         # COMMENT OUT THIS RETURN UNLESS 'PushWithScoop' IS CALLING EVERYTHING
-        # return 'Success'
+        return 'Success'
 
         targetBin = userdata.bin
         jointConfigHor = [0, 0, 0, 0, 0, 0, 0, 0]
 
         # TODO: THESE ARE MOSTLY VERTICAL POSES, CHANGE TO HORIZONTAL POSES IF NEEDED
-        if targetBin == "A":  # THIS CONFIG IS WRONG, VERY FAR INSIDE SHELF
-            jointConfigHor = [-2.9180621618059956, -0.020495417364615614,
-                              -1.285681453955754, -2.8463861700045063,
-                              -0.5254213067909062, 2.07194501960422,
-                              -0.017180756603675337, -1.2763091386851935]
+        if targetBin == "A":  # oldSUCCESS!
+            jointConfigHor = [-2.476390993374663, 1.018227984000994,
+                              -0.7615361332731927, -0.4143850759424132,
+                              1.743826755749119, 1.2232240642678402,
+                              0.5953827787445809, 1.7196706206680665]
 
-        elif targetBin == "B":
-            jointConfigHor = [-2.5886653285200394, -2.374620051506527,
-                           1.8133726045423784, -1.8764388649633008,
-                           0.9006129161380904, -0.7376122309261526,
-                           -1.8880190429049368, -1.4743091056932842]
+        elif targetBin == "B":  # oldSUCCESS!  *check that we have actually cleared shelf
+            # jointConfigHor = [-2.2074857444262976, -3.045685540584711,
+            #                   1.9, -2.0639123895240985,
+            #                   1.801592142183052, -0.7345649238710564,
+            #                   -1.7975638693339302, -1.6729443283591612]
+            jointConfigHor = [-2.20769174274226, -3.044802765450554,
+                              1.9, -2.063762136216949,
+                              1.8008414892898243, -0.7355662270876514,
+                              -1.7985231711726328, -1.6730311904692863]
+
+            # jointConfigHor = [-2.5886653285200394, -2.374620051506527,
+            #                1.8133726045423784, -1.8764388649633008,
+            #                0.9006129161380904, -0.7376122309261526,
+            #                -1.8880190429049368, -1.4743091056932842]
 
         elif targetBin == "C":
             jointConfigHor = [0.10225791436341165, 0.7835974930475644,
@@ -63,11 +72,13 @@ class Scoop(smach.State):
                            1.3427193003920177, 3.1189284019155186,
                            -1.4674104840922055, -0.9027630644540776]
 
+
         elif targetBin == "D":  # pose is vertical
             jointConfigHor = [2.9667019844055176, 2.7412068843841553,
                            0.09522612392902374, -1.1803146600723267,
                            2.2825026512145996, 1.8705755472183228,
                            1.8874949216842651, -2.919917583465576]
+
 
         elif targetBin == "E":  # pose is vertical
             jointConfigHor = [2.9667019844055176, 1.4224945306777954,
@@ -126,7 +137,7 @@ class Scoop(smach.State):
         self.arm.set_pose_reference_frame("/shelf")
 
         # horiztonal pose relative to bin
-        horizontalPose = bin_pose(targetBin).pose
+        horizontalPose = bin_pose_tray(targetBin).pose
         horizontalPose.position.x += -0.307581
         horizontalPose.position.y += -0.011221
         horizontalPose.position.z += 0.05463
@@ -154,22 +165,35 @@ class Scoop(smach.State):
             horizontalPose.position.y += rightOffset
             self.rightColumn = True
 
-        horizontalPose = self.convertFrameRobotToShelf(horizontalPose)
-        rospy.loginfo("planning to horizontal pose")
+        # TEMPORARY ##################################################
+        horizontalPose.position.z += 0.13
+        if self.isLeftToRight:
+            if self.middleColumn:
+                horizontalPose.position.y += -0.15
+            else:
+                horizontalPose.position.y += -0.12
+        else:
+            horizontalPose.position.y += 0.12
+        ##################################################################
 
-        # add_shelf()
-        remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED
+
+        horizontalPose = self.convertFrameRobotToShelf(horizontalPose)
+        rospy.loginfo("planning to horizontal config")
+
+        add_shelf(Shelf.PADDED)
+        # remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED
         # self.arm.set_pose_target(horizontalPose)
         self.arm.set_joint_value_target(jointConfigHor)
         plan = self.arm.plan()
         if not self.move(plan.joint_trajectory):
             return 'Failure'
-        rospy.loginfo("moved to horizontal pose")        
+        rospy.loginfo("moved to horizontal config")        
         
         if not self.scoopBin(horizontalPose):
             return 'Failure'
         # rospy.sleep(100)
 
+        # add_shelf(Shelf.PADDED)
         rospy.loginfo("planning cartesian path out of bin")
 
         if targetBin == "A":
@@ -199,36 +223,22 @@ class Scoop(smach.State):
                                                get_current_pose().pose)]
             # OUT + UP
             poses.append(deepcopy(poses[-1]))
-            poses[-1].position.x += -0.4586
-            # poses[-1].position.y += 0.05
-            poses[-1].position.z += 0.05
+            poses[-1].position.y += 0.05
 
             if not follow_path(self.arm, poses):
                 return 'Failure'
 
+            rospy.loginfo("moved over")
             poses = [self.convertFrameRobotToShelf(self.arm.
-                                                   get_current_pose().pose)]
-
+                                               get_current_pose().pose)]
+            # OUT + UP
             poses.append(deepcopy(poses[-1]))
-            poses[-1].position.z += 0.05
+            # poses[-1].position.x += -0.4586
+            poses[-1].position.x += -0.3586  # MAY BE IN COLLISION WITH SHELF
+            # poses[-1].position.y += 0.04
+            poses[-1].position.z += 0.19
+            # poses[-1].position.z += 0.04
 
-            rospy.loginfo("planning cartesian path to final bin pose")
-            if not follow_path(self.arm, poses):
-                return 'Failure'
-
-            poses = [self.convertFrameRobotToShelf(self.arm.
-                                                   get_current_pose().pose)]            
-
-            poses.append(deepcopy(poses[-1]))
-            # To right side of shelf
-            poses[-1].position.y = -0.686495  # INCLUDES CURRENT SHELF CALIBRATION as of Saturday night
-            poses[-1].position.z += -0.05
-            poses[-1].orientation.x = -0.36667
-            poses[-1].orientation.y = -0.648119
-            poses[-1].orientation.z = 0.333549
-            poses[-1].orientation.w = 0.578135
-
-            rospy.loginfo("planning cartesian path to pre-dumping pose")
             if not follow_path(self.arm, poses):
                 return 'Failure'
 
@@ -475,7 +485,7 @@ class Scoop(smach.State):
             return 'Failure'
 
         # return right arm to home position
-        add_shelf()
+        add_shelf(Shelf.PADDED)
         jointConfigHome = [0, 0, 0, 0, 0, 0, 0, 0, 0]
         jointConfigHome[0] = 0.0  # Torso
         jointConfigHome[1] = 1.699523295294849
@@ -509,36 +519,49 @@ class Scoop(smach.State):
     def scoopBin(self, horizontalPose):
         remove_shelf()
 
-        # rospy.loginfo("planning cartesian path into bin")
-        rospy.loginfo("going to horizontal pose")
+        # # rospy.loginfo("planning cartesian path into bin")
+        # rospy.loginfo("going to horizontal pose")
 
-        # # SPLITTING THIS WAYPOINT INTO 2 PARTS IS UNTESTED!!!!!!!!!!!
+        # # # SPLITTING THIS WAYPOINT INTO 2 PARTS IS UNTESTED!!!!!!!!!!!
+        # # # START
+        # # poses = [self.convertFrameRobotToShelf(self.arm.
+        # #                                        get_current_pose().pose)]
+
+        # # poses.append(deepcopy(poses[-1]))
+        # # # poses[-1].position.x = horizontalPose.position.x
+        # # # poses[-1].position.y = horizontalPose.position.y
+        # # # poses[-1].position.z = horizontalPose.position.z
+        # # poses[-1].orientation.x = horizontalPose.orientation.x
+        # # poses[-1].orientation.y = horizontalPose.orientation.y
+        # # poses[-1].orientation.z = horizontalPose.orientation.z
+        # # poses[-1].orientation.w = horizontalPose.orientation.w
+
+        # # if not follow_path(self.arm, poses):
+        # #     rospy.loginfo("FAILED to dump")
+        # #     return False
+
         # # START
         # poses = [self.convertFrameRobotToShelf(self.arm.
         #                                        get_current_pose().pose)]
 
-        # poses.append(deepcopy(poses[-1]))
-        # # poses[-1].position.x = horizontalPose.position.x
-        # # poses[-1].position.y = horizontalPose.position.y
-        # # poses[-1].position.z = horizontalPose.position.z
-        # poses[-1].orientation.x = horizontalPose.orientation.x
-        # poses[-1].orientation.y = horizontalPose.orientation.y
-        # poses[-1].orientation.z = horizontalPose.orientation.z
-        # poses[-1].orientation.w = horizontalPose.orientation.w
+        # poses.append(horizontalPose)
 
         # if not follow_path(self.arm, poses):
-        #     rospy.loginfo("FAILED to dump")
+        #     rospy.loginfo("FAILED going to horizontal pose")
         #     return False
 
-        # START
-        poses = [self.convertFrameRobotToShelf(self.arm.
-                                               get_current_pose().pose)]
-
-        poses.append(horizontalPose)
-
-        if not follow_path(self.arm, poses):
-            rospy.loginfo("FAILED going to horizontal pose")
+        # THIS BLOCK OF CODE FOR OBTAINING JOINT CONFIGURATIONS FOR PLANNING ONLY, SHOULD BE COMMENTED OUT FOR ACTUAL RUNS
+        rospy.sleep(1.0)
+        rospy.loginfo("going to horiztonal pose")
+        self.arm.set_pose_target(horizontalPose)
+        plan = self.arm.plan()
+        if not self.move(plan.joint_trajectory):
+            rospy.loginfo("FAILED going to horiztonal pose")
             return False
+        
+        rospy.loginfo("sleeping...")
+        rospy.sleep(15.0)
+        ##################################################################################################
 
         # IN
         rospy.loginfo("entering bin")
