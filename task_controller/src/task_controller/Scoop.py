@@ -383,33 +383,31 @@ class Scoop(smach.State):
         # return 'Failure'
         #######################################################################
 
+
+        # bins C, F, I, L
         # target_pose = Pose()
-        # target_pose.position.x = 0.472985  # 0.482178
-        # target_pose.position.y = -0.351667  # -0.335627
-        # target_pose.position.z = 0.753171  # 0.706449
-        # target_pose.orientation.x = -0.164656  # -0.198328
-        # target_pose.orientation.y = 0.766477  # 0.759802
-        # target_pose.orientation.z = -0.591483  # -0.598499
-        # target_pose.orientation.w = -0.188543  # -0.158639
+        # target_pose.position.x = 0.472985
+        # target_pose.position.y = -0.351667
+        # target_pose.position.z = 0.653171
+        # target_pose.orientation.x = -0.164656
+        # target_pose.orientation.y = 0.766477
+        # target_pose.orientation.z = -0.591483
+        # target_pose.orientation.w = -0.188543
 
-        target_pose = self.convertFrameRobotToShelf(self.arm.get_current_pose().pose)
-        target_pose.position.z -= 0.7
-
-
-        q1 = transformations.quaternion_about_axis(-math.pi/2, (0, 0, 1))
-        q2 = [ target_pose.orientation.x, target_pose.orientation.y, target_pose.orientation.z,
-                             target_pose.orientation.w ]
-
-        q3 = transformations.quaternion_multiply(q1, q2)
-
-        target_pose.orientation.x = q3[0]
-        target_pose.orientation.y = q3[1]
-        target_pose.orientation.z = q3[2]
-        target_pose.orientation.w = q3[3]
+        # target_pose = self.arm.get_current_pose().pose
+        #
+        # target_pose.position.y -= 0.05
 
 
-
-
+        #bins A, D, G, J,
+        target_pose = Pose()
+        target_pose.position.x = 0.472985
+        target_pose.position.y = 0.351667
+        target_pose.position.z = 0.553171
+        target_pose.orientation.x = -0.188543
+        target_pose.orientation.y = -0.591483
+        target_pose.orientation.z = -0.766477
+        target_pose.orientation.w = 0.164656
         rospy.loginfo("Trying to follow constrained path")
 
         if not self.follow_constrained_path(target_pose):
@@ -668,15 +666,15 @@ class Scoop(smach.State):
 
     def follow_constrained_path(self, target_pose):
         constraints = Constraints()
-        orientation_constraint = OrientationConstraint( header=Header(stamp=rospy.Time.now(), frame_id="/shelf"),
-                                                        orientation=make_quaternion(-0.36665, -0.64811, 0.33362, 0.57811),
+        orientation_constraint = OrientationConstraint( header=Header(stamp=rospy.Time.now(), frame_id="/base_link"),
+                                                        orientation=target_pose.orientation,
                                                         link_name="arm_right_link_7_t",
-                                                        absolute_x_axis_tolerance=0.05,
-                                                        absolute_y_axis_tolerance=0.05,
-                                                        absolute_z_axis_tolerance=2*math.pi,
+                                                        absolute_x_axis_tolerance=0.15,
+                                                        absolute_y_axis_tolerance=0.15,
+                                                        absolute_z_axis_tolerance=3.14,
                                                         weight=10   )
 
-        # position_constraint = PositionConstraint(   header=Header(stamp=rospy.Time.now(), frame_id="/shelf"),
+        # position_constraint = PositionConstraint(   header=Header(stamp=rospy.Time.now(), frame_id="/base_link"),
         #                                             link_name="arm_right_link_7_t",
         #                                             target_point_offset=make_vector(0.01, 0.01, 0.01),
         #                                             weight=9    )
@@ -685,8 +683,9 @@ class Scoop(smach.State):
         constraints.orientation_constraints.append(orientation_constraint)
         self.arm.set_path_constraints(constraints)
         self.arm.set_goal_tolerance(0.01)
+        self.arm.set_pose_reference_frame("/base_link")
         self.arm.set_pose_target(target_pose)
-        self.arm.set_planning_time(30)
+        self.arm.set_planning_time(120)
         rospy.loginfo("planning constrained path")
         plan = self.arm.plan()
         result = move(self.arm, plan.joint_trajectory)
