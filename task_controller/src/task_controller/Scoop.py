@@ -39,7 +39,7 @@ class Scoop(smach.State):
     @on_exception(failure_state="Failure")
     def execute(self, userdata):
         # COMMENT OUT THIS RETURN UNLESS 'PushWithScoop' IS CALLING EVERYTHING
-        return 'Success'
+        # return 'Success'
 
         targetBin = userdata.bin
         jointConfigHor = [0, 0, 0, 0, 0, 0, 0, 0]
@@ -132,7 +132,7 @@ class Scoop(smach.State):
 
         # SCOOP
         self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
-        self.arm.set_planning_time(10)
+        self.arm.set_planning_time(15)
         self.arm.set_planner_id("RRTConnectkConfigDefault")
         self.arm.set_pose_reference_frame("/shelf")
 
@@ -147,6 +147,8 @@ class Scoop(smach.State):
         horizontalPose.orientation.z = 0.403541
         horizontalPose.orientation.w = 0.698654
         # TODO: calibrate orientation?
+
+
 
         # FIX
         # leftOffset = -0.001
@@ -184,19 +186,62 @@ class Scoop(smach.State):
 
         horizontalPose = self.convertFrameRobotToShelf(horizontalPose)
         rospy.loginfo("planning to horizontal config")
+        self.arm.set_pose_reference_frame("/base_link")
 
-        add_shelf(Shelf.PADDED)
+        # add_shelf(Shelf.PADDED)
         # remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED
         # self.arm.set_pose_target(horizontalPose)
-        self.arm.set_joint_value_target(jointConfigHor)
+        # self.arm.set_joint_value_target(jointConfigHor)
+        target_pose = Pose()
+        target_pose.position.x = 0.57313
+        target_pose.position.y = -0.74604
+        target_pose.position.z= 1.2178
+        target_pose.orientation.x = 0
+        target_pose.orientation.y = 0.70711
+        target_pose.orientation.z = 0.70711
+        target_pose.orientation.w = 0
         plan = self.arm.plan()
         if not self.move(plan.joint_trajectory):
             return 'Failure'
-        rospy.loginfo("moved to horizontal config")        
+        #
+        #
+        # quat1 = transformations.quaternion_about_axis(-1.57079633, (0, 0, 1))
+        # rospy.loginfo(quat1)
+        #
+        # quat2 = transformations.quaternion_multiply( quat1, [0.16997, -0.63061, 0.73307, 0.18988])
+        # rospy.loginfo(quat2)
+        # #
+        # #
+        # target_pose.orientation.x = quat2[0]
+        # target_pose.orientation.y = quat2[1]
+        # target_pose.orientation.z = quat2[2]
+        # target_pose.orientation.w = quat2[3]
+        #
+        #
+        # self.arm.set_pose_target(target_pose)
+        # plan = self.arm.plan()
+        # if not self.move(plan.joint_trajectory):
+        #     return 'Failure'
+
+        rospy.sleep(5)
+
+        target_pose = Pose()
+        target_pose.position.x = 0.71689
+        target_pose.position.y = -0.69707
+        target_pose.position.z = 1.2177
+        target_pose.orientation.x = -0.28911
+        target_pose.orientation.y =  0.64506
+        target_pose.orientation.z =0.64562
+        target_pose.orientation.w = -0.28895
+
+        if not self.follow_constrained_path(target_pose):
+            rospy.loginfo("FAILED to follow constrained path")
+            return 'Failure'
         
         if not self.scoopBin(horizontalPose):
             return 'Failure'
         # rospy.sleep(100)
+
 
         # add_shelf(Shelf.PADDED)
         rospy.loginfo("planning cartesian path out of bin")
@@ -395,34 +440,30 @@ class Scoop(smach.State):
 
         #######################################################################
         rospy.loginfo("made it out")
-        return 'Failure'
+        # return 'Failure'
         #######################################################################
 
 
         # bins C, F, I, L
-        # target_pose = Pose()
-        # target_pose.position.x = 0.472985
-        # target_pose.position.y = -0.351667
-        # target_pose.position.z = 0.653171
-        # target_pose.orientation.x = -0.164656
-        # target_pose.orientation.y = 0.766477
-        # target_pose.orientation.z = -0.591483
-        # target_pose.orientation.w = -0.188543
-
-        # target_pose = self.arm.get_current_pose().pose
-        #
-        # target_pose.position.y -= 0.05
+        target_pose = Pose()
+        target_pose.position.x = 0.49195
+        target_pose.position.y = -0.39594
+        target_pose.position.z = 0.64392
+        target_pose.orientation.x = 0.16997
+        target_pose.orientation.y = -0.63061
+        target_pose.orientation.z = 0.73307
+        target_pose.orientation.w = 0.18988
 
 
         #bins A, D, G, J,
-        target_pose = Pose()
-        target_pose.position.x = 0.472985
-        target_pose.position.y = 0.351667
-        target_pose.position.z = 0.553171
-        target_pose.orientation.x = -0.188543
-        target_pose.orientation.y = -0.591483
-        target_pose.orientation.z = -0.766477
-        target_pose.orientation.w = 0.164656
+        # target_pose = Pose()
+        # target_pose.position.x = 0.24128
+        # target_pose.position.y = 0.65743
+        # target_pose.position.z = 0.72495
+        # target_pose.orientation.x = -0.52171
+        # target_pose.orientation.y = -0.28389
+        # target_pose.orientation.z = -0.029079
+        # target_pose.orientation.w = 0.80398
         rospy.loginfo("Trying to follow constrained path")
 
         if not self.follow_constrained_path(target_pose):
@@ -565,7 +606,7 @@ class Scoop(smach.State):
             return False
         
         rospy.loginfo(horizontalPose)
-        raw_input("Hit enter to continue ")
+        # raw_input("Hit enter to continue ")
         # rospy.sleep(15.0)
         ##################################################################################################
 
@@ -699,8 +740,8 @@ class Scoop(smach.State):
                                                         orientation=target_pose.orientation,
                                                         link_name="arm_right_link_7_t",
                                                         absolute_x_axis_tolerance=0.15,
-                                                        absolute_y_axis_tolerance=0.15,
-                                                        absolute_z_axis_tolerance=3.14,
+                                                        absolute_y_axis_tolerance=3.14,
+                                                        absolute_z_axis_tolerance=0.15,
                                                         weight=10   )
 
         # position_constraint = PositionConstraint(   header=Header(stamp=rospy.Time.now(), frame_id="/base_link"),
@@ -711,13 +752,21 @@ class Scoop(smach.State):
         # constraints.position_constraints.append(position_constraint)
         constraints.orientation_constraints.append(orientation_constraint)
         self.arm.set_path_constraints(constraints)
+        # add_shelf(Shelf.PADDED)
+        remove_shelf()
         self.arm.set_goal_tolerance(0.01)
         self.arm.set_pose_reference_frame("/base_link")
         self.arm.set_pose_target(target_pose)
         self.arm.set_planning_time(120)
         rospy.loginfo("planning constrained path")
         plan = self.arm.plan()
+        rospy.loginfo("moving constrained path")
         result = move(self.arm, plan.joint_trajectory)
+        if not result:
+            return 'Failure'
+
+        rospy.loginfo("Success constrained path")
+        rospy.sleep(50)
 
         if result:
             rospy.loginfo("constrained path moved successfully")

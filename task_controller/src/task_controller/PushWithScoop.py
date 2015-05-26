@@ -30,7 +30,7 @@ class PushWithScoop(smach.State):
 
     @on_exception(failure_state="Failure")
     def execute(self, userdata):
-        # return 'Success'
+        return 'Success'
 
         targetBin = userdata.bin
         startBin = "C"
