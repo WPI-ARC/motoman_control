@@ -34,7 +34,7 @@ class ErrorHandler(smach.State):
 
         if robot_state.has_error():
             rospy.logerr("Robot alarm is set, going home should clear it")
-        if not go_home(BIN(userdata.bin)):
+        if not go_home(shelf=BIN(userdata.bin)):
             rospy.logfatal("Robot should continue going home forever")
             return 'Failed'
         if robot_state.has_error():

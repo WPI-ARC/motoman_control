@@ -432,8 +432,8 @@ class Grasping:
                     Tshelfpregrasp = numpy.dot(Tshelfproj, Tprojpregrasp)
 
                     # Transform from pregrasp to approach pose
-                    # Trans_pregraspapproach = numpy.array([-approach_offset, 0, 0])
-                    Trans_pregraspapproach = numpy.array([-self.approachpose_offset, 0, 0])
+                    Trans_pregraspapproach = numpy.array([-approach_offset, 0, 0])
+                    # Trans_pregraspapproach = numpy.array([-self.approachpose_offset, 0, 0])
                     Rot_pregraspapproach = numpy.eye(3, 3)
                     Tpregraspapproach = self.construct_4Dmatrix(Trans_pregraspapproach, Rot_pregraspapproach)
 
