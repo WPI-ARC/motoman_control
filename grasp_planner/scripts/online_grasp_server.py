@@ -140,7 +140,7 @@ class Grasping:
             self.objectheightoffset = 0.0
         elif req.item == 'feline_greenies_dental_treats':
             item = '../env/dentaltreat.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0.015
         elif req.item == 'expo_dry_erase_board_eraser':
             item = '../env/eraser.env.xml'
             self.objectheightoffset = 0.0
