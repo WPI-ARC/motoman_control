@@ -27,28 +27,52 @@ def schedule_from_order(order):
     double_items.sort()
     multiple_items.sort()
 
+    can_grasp = rospy.get_param("/can_grasp")
+    no_scoop = rospy.get_param("/no_scoop")
+
     schedule = []
+    # Try to grab items first
     for _, element in single_items:
-        schedule.append(ScheduleItem(
-            action="grab",
-            name=element.name,
-            bin=element.bin,
-            contents=element.contents,
-        ))
+        if element.name in can_grasp:
+            schedule.append(ScheduleItem(
+                action="grab",
+                name=element.name,
+                bin=element.bin,
+                contents=element.contents,
+            ))
     for _, element in double_items:
-        schedule.append(ScheduleItem(
-            action="grab",
-            name=element.name,
-            bin=element.bin,
-            contents=element.contents,
-        ))
+        if element.name in can_grasp:
+            schedule.append(ScheduleItem(
+                action="grab",
+                name=element.name,
+                bin=element.bin,
+                contents=element.contents,
+            ))
     for _, element in multiple_items:
-        schedule.append(ScheduleItem(
-            action="grab",
-            name=element.name,
-            bin=element.bin,
-            contents=element.contents,
-        ))
+        if element.name in can_grasp:
+            schedule.append(ScheduleItem(
+                action="grab",
+                name=element.name,
+                bin=element.bin,
+                contents=element.contents,
+            ))
+    # Then scoop items that are ungraspable
+    for _, element in single_items:
+        if element.name not in can_grasp and element.name not in no_scoop:
+            schedule.append(ScheduleItem(
+                action="scoop",
+                name=element.name,
+                bin=element.bin,
+                contents=element.contents,
+            ))
+    for _, element in double_items:
+        if element.name not in can_grasp and element.name not in no_scoop:
+            schedule.append(ScheduleItem(
+                action="scoop",
+                name=element.name,
+                bin=element.bin,
+                contents=element.contents,
+            ))
     return schedule
 
 if __name__ == '__main__':

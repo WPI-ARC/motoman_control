@@ -100,6 +100,7 @@ items:
     supported: true
     bonus: 2
     force: 1
+
 item_priorities:
   - cheezit_big_original
   - elmers_washable_no_run_school_glue

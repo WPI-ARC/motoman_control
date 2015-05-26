@@ -9,13 +9,20 @@ class ResettableScheduler(smach.State):
 
     def __init__(self):
         smach.State.__init__(self, outcomes=['Pick', 'Scoop', 'Success', 'Failure', 'Fatal'],
-                             input_keys=[], output_keys=['item', 'bin', 'contents'])
+                             input_keys=['new_information'], output_keys=['action', 'item', 'bin', 'contents', 'new_information'])
         self._m = Lock()
         self.schedule = []
         self.location = 0
 
     def execute(self, data):
         rospy.loginfo("Scheduler running...")
+
+        if data.new_information is not None:
+            no_scoop = rospy.get_param("/no_scoop")
+            # Add suggested scoop if it makes sense
+            if data.new_information.name not in no_scoop and len(data.new_information.contents) <= 2:
+                self.schedule.append(data.new_information)
+        data.new_information = None
 
         schedule, location = [], 0
         while location >= len(schedule):
@@ -30,6 +37,7 @@ class ResettableScheduler(smach.State):
             self.location += 1
 
             if current.action.startswith("grab"):
+                data.action = "grab"
                 data.item = current.name
                 data.bin = current.bin
                 data.contents = current.contents
@@ -38,6 +46,7 @@ class ResettableScheduler(smach.State):
                 return 'Pick'
 
             elif current.action == 'scoop':
+                data.action = "scoop"
                 data.item = current.name
                 data.bin = current.bin
                 data.contents = current.contents

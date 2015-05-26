@@ -6,6 +6,7 @@ from apc_util.moveit import go_home, robot_state
 from apc_util.smach import on_exception
 from apc_util.grasping import gripper
 from apc_util.shelf import BIN
+from apc_msgs.msg import ScheduleItem
 
 
 class ErrorHandler(smach.State):
@@ -16,11 +17,21 @@ class ErrorHandler(smach.State):
 
     def __init__(self):
         smach.State.__init__(self, outcomes=['Continue', 'Failed', 'Fatal'],
-                             input_keys=['bin'])
+                             input_keys=['action', 'item', 'bin', 'contents'], output_keys=['new_information'])
 
     @on_exception(failure_state="Failed")
     def execute(self, userdata):
         rospy.loginfo("ErrorHandler executing...")
+
+        # Suggest scooping if grasping failed
+        if userdata.action == "grab":
+            userdata.new_information = ScheduleItem(
+                action="scoop",
+                name=userdata.name,
+                bin=userdata.bin,
+                contents=userdata.contents,
+            )
+
         while robot_state.is_stopped():
             rospy.logwarn("Waiting until e-stop is removed to handle errors")
             rospy.sleep(1)
