@@ -226,9 +226,9 @@ class Scoop(smach.State):
         rospy.sleep(5)
 
         target_pose = Pose()
-        target_pose.position.x = 0.71689
-        target_pose.position.y = -0.69707
-        target_pose.position.z = 1.2177
+        target_pose.position.x = 0.51689
+        target_pose.position.y = -0.59707
+        target_pose.position.z = 1.1177
         target_pose.orientation.x = -0.28911
         target_pose.orientation.y =  0.64506
         target_pose.orientation.z =0.64562
@@ -755,9 +755,11 @@ class Scoop(smach.State):
         # add_shelf(Shelf.PADDED)
         remove_shelf()
         self.arm.set_goal_tolerance(0.01)
+
+        self.arm.set_planner_id("RRTstarkConfigDefault")
         self.arm.set_pose_reference_frame("/base_link")
         self.arm.set_pose_target(target_pose)
-        self.arm.set_planning_time(120)
+        self.arm.set_planning_time(20)
         rospy.loginfo("planning constrained path")
         plan = self.arm.plan()
         rospy.loginfo("moving constrained path")
