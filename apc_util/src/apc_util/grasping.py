@@ -7,7 +7,7 @@ from robotiq_s_model_articulated_msgs.msg import SModelRobotInput
 
 from moveit import goto_pose, follow_path, move, robot_state
 from shelf import FULL_SHELF
-from services import _grasp_generator, _gripper_control, _get_cartesian_path, _compute_ik
+from services import _grasp_generator, _gripper_control, _compute_ik, get_cartesian_path
 from moveit_msgs.msg import RobotState
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Header
@@ -15,6 +15,7 @@ from moveit_msgs.msg import PositionIKRequest
 from moveit_msgs.msg import MoveItErrorCodes
 from geometry_msgs.msg import PoseStamped
 import traceback
+
 
 class Gripper(object):
     def __init__(self):
@@ -137,7 +138,8 @@ def plan_grasps(group, grasps):
             rospy.logwarn("Failed to find valid IK solution "+str(ik_solution.error_code.val))
             continue
 
-        response = _get_cartesian_path(
+        # Plan Approach
+        response, success = get_cartesian_path(
             group_name=group.get_name(),
             start_state=ik_solution.solution,
             waypoints=[grasp.pregrasp],
@@ -145,64 +147,78 @@ def plan_grasps(group, grasps):
             jump_threshold=0.0,
             avoid_collisions=True
         )
-
+        if not success:
+            continue
 
         print "Fraction: ", response.fraction
-
         rospy.loginfo("Cartesian path had status code: "+str(response.error_code))
-        rospy.loginfo("Cartesian ")
 
-        #traj, success = group.compute_cartesian_path(
-        #    [grasp.approach, grasp.pregrasp],
-        #    0.01,  # 1cm interpolation resolution
-        #    0.0,  # jump_threshold disabled
-        #    avoid_collisions=True
-        #)
-        #rospy.loginfo("Compute cartesian path returned a status code " + str(success))
-        if response.fraction >= 1:
-            group.set_planner_id("RRTConnectkConfigDefault")
-            group.set_workspace([-3, -3, -3, 3, 3, 3])
-            for t in [1,3]:
-                group.set_planning_time(t)
-                plan = group.plan(ik_solution.solution.joint_state)
-                if len(plan.joint_trajectory.points) > 0:
-                    approach_plan = plan
-                    break
+        if response.fraction < 1:
+            continue
 
-            if not approach_plan:
-                rospy.logwarn("Failed to find plan to approach pose")
-                continue
+        # Plan Retreat
+        poses = [grasp.pregrasp]
+        poses.append(deepcopy(poses[-1]))
+        poses[-1].position.z += 0.032
+        poses.append(deepcopy(poses[-1]))
+        poses[-1].position.x = 0.48
+        retreat_response, success = get_cartesian_path(
+            group_name=group.get_name(),
+            start_state=JointState(
+                name=response.solution.joint_trajectory.joint_names,
+                position=response.solution.joint_trajectory.points[-1].positions
+            ),
+            waypoints=poses,
+            max_step=0.01,
+            jump_threshold=0.0,
+            avoid_collisions=True
+        )
+        if not success:
+            continue
 
-            rospy.loginfo("Found grasp")
-            rospy.loginfo(ik_solution.solution.joint_state)
-            yield grasp, approach_plan, response.solution
+        print "Fraction: ", retreat_response.fraction
+        rospy.loginfo("Cartesian path had status code: "+str(retreat_response.error_code))
+
+        if retreat_response.fraction < 1:
+            continue
+
+        group.set_planner_id("RRTConnectkConfigDefault")
+        group.set_workspace([-3, -3, -3, 3, 3, 3])
+        for t in [1,3]:
+            group.set_planning_time(t)
+            plan = group.plan(ik_solution.solution.joint_state)
+            if len(plan.joint_trajectory.points) > 0:
+                approach_plan = plan
+                break
+
+        if not approach_plan:
+            rospy.logwarn("Failed to find plan to approach pose")
+            continue
+
+        # TODO: Plan retreat
+
+        rospy.loginfo("Found grasp")
+        rospy.loginfo(ik_solution.solution.joint_state)
+        yield grasp, approach_plan, response.solution, retreat_response.solution
 
 
-def execute_grasp(group, grasp, plan1, plan2, shelf=FULL_SHELF):
+def execute_grasp(group, grasp, plan_to_approach, plan_to_grasp, plan_to_retreat, shelf=FULL_SHELF):
     rospy.loginfo("Moving to approach pose")
     #start = list(plan.joint_trajectory.points[0].positions)
     #if not goto_pose(group, start, [1, 5, 30, 60], shelf=shelf):
     #    return False
-    if not move(group, plan1.joint_trajectory):
+    if not move(group, plan_to_approach.joint_trajectory):
         rospy.logerr("Failed to got to approach pose")
         return False
     rospy.loginfo("Executing cartesian approach")
-    if not move(group, plan2.joint_trajectory):
+    if not move(group, plan_to_grasp.joint_trajectory):
         rospy.logerr("Failed to execute approach")
         return False
     if not gripper.grab():
         rospy.loginfo("Executing cartesian retreat")
-        follow_path(group, [grasp.approach]) # If grasp fails, move back to approach pose
+        follow_path(group, [grasp.approach])  # If grasp fails, move back to approach pose
         return False
-
-
-    rospy.loginfo("Executing cartesian retreat")
-    poses = [group.get_current_pose().pose]
-    poses.append(deepcopy(poses[-1]))
-    poses[-1].position.z += 0.032
-    poses.append(deepcopy(poses[-1]))
-    poses[-1].position.x = 0.48
-
-    if not follow_path(group, poses):
+    if not move(group, plan_to_retreat.joint_trajectory):
+        rospy.logerr("Failed to execute approach")
         return False
     return True
