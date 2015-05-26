@@ -101,28 +101,51 @@ items:
     bonus: 2
     force: 1
 item_priorities:
-  - crayola_64_ct
-  - expo_dry_erase_board_eraser
-  - elmers_washable_no_run_school_glue
   - cheezit_big_original
-  - kyjen_squeakin_eggs_plush_puppies
-  - genuine_joe_plastic_stir_sticks
-  - munchkin_white_hot_duck_bath_toy
-  - mommys_helper_outlet_plugs
-  - sharpie_accent_tank_style_highlighters
-  - stanley_66_052
-  - safety_works_safety_glasses
-  - paper_mate_12_count_mirado_black_warrior
-  - mark_twain_huckleberry_finn
-  - first_years_take_and_toss_straw_cup
+  - elmers_washable_no_run_school_glue
+  - kong_duck_dog_toy
   - feline_greenies_dental_treats
-  - laugh_out_loud_joke_book
+  - munchkin_white_hot_duck_bath_toy
+  - kyjen_squeakin_eggs_plush_puppies
+  - stanley_66_052
+  - crayola_64_ct
+  - genuine_joe_plastic_stir_sticks
+  - sharpie_accent_tank_style_highlighters
+  - mommys_helper_outlet_plugs
+  - expo_dry_erase_board_eraser
+  - champion_copper_plus_spark_plug
   - kong_air_dog_squeakair_tennis_ball
+  - first_years_take_and_toss_straw_cup
   - mead_index_cards
   - kong_sitting_frog_dog_toy
-  - kong_duck_dog_toy
   - highland_6539_self_stick_notes
   - oreo_mega_stuf
   - dr_browns_bottle_brush
-  - champion_copper_plus_spark_plug
+  - safety_works_safety_glasses
   - rolodex_jumbo_pencil_cup
+  - laugh_out_loud_joke_book
+  - paper_mate_12_count_mirado_black_warrior
+  - mark_twain_huckleberry_finn
+
+can_grasp:
+  - cheezit_big_original
+  - elmers_washable_no_run_school_glue
+  - kong_duck_dog_toy
+  - feline_greenies_dental_treats
+  - munchkin_white_hot_duck_bath_toy
+  - kyjen_squeakin_eggs_plush_puppies
+  - stanley_66_052
+  - crayola_64_ct
+  - genuine_joe_plastic_stir_sticks
+  - sharpie_accent_tank_style_highlighters
+  - mommys_helper_outlet_plugs
+  - expo_dry_erase_board_eraser
+  - champion_copper_plus_spark_plug
+  - kong_air_dog_squeakair_tennis_ball
+  - first_years_take_and_toss_straw_cup
+  - kong_sitting_frog_dog_toy
+  - safety_works_safety_glasses
+  - rolodex_jumbo_pencil_cup
+
+no_scoop:
+  - cheezit_big_original
