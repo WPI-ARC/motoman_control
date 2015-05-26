@@ -39,7 +39,7 @@ class Scoop(smach.State):
     @on_exception(failure_state="Failure")
     def execute(self, userdata):
         # COMMENT OUT THIS RETURN UNLESS 'PushWithScoop' IS CALLING EVERYTHING
-        # return 'Success'
+        return 'Success'
 
         targetBin = userdata.bin
         jointConfigHor = [0, 0, 0, 0, 0, 0, 0, 0]
@@ -140,7 +140,8 @@ class Scoop(smach.State):
         horizontalPose = bin_pose_tray(targetBin).pose
         horizontalPose.position.x += -0.307581
         horizontalPose.position.y += -0.011221
-        horizontalPose.position.z += 0.05463
+        # horizontalPose.position.z += 0.05463
+        horizontalPose.position.z += 0.18463
         horizontalPose.orientation.x = -0.293106
         horizontalPose.orientation.y = -0.512959
         horizontalPose.orientation.z = 0.403541
@@ -148,9 +149,13 @@ class Scoop(smach.State):
         # TODO: calibrate orientation?
 
         # FIX
-        leftOffset = -0.001
-        middleOffset = -0.002
-        rightOffset = 0.050
+        # leftOffset = -0.001
+        # middleOffset = -0.002
+        # rightOffset = 0.050
+
+        leftOffset = -0.150
+        middleOffset = -0.120
+        rightOffset = 0.170
 
         if (targetBin == "A" or targetBin == "D" or
                 targetBin == "G" or targetBin == "J"):
@@ -165,16 +170,16 @@ class Scoop(smach.State):
             horizontalPose.position.y += rightOffset
             self.rightColumn = True
 
-        # TEMPORARY ##################################################
-        horizontalPose.position.z += 0.13
-        if self.isLeftToRight:
-            if self.middleColumn:
-                horizontalPose.position.y += -0.15
-            else:
-                horizontalPose.position.y += -0.12
-        else:
-            horizontalPose.position.y += 0.12
-        ##################################################################
+        # # TEMPORARY ##################################################
+        # horizontalPose.position.z += 0.13
+        # if self.isLeftToRight:  # THIS ISN"T A THING IN THIS FILE!!!!
+        #     if self.middleColumn:
+        #         horizontalPose.position.y += -0.15
+        #     else:
+        #         horizontalPose.position.y += -0.12
+        # else:
+        #     horizontalPose.position.y += 0.12
+        # ##################################################################
 
 
         horizontalPose = self.convertFrameRobotToShelf(horizontalPose)
@@ -551,16 +556,16 @@ class Scoop(smach.State):
         #     return False
 
         # THIS BLOCK OF CODE FOR OBTAINING JOINT CONFIGURATIONS FOR PLANNING ONLY, SHOULD BE COMMENTED OUT FOR ACTUAL RUNS
-        # rospy.sleep(1.0)
-        # rospy.loginfo("going to horiztonal pose")
-        # self.arm.set_pose_target(horizontalPose)
-        # plan = self.arm.plan()
-        # if not self.move(plan.joint_trajectory):
-        #     rospy.loginfo("FAILED going to horiztonal pose")
-        #     return False
+        rospy.sleep(1.0)
+        rospy.loginfo("going to horiztonal pose")
+        self.arm.set_pose_target(horizontalPose)
+        plan = self.arm.plan()
+        if not self.move(plan.joint_trajectory):
+            rospy.loginfo("FAILED going to horiztonal pose")
+            return False
         
         rospy.loginfo(horizontalPose)
-        # raw_input("Hit enter to continue ")
+        raw_input("Hit enter to continue ")
         # rospy.sleep(15.0)
         ##################################################################################################
 
