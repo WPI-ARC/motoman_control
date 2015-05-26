@@ -45,6 +45,42 @@ def attach_sphere(link, name, pose, radius, touch_links=[]):
     scene._pub_aco.publish(aco)
 
 
+def attach_cylinder(link, name, pose, height, radius, touch_links=[]):
+    aco = AttachedCollisionObject()
+
+    co = CollisionObject()
+    co.operation = CollisionObject.ADD
+    co.id = name
+    co.header = pose.header
+    cylinder = SolidPrimitive()
+    cylinder.type = SolidPrimitive.CYLINDER
+    cylinder.dimensions = [height, radius]
+    co.primitives = [cylinder]
+    co.primitive_poses = [pose.pose]
+    aco.object = co
+
+    aco.link_name = link
+    if len(touch_links) > 0:
+        aco.touch_links = touch_links
+    else:
+        aco.touch_links = [link]
+    scene._pub_aco.publish(aco)
+
+
+def add_object(center, name="Object", radius=0.17):
+    pose = PoseStamped()
+    pose.header.frame_id = "/base_link"
+    pose.header.stamp = rospy.Time.now()
+    pose.pose = center
+    while scene._pub_co.get_num_connections() == 0:
+        rospy.sleep(0.01)
+    scene.add_sphere(
+        name=name,
+        pose=pose,
+        radius=radius,
+    )
+
+
 def add_object(center, name="Object", radius=0.17):
     pose = PoseStamped()
     pose.header.frame_id = "/base_link"

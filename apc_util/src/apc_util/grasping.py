@@ -5,7 +5,7 @@ from copy import deepcopy
 from threading import Lock
 from robotiq_s_model_articulated_msgs.msg import SModelRobotInput
 
-from moveit import goto_pose, follow_path, move, robot_state
+from moveit import goto_pose, follow_path, move, robot_state, check_collision
 from shelf import FULL_SHELF
 from services import _grasp_generator, _gripper_control, _compute_ik, get_cartesian_path
 from moveit_msgs.msg import RobotState
@@ -155,13 +155,15 @@ def plan_grasps(group, grasps):
 
         if response.fraction < 1:
             continue
+        if not check_collision(response.solution.joint_trajectory):
+            continue
 
         # Plan Retreat
         poses = [grasp.pregrasp]
         poses.append(deepcopy(poses[-1]))
         poses[-1].position.z += 0.032
         poses.append(deepcopy(poses[-1]))
-        poses[-1].position.x = 0.48
+        poses[-1].position.x = 0.4
         retreat_response, success = get_cartesian_path(
             group_name=group.get_name(),
             start_state=RobotState(
@@ -183,6 +185,8 @@ def plan_grasps(group, grasps):
 
         if retreat_response.fraction < 1:
             continue
+        if not check_collision(retreat_response.solution.joint_trajectory):
+            continue
 
         group.set_planner_id("RRTConnectkConfigDefault")
         group.set_workspace([-3, -3, -3, 3, 3, 3])
@@ -196,8 +200,8 @@ def plan_grasps(group, grasps):
         if not approach_plan:
             rospy.logwarn("Failed to find plan to approach pose")
             continue
-
-        # TODO: Plan retreat
+        if not check_collision(approach_plan.joint_trajectory):
+            continue
 
         rospy.loginfo("Found grasp")
         rospy.loginfo(ik_solution.solution.joint_state)

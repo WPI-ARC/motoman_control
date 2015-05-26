@@ -3,8 +3,9 @@ import smach
 
 from sensor_msgs.msg import PointCloud2
 from geometry_msgs.msg import PoseStamped
+from math import sqrt
 
-from apc_util.collision import attach_sphere
+from apc_util.collision import scene
 from apc_util.grasping import plan_grasps, execute_grasp, gripper, generate_grasps
 from apc_util.shelf import NO_SHELF, BIN, PADDED_SHELF, get_shelf_pose
 from apc_util.smach import on_exception
@@ -64,7 +65,7 @@ class PickItem(smach.State):
         pose.pose.orientation.y = 0
         pose.pose.orientation.z = 0
         pose.pose.orientation.w = 1
-        attach_sphere("arm_left_link_7_t", "Object", pose, 0.17, 
+        scene.attach_box("arm_left_link_7_t", "Object", pose, [0.15, 0.23, 0.16], 
             ["hand_left_finger_1_link_1", "hand_left_finger_1_link_2", "hand_left_finger_1_link_3", "hand_left_finger_1_link_3_tip",
              "hand_left_finger_2_link_1", "hand_left_finger_2_link_2", "hand_left_finger_2_link_3", "hand_left_finger_2_link_3_tip",
              "hand_left_finger_middle_link_1", "hand_left_finger_middle_link_2", "hand_left_finger_middle_link_3", "hand_left_finger_middle_link_3_tip"])
