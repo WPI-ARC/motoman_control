@@ -17,6 +17,8 @@
 #define EXEC_TIME_BUFFER 1.0
 #define EXEC_TIME_FRACTION 1.25
 #define REMOVE_TRAJECTORY_VELOCITIES true
+#define TARGET_REACHED_CHECKS 10
+#define TARGET_REACHED_CHECK_WAIT 0.5
 
 // Globals
 bool g_simulation_execution = false;
@@ -250,6 +252,57 @@ trajectory_msgs::JointTrajectory GenerateFullTrajectory(const std::map<std::stri
     return full_trajectory;
 }
 
+bool CheckIfTargetReached(const std::map<std::string, double>& target_joint_values)
+{
+    // Now, check to see if we've reached the target
+    // Copy the current joint states
+    g_joint_state_mutex.lock();
+    std::vector<sensor_msgs::JointState> check_current_states = g_joint_states;
+    g_joint_state_mutex.unlock();
+    // Insert all joints states into a map
+    std::map<std::string, double> check_current_joint_values;
+    for (size_t sdx = 0; sdx < check_current_states.size(); sdx++)
+    {
+        const sensor_msgs::JointState& check_current_state = check_current_states[sdx];
+        if (check_current_state.name.size() != check_current_state.position.size())
+        {
+            ROS_ERROR("Invalid joint state for group %zu when trying to check if trajectory execution finished", sdx);
+            return false;
+        }
+        for (size_t idx = 0; idx < check_current_state.name.size(); idx++)
+        {
+            std::string joint_name = check_current_state.name[idx];
+            double joint_position = check_current_state.position[idx];
+            check_current_joint_values[joint_name] = joint_position;
+        }
+    }
+    // Make sure the target is reached within the desired tolerance
+    std::map<std::string, double>::const_iterator target_joint_values_itr;
+    for (target_joint_values_itr = target_joint_values.begin(); target_joint_values_itr != target_joint_values.end(); ++target_joint_values_itr)
+    {
+        std::string joint_name = target_joint_values_itr->first;
+        double target_joint_value = target_joint_values_itr->second;
+        // Look up the joint in the joint state
+        std::map<std::string, double>::const_iterator found_state_value = check_current_joint_values.find(joint_name);
+        if (found_state_value != check_current_joint_values.end())
+        {
+            double state_joint_value = found_state_value->second;
+            double joint_value_delta = fabs(target_joint_value - state_joint_value);
+            if (joint_value_delta >= TARGET_REACHED_THRESHOLD)
+            {
+                ROS_ERROR("Joint %s did not reach target value %f, is at %f instead", joint_name.c_str(), target_joint_value, state_joint_value);
+                return false;
+            }
+        }
+        else
+        {
+            ROS_ERROR("Couldn't find joint state value for joint %s when trying to check if trajectory execution finished", joint_name.c_str());
+            return false;
+        }
+    }
+    return true;
+}
+
 bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, motoman_moveit::convert_trajectory_server::Response &res)
 {
     if (req.jointTraj.points.size() == 0)
@@ -460,62 +513,29 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, moto
             ROS_INFO("Trajectory execution service call returned SUCCESS, waiting for execution to finish");
         }
     }
+    // Get a map for the target joint states
+    std::map<std::string, double> target_joint_values = GenerateNameValueMap(req.jointTraj.joint_names, req.jointTraj.points[req.jointTraj.points.size() - 1].positions);
     // Wait for the trajectory to finish, plus a little buffer time
     ros::Duration trajectory_exec_duration = (req.jointTraj.points[req.jointTraj.points.size() - 1].time_from_start * EXEC_TIME_FRACTION) + ros::Duration(EXEC_TIME_BUFFER);
     trajectory_exec_duration.sleep();
-    // Now, check to see if we've reached the target
-    // Copy the current joint states
-    g_joint_state_mutex.lock();
-    std::vector<sensor_msgs::JointState> check_current_states = g_joint_states;
-    g_joint_state_mutex.unlock();
-    // Insert all joints states into a map
-    std::map<std::string, double> check_current_joint_values;
-    for (size_t sdx = 0; sdx < current_states.size(); sdx++)
+    // Check if target reached
+    for (int32_t checks = 0; checks < TARGET_REACHED_CHECKS; checks++)
     {
-        const sensor_msgs::JointState& check_current_state = check_current_states[sdx];
-        if (check_current_state.name.size() != check_current_state.position.size())
+        ros::Duration(TARGET_REACHED_CHECK_WAIT).sleep();
+        bool target_reached = CheckIfTargetReached(target_joint_values);
+        if (target_reached)
         {
-            ROS_ERROR("Invalid joint state for group %zu when trying to check if trajectory execution finished", sdx);
-            res.success = false;
+            ROS_INFO("Target reached on check %d of %d", checks, TARGET_REACHED_CHECKS);
+            res.success = true;
             return true;
-        }
-        for (size_t idx = 0; idx < check_current_state.name.size(); idx++)
-        {
-            std::string joint_name = check_current_state.name[idx];
-            double joint_position = check_current_state.position[idx];
-            check_current_joint_values[joint_name] = joint_position;
-        }
-    }
-    // Get an equivalent map for the target joint states
-    std::map<std::string, double> target_joint_values = GenerateNameValueMap(req.jointTraj.joint_names, req.jointTraj.points[req.jointTraj.points.size() - 1].positions);
-    // Make sure the target is reached within the desired tolerance
-    std::map<std::string, double>::const_iterator target_joint_values_itr;
-    for (target_joint_values_itr = target_joint_values.begin(); target_joint_values_itr != target_joint_values.end(); ++target_joint_values_itr)
-    {
-        std::string joint_name = target_joint_values_itr->first;
-        double target_joint_value = target_joint_values_itr->second;
-        // Look up the joint in the joint state
-        std::map<std::string, double>::const_iterator found_state_value = check_current_joint_values.find(joint_name);
-        if (found_state_value != check_current_joint_values.end())
-        {
-            double state_joint_value = found_state_value->second;
-            double joint_value_delta = fabs(target_joint_value - state_joint_value);
-            if (joint_value_delta >= TARGET_REACHED_THRESHOLD)
-            {
-                ROS_ERROR("Joint %s did not reach target value %f, is at %f instead", joint_name.c_str(), target_joint_value, state_joint_value);
-                res.success = false;
-                return true;
-            }
         }
         else
         {
-            ROS_ERROR("Couldn't find joint state value for joint %s when trying to check if trajectory execution finished", joint_name.c_str());
-            res.success = false;
-            return true;
+            ROS_WARN("Target not reached on check %d of %d", checks, TARGET_REACHED_CHECKS);
         }
     }
-    ROS_INFO("Target reached");
-    res.success = true;
+    ROS_ERROR("Target not reached in %d checks", TARGET_REACHED_CHECKS);
+    res.success = false;
     return true;
 }
 
