@@ -43,7 +43,7 @@ class Grasping:
         self.fingerlength = 0.115  # palm to finger tip offset is 11.5 cm
         self.gripperwidth = 0.155 - self.padding  # gripper width is 15.5 cm
         self.z_lowerboundoffset = 0.065 # Palm center to bottom of hand is 6.5 cm
-        self.approachpose_offset = 0.2  # Set aproach pose to be 30cm back from the front of the bin
+        self.approachpose_offset = 0.3 # Set aproach pose to be 30cm back from the front of the bin
         # palm -15 deg offset about z-axis
         self.hand_theta = 0.261799
         self.shelfpitch = 0.0872664626 # 5 deg pitch  = 0.0872664626
@@ -140,7 +140,7 @@ class Grasping:
             self.objectheightoffset = 0.0
         elif req.item == 'feline_greenies_dental_treats':
             item = '../env/dentaltreat.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0.015
         elif req.item == 'expo_dry_erase_board_eraser':
             item = '../env/eraser.env.xml'
             self.objectheightoffset = 0.0
@@ -228,7 +228,7 @@ class Grasping:
         obj_depth = abs(max_x-min_x)
         edge_offset = min_x
         extensions = 0.15 # 15cm finger extensions
-        offset = numpy.true_divide(obj_depth, 4)
+        offset = numpy.true_divide(obj_depth, 2)
         if offset > self.fingerlength + extensions:
             offset = 0.10
         if offset < 0.10:
@@ -242,9 +242,10 @@ class Grasping:
 
     def compute_approach_offset(self, projection_x, bin_min_x, theta):
         dist = abs(projection_x - bin_min_x)
-        # offset = (dist + self.approachpose_offset) * numpy.cos(abs(theta))
+        offset = (dist + self.approachpose_offset) * numpy.cos(abs(theta))
         # return dist + self.approachpose_offset
-        return dist
+        # return dist
+        return offset
         # return bin_min_x - 0.20
 
     def compute_score(self, width, pitch):
@@ -252,9 +253,9 @@ class Grasping:
         gscore = abs(pitch)
         weight = 0.6
         score = (1-weight)*fscore - weight*gscore
-        if score < 0:
-            score = 0
-            rospy.logerr("WARNING! Score is negative. Setting score to zero. Consider adjusting weight bias.")
+        # if score < 0:
+            # score = 0
+            # rospy.logerr("WARNING! Score is negative. Setting score to zero. Consider adjusting weight bias.")
         rospy.logdebug("%s = 0.5*%s + 0.5*%s", score, fscore, gscore)
         return score
 
@@ -432,8 +433,8 @@ class Grasping:
                     Tshelfpregrasp = numpy.dot(Tshelfproj, Tprojpregrasp)
 
                     # Transform from pregrasp to approach pose
-                    # Trans_pregraspapproach = numpy.array([-approach_offset, 0, 0])
-                    Trans_pregraspapproach = numpy.array([-self.approachpose_offset, 0, 0])
+                    Trans_pregraspapproach = numpy.array([-approach_offset, 0, 0])
+                    # Trans_pregraspapproach = numpy.array([-self.approachpose_offset, 0, 0])
                     Rot_pregraspapproach = numpy.eye(3, 3)
                     Tpregraspapproach = self.construct_4Dmatrix(Trans_pregraspapproach, Rot_pregraspapproach)
 
@@ -464,7 +465,7 @@ class Grasping:
                     pregrasp_height_extra = abs(grasp_depth) * numpy.sin(pitch)
                     proj_msg.position.z = height + pregrasp_height_extra
                     approach_msg = PoseFromMatrix(TbaseIK_approach)
-                    approach_bin_entrance_position = numpy.dot(Tbaseshelf, numpy.array([[bin_min_x-0.32], [0], [0], [1]]))
+                    approach_bin_entrance_position = numpy.dot(Tbaseshelf, numpy.array([[bin_min_x-0.55], [0], [0], [1]])) # Set approach to always be 50cm back from front face of bin
                     approach_msg.position.x = approach_bin_entrance_position[0]
                     approach_height_extra = abs(self.approachpose_offset) * numpy.sin(pitch)
                     approach_msg.position.z = height + pregrasp_height_extra + approach_height_extra

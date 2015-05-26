@@ -38,6 +38,26 @@ def move(group, traj):
         if not check_joint_values(group, traj.joint_names, traj.points[0].positions):
             rospy.logerr("Not moving since initial joint values are not within tolerance")
             return False
+
+        # Check plan for collisions
+        collisions, success = check_collisions(CheckTrajectoryValidityQuery(
+	    initial_state=JointState(
+	        header=Header(stamp=rospy.Time.now()),
+	        name=robot.sda10f.get_joints(),
+	        position=robot.sda10f.get_current_joint_values()
+	    ),
+	    trajectory=traj,
+	    check_type=CheckTrajectoryValidityQuery.CHECK_ENVIRONMENT_COLLISION,
+        ))
+        if not success:
+	    rospy.logerr("Verifying plan was unsuccessful")
+	    return False
+        if collisions.result.status != CheckTrajectoryValidityResult.SUCCESS:
+	    rospy.logerr("Can't execute plan, it is invalid. Status=%s" % collisions.result.status)
+	    return False
+
+        raw_input("Continue...")
+
         result = _move(traj)
         if not check_joint_values(group, traj.joint_names, traj.points[-1].positions):
             rospy.logerr("Moving failed, final joint values are not within tolerance")
@@ -83,13 +103,13 @@ def goto_pose(group, pose, times=[5, 20, 40, 60], shelf=SIMPLE_SHELF):
     # group.set_planner_id("RRTstarkConfigDefault")
     # group.set_planner_id("KPIECEkConfigDefault")
     group.set_planner_id("RRTConnectkConfigDefault")
-
     group.set_workspace([-3, -3, -3, 3, 3, 3])
     with shelf:
         for t in times:
             group.set_planning_time(t)
             rospy.loginfo("Planning for "+str(t)+" seconds...")
             plan = group.plan(pose)
+
             if len(plan.joint_trajectory.points) > 0:
                 if move(group, plan.joint_trajectory):
                     return True
