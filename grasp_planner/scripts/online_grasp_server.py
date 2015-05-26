@@ -228,7 +228,7 @@ class Grasping:
         obj_depth = abs(max_x-min_x)
         edge_offset = min_x
         extensions = 0.15 # 15cm finger extensions
-        offset = numpy.true_divide(obj_depth, 4)
+        offset = numpy.true_divide(obj_depth, 2)
         if offset > self.fingerlength + extensions:
             offset = 0.10
         if offset < 0.10:
@@ -253,9 +253,9 @@ class Grasping:
         gscore = abs(pitch)
         weight = 0.6
         score = (1-weight)*fscore - weight*gscore
-        if score < 0:
-            score = 0
-            rospy.logerr("WARNING! Score is negative. Setting score to zero. Consider adjusting weight bias.")
+        # if score < 0:
+            # score = 0
+            # rospy.logerr("WARNING! Score is negative. Setting score to zero. Consider adjusting weight bias.")
         rospy.logdebug("%s = 0.5*%s + 0.5*%s", score, fscore, gscore)
         return score
 
