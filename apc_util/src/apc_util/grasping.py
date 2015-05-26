@@ -201,7 +201,7 @@ def execute_grasp(group, grasp, plan1, plan2, shelf=FULL_SHELF):
     poses.append(deepcopy(poses[-1]))
     poses[-1].position.z += 0.032
     poses.append(deepcopy(poses[-1]))
-    poses[-1].position.x = 0.48
+    poses[-1].position.x = 0.4
 
     if not follow_path(group, poses):
         return False
