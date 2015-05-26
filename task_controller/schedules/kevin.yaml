@@ -1,18 +1,19 @@
 - action: grab
-  bin: A
+  bin: B
   # item: rolodex_jumbo_pencil_cup
   #item: first_years_take_and_toss_straw_cup
   # item: munchkin_white_hot_duck_bath_toy
   # item: kong_duck_dog_toy
   # item: champion_copper_plus_spark_plug
-  # item: kyjen_squeakin_eggs_plush_puppies
+  item: kyjen_squeakin_eggs_plush_puppies
   # item: expo_dry_erase_board_eraser
   # item: elmers_washable_no_run_school_glue
-  item: "feline_greenies_dental_treats"
+  # item: "feline_greenies_dental_treats"
   # item: "cheezit_big_original"
-  #item: crayola_64_ct
+  # item: crayola_64_ct
   # item: genuine_joe_plastic_stir_sticks
-  others: ['highland_6539_self_stick_notes']
+  # others: ['highland_6539_self_stick_notes']
+  others: []
 - action: grab
   bin: B
   # item: first_years_take_and_toss_straw_cup
@@ -24,9 +25,9 @@
   # item: expo_dry_erase_board_eraser
   # item: elmers_washable_no_run_school_glue
   # item: feline_greenies_dental_treats
-  item: "cheezit_big_original"
+  # item: "cheezit_big_original"
   # item: crayola_64_ct
-  #item: genuine_joe_plastic_stir_sticks
+  item: genuine_joe_plastic_stir_sticks
   others: []
 - action: grab
   bin: C
