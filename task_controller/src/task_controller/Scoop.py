@@ -39,7 +39,7 @@ class Scoop(smach.State):
     @on_exception(failure_state="Failure")
     def execute(self, userdata):
         # COMMENT OUT THIS RETURN UNLESS 'PushWithScoop' IS CALLING EVERYTHING
-        return 'Success'
+        # return 'Success'
 
         targetBin = userdata.bin
         jointConfigHor = [0, 0, 0, 0, 0, 0, 0, 0]
@@ -390,7 +390,7 @@ class Scoop(smach.State):
 
         #######################################################################
         rospy.loginfo("made it out")
-        # return 'Failure'
+        return 'Failure'
         #######################################################################
 
         # target_pose = Pose()
@@ -553,16 +553,17 @@ class Scoop(smach.State):
         #     return False
 
         # THIS BLOCK OF CODE FOR OBTAINING JOINT CONFIGURATIONS FOR PLANNING ONLY, SHOULD BE COMMENTED OUT FOR ACTUAL RUNS
-        rospy.sleep(1.0)
-        rospy.loginfo("going to horiztonal pose")
-        self.arm.set_pose_target(horizontalPose)
-        plan = self.arm.plan()
-        if not self.move(plan.joint_trajectory):
-            rospy.loginfo("FAILED going to horiztonal pose")
-            return False
+        # rospy.sleep(1.0)
+        # rospy.loginfo("going to horiztonal pose")
+        # self.arm.set_pose_target(horizontalPose)
+        # plan = self.arm.plan()
+        # if not self.move(plan.joint_trajectory):
+        #     rospy.loginfo("FAILED going to horiztonal pose")
+        #     return False
         
-        rospy.loginfo("sleeping...")
-        rospy.sleep(15.0)
+        rospy.loginfo(horizontalPose)
+        # raw_input("Hit enter to continue ")
+        # rospy.sleep(15.0)
         ##################################################################################################
 
         # IN
