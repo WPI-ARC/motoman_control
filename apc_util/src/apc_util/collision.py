@@ -4,9 +4,10 @@ import rospy
 import moveit_commander
 
 from geometry_msgs.msg import PoseStamped
-from moveit_msgs.msg import CollisionObject, AttachedCollisionObject
+from moveit_msgs.msg import CollisionObject, AttachedCollisionObject, PlanningSceneComponents
 from shape_msgs.msg import SolidPrimitive
 from services import _publish_pointcloud_collision
+from services import get_planning_scene
 
 scene = moveit_commander.PlanningSceneInterface()
 
@@ -67,3 +68,20 @@ def remove_object(name="Object"):
     while scene._pub_co.get_num_connections() == 0:
         rospy.sleep(0.01)
     scene._pub_co.publish(co)
+
+    while True:
+        rospy.sleep(0.1)
+        result, success = get_planning_scene(
+            PlanningSceneComponents(
+                PlanningSceneComponents.WORLD_OBJECT_NAMES
+                + PlanningSceneComponents.WORLD_OBJECT_GEOMETRY
+            )
+        )
+        if not success:
+            continue
+        found = False
+        for object in result.scene.world.collision_objects:
+            if object.id == name:
+                found = True
+        if not found:
+            return
