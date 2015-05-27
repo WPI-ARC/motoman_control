@@ -55,7 +55,7 @@ class PickItem(smach.State):
             except StopIteration:
                 rospy.logwarn("No online grasps found.")
                 # 
-                min_x, max_x, min_y, max_y, min_z, _ = rospy.get_param(prefix+"/bins/"+userdata.bin)
+                min_x, max_x, min_y, max_y, min_z, _ = rospy.get_param("/shelf"+"/bins/"+userdata.bin)
                 # TODO: Convert to base frame
                 Tbase_shelf = numpy.array([PoseToMatrix(pose)]) # Transform form base to shelf
                 min_y_base = numpy.dot(Tbase_shelf, numpy.array([[0], [min_y], [0], [1]]))[2]
@@ -66,13 +66,13 @@ class PickItem(smach.State):
                 
                 cutoff1, cutoff2 = min_y_base + (0.14 * sqrt(2)/2), max_y_base - (0.14 * sqrt(2)/2)
                 if userdata.pose.position.y < cutoff1:
-                    success = execute_wallgrasp_left(min_x_base, max_x_base, min_y_base, max_y_base, min_z_base)
+                    success = execute_wallgrasp_left(self.arm, min_x_base, max_x_base, min_y_base, max_y_base, min_z_base)
                     if not success:
                         return 'Failure'
                 elif userdata.pose.position.y < cutoff1:                    
                     pass  # TODO: center grasp
                 else:
-                    success = execute_wallgrasp_right(min_x_base, max_x_base, min_y_base, max_y_base, min_z_base)
+                    success = execute_wallgrasp_right(self.arm, min_x_base, max_x_base, min_y_base, max_y_base, min_z_base)
                     if not success:
                         return 'Failure'
                 return "Failure"

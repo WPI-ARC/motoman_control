@@ -106,7 +106,7 @@ if __name__ == '__main__':
     pose = PoseStamped()
     pose.header.frame_id = "/base_link"
     pose.header.stamp = rospy.Time.now()
-    pose.pose.position.x = -1.7
+    pose.pose.position.x = -1.01
     pose.pose.position.y = 0
     pose.pose.position.z = 1.5
     pose.pose.orientation.x = 0
@@ -114,11 +114,11 @@ if __name__ == '__main__':
     pose.pose.orientation.z = 0
     pose.pose.orientation.w = 1
 
-    # scene.add_box(
-    #     name="back wall",
-    #     pose=pose,
-    #     size=(0.01, 6, 3)
-    # )
+    scene.add_box(
+        name="back wall",
+        pose=pose,
+        size=(0.01, 6, 3)
+    )
 
     pose = PoseStamped()
     pose.header.frame_id = "/base_link"
@@ -192,18 +192,35 @@ if __name__ == '__main__':
     pose.header.frame_id = "/base_link"
     pose.header.stamp = rospy.Time.now()
     pose.pose.position.x = 0
-    pose.pose.position.y = -1.2
+    pose.pose.position.y = -1
     pose.pose.position.z = 1.5
     pose.pose.orientation.x = 0
     pose.pose.orientation.y = 0
     pose.pose.orientation.z = 0
     pose.pose.orientation.w = 1
 
-    # scene.add_box(
-    #     name="side wall",
-    #     pose=pose,
-    #     size=(6, 0.01, 3)
-    # )
+    scene.add_box(
+        name="right wall",
+        pose=pose,
+        size=(6, 0.01, 3)
+    )
+
+    pose = PoseStamped()
+    pose.header.frame_id = "/base_link"
+    pose.header.stamp = rospy.Time.now()
+    pose.pose.position.x = 0
+    pose.pose.position.y = 1
+    pose.pose.position.z = 1.5
+    pose.pose.orientation.x = 0
+    pose.pose.orientation.y = 0
+    pose.pose.orientation.z = 0
+    pose.pose.orientation.w = 1
+
+    scene.add_box(
+        name="left wall",
+        pose=pose,
+        size=(6, 0.01, 3)
+    )
 
     pose = PoseStamped()
     pose.header.frame_id = "/base_link"

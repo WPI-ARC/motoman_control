@@ -108,7 +108,7 @@ def goto_pose(group, pose, times=[5, 20, 40, 60], shelf=SIMPLE_SHELF):
     # group.set_planner_id("RRTstarkConfigDefault")
     # group.set_planner_id("KPIECEkConfigDefault")
     group.set_planner_id("RRTConnectkConfigDefault")
-    group.set_workspace([-3, -3, -3, 3, 3, 3])
+    group.set_workspace([-1, -1, -3, 3, 1, 6])
     with shelf:
         for t in times:
             group.set_planning_time(t)

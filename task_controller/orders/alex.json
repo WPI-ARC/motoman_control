@@ -1,0 +1,17 @@
+{
+  "bin_contents":
+  {
+    "bin_K":
+    [
+      "crayola_64_ct"
+    ]
+  },
+
+  "work_order":
+  [
+    {
+      "bin": "bin_K",
+      "item": "crayola_64_ct"
+    }
+  ]
+}

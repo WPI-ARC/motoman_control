@@ -13,7 +13,8 @@ def PickAndPlaceItem(robot):
 
     sm = smach.StateMachine(
         outcomes=['Success', 'Failure', 'Fatal'],
-        input_keys=['bin', 'item', 'contents'],
+        input_keys=['bin', 'item', 'contents', 'gripper_status'],
+        output_keys=['gripper_status'],
     )
 
     # Populate the state machine from the modules

@@ -1,0 +1,105 @@
+{
+  "bin_contents":
+  {
+    "bin_A":
+    [
+      "elmers_washable_no_run_school_glue"
+    ],
+    "bin_B":
+    [
+      "expo_dry_erase_board_eraser"
+    ],
+    "bin_C":
+    [
+      "cheezit_big_original"
+    ],
+    "bin_D":
+    [
+      "sharpie_accent_tank_style_highlighters", "dr_browns_bottle_brush"
+    ],
+    "bin_E":
+    [
+      "oreo_mega_stuf"
+    ],
+    "bin_F":
+    [
+      "mead_index_cards", "stanley_66_052"
+    ],
+    "bin_G":
+    [
+      "feline_greenies_dental_treats", "mommys_helper_outlet_plugs"
+    ],
+    "bin_H":
+    [
+      "kong_duck_dog_toy"
+    ],
+    "bin_I":
+    [
+      "genuine_joe_plastic_stir_sticks", "paper_mate_12_count_mirado_black_warrior"
+    ],
+    "bin_J":
+    [
+      "rolodex_jumbo_pencil_cup", "safety_works_safety_glasses", "laugh_out_loud_joke_book"
+    ],
+    "bin_K":
+    [
+      "kyjen_squeakin_eggs_plush_puppies", "munchkin_white_hot_duck_bath_toy", "champion_copper_plus_spark_plug"
+    ],
+    "bin_L":
+    [
+      "kong_air_dog_squeakair_tennis_ball", "first_years_take_and_toss_straw_cup"
+    ]
+  },
+
+  "work_order":
+  [
+    {
+      "bin": "bin_A",
+      "item": "elmers_washable_no_run_school_glue"
+    },
+    {
+      "bin": "bin_B",
+      "item": "expo_dry_erase_board_eraser"
+    },
+    {
+      "bin": "bin_C",
+      "item": "cheezit_big_original"
+    },
+    {
+      "bin": "bin_D",
+      "item": "sharpie_accent_tank_style_highlighters"
+    },
+    {
+      "bin": "bin_E",
+      "item": "oreo_mega_stuf"
+    },
+    {
+      "bin": "bin_F",
+      "item": "stanley_66_052"
+    },
+    {
+      "bin": "bin_G",
+      "item": "feline_greenies_dental_treats"
+    },
+    {
+      "bin": "bin_H",
+      "item": "kong_duck_dog_toy"
+    },
+    {
+      "bin": "bin_I",
+      "item": "genuine_joe_plastic_stir_sticks"
+    },
+    {
+      "bin": "bin_J",
+      "item": "safety_works_safety_glasses"
+    },
+    {
+      "bin": "bin_K",
+      "item": "munchkin_white_hot_duck_bath_toy"
+    },
+    {
+      "bin": "bin_L",
+      "item": "first_years_take_and_toss_straw_cup"
+    }
+  ]
+}
