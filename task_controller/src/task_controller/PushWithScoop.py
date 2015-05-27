@@ -397,7 +397,7 @@ class PushWithScoop(smach.State):
                                                get_current_pose().pose)]
 
         poses.append(deepcopy(poses[-1]))
-        xDist = 0.12
+        xDist1 = 0.12
         # xDist1 = 0.07
         poses[-1].position.x += xDist1
         if self.isLeftToRight:
@@ -408,7 +408,7 @@ class PushWithScoop(smach.State):
             poses[-1].position.z += -xDist1*0.0875  # 5 degrees
 
         poses.append(deepcopy(poses[-1]))
-        # xDist = 0.35
+        # xDist2 = 0.35
         xDist2 = 0.25
         poses[-1].position.x += xDist2
         if self.isLeftToRight:
