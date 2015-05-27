@@ -166,7 +166,7 @@ def retreat_normal(self, grasp, group, response):
         waypoints=poses,
         max_step=0.01,
         jump_threshold=0.0,
-        avoid_collisions=False
+        avoid_collisions=True
     )
     return retreat_response, success
 
@@ -355,7 +355,24 @@ def plan_grasps(group, grasps):
             continue
 
         # Plan Retreat
-        retreat_response, success = self.retreat_normal(grasp, group, response)
+        poses = [grasp.pregrasp]
+        poses.append(deepcopy(poses[-1]))
+        poses[-1].position.z += 0.032
+        poses.append(deepcopy(poses[-1]))
+        poses[-1].position.x = 0.4
+        retreat_response, success = get_cartesian_path(
+            group_name=group.get_name(),
+            start_state=RobotState(
+                joint_state=JointState(
+                    name=response.solution.joint_trajectory.joint_names,
+                    position=response.solution.joint_trajectory.points[-1].positions
+                )
+            ),  
+            waypoints=poses,
+            max_step=0.01,
+            jump_threshold=0.0,
+            avoid_collisions=True
+        )
 
         # if  ischeezit:
         #     retreat_response, success = self.retreat_cheezit(grasp, group, response)
