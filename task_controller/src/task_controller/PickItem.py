@@ -60,6 +60,7 @@ class PickItem(smach.State):
                 min_x_base = numpy.dot(Tbase_shelf, numpy.array([[min_x], [0], [0], [1]])) [0]
                 max_x_base = numpy.dot(Tbase_shelf, numpy.array([[max_x], [0], [0], [1]])) [0]
                 min_z_base = numpy.dot(Tbase_shelf, numpy.array([[0], [0], [min_z], [1]])) [2]
+                rospy.logerr('>>>>>>>>>>>>>>>>>>>>>> after conver bin bound>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
                 
                 cutoff1, cutoff2 = min_y_base + (0.14 * sqrt(2)/2), max_y_base - (0.14 * sqrt(2)/2)
                 if userdata.pose.position.y < cutoff1:
