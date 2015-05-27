@@ -11,8 +11,6 @@ find_package(Boost REQUIRED system filesystem date_time thread)
 add_service_files(
     FILES
     convert_trajectory_server.srv
-    get_tray_server.srv
-    attach_tray_server.srv
 )
 
 generate_messages(

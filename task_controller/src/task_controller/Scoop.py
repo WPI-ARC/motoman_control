@@ -64,18 +64,14 @@ class Scoop(smach.State):
         horizontalPose.orientation.w = 0.698654
         # TODO: calibrate orientation?
 
-        # FIX
-        # leftOffsetRight = -0.001
-        # middleOffsetMiddle = -0.002
-        # rightOffsetLeft = 0.050
 
         leftOffsetRight = -0.110
+        leftOffsetLeft = -0.080
         middleOffsetMiddle = -0.1275
-        rightOffsetLeft = 0.170
-        rightOffsetRight = 0.14
-        leftOffsetLeft = -0.08
-        middleOffsetLeft =-0.08
         middleOffsetRight = -0.175
+        middleOffsetLeft = -0.08
+        rightOffsetRight = 0.140
+        rightOffsetLeft = 0.170
 
         if (self.targetBin == "A" or self.targetBin == "D" or
                 self.targetBin == "G" or self.targetBin == "J"):
@@ -83,8 +79,9 @@ class Scoop(smach.State):
 
         elif (self.targetBin == "B" or self.targetBin == "E" or
                 self.targetBin == "H" or self.targetBin == "K"):
-            horizontalPose.position.y += middleOffsetMiddle
 
+            # horizontalPose.position.y += middleOffsetMiddle
+            horizontalPose.position.y += middleOffsetLeft
         elif (self.targetBin == "C" or self.targetBin == "F" or
                 self.targetBin == "I" or self.targetBin == "L"):
             horizontalPose.position.y += rightOffsetLeft
@@ -104,13 +101,13 @@ class Scoop(smach.State):
 
         jointConfigHor = [0, 0, 0, 0, 0, 0, 0, 0]
 
-        if self.targetBin == "A":  #
-            # vertical pose
-            jointConfigHor = [1.9681722954889078, -0.023200618121380513, 1.5089116451880789, 1.8039264439517484, 1.9849145300443676, 1.248039336029401, 1.620441408283454, -3.13]
 
-            # horiztonal pose  DOESN"T FINISH CARTESIAN PATH INTO BIN (60%)
-            jointConfigHor = [-2.6278238770266884, -2.8717882676343707, 1.9, 1.41899550351945, -1.394620876270875, -0.30435794374488895, 1.9, 1.8393546525122273]
-            # jointConfigHor = [-2.6266047232928647, -2.8707911662742625, 1.9, 1.4185633027580957, -1.3925214891151116, -0.3055918485431591, 1.9, 1.838375550073248]
+        if self.targetBin == "A":  # SCOOP SUCCESS
+            # horiztonal pose
+            jointConfigHor = [2.787122819843751, 1.1426674464611235, -0.4407243014959283, -2.938360463288102, -1.7825824022519545, 1.877092883918891, -1.8864029108808542, -1.7389067722224323]
+            # jointConfigHor = [2.782707824398671, 1.1213539604121765, -0.5105509676099902, -2.95, -1.8127950575104665, 1.8751692165531906, -1.8956069620580396, -1.843186568028629]
+            # default
+            # jointConfigHor = [2.608074188232422, -0.29658669233322144, 0.8934586644172668, 1.7289633750915527, 1.573803424835205, 1.2867212295532227, 1.4699939489364624, -2.8265552520751953]
 
             # default
             jointConfigHor = [2.608074188232422, -0.29658669233322144, 0.8934586644172668, 1.7289633750915527, 1.573803424835205, 1.2867212295532227, 1.4699939489364624, -2.8265552520751953]
@@ -124,10 +121,15 @@ class Scoop(smach.State):
         elif self.targetBin == "B":  #
             # vertical pose
             jointConfigHor = [-2.691808686026977, -2.8018998306066116, 1.3848981009275314, -2.282453315654881, 1.8152513141302793, -0.6202050989860174, -1.624154936000525, -0.3587748187263247]
+# [-1.0030035405789968, -1.3676622009763029, 0.4576668194873724, -2.177249279887369, 0.450985796862375, -1.204311025594268, -1.5581180459959898, -2.75676652084731, 1.5618443734944463, -2.1295047284401276, 1.4317529318186657, -0.6433763681214768, -1.8426522259677303, -1.653964354060165, -2.8327725595827187, 0.0]
+
+
 
             # horizontal pose  DOESN"T FINISH CARTESIAN PATH INTO BIN (69%)
             jointConfigHor = [-2.8819607919477774, -2.5683663777443138, 1.9, -2.241769564971686, 1.1787675479307382, -0.5392291309261772, -1.8531964931997877, -1.8695438375092903]
 
+
+            # jointConfigHor = [-2.831730496183794, -2.7264830881170523, 1.6366395998456265, -2.1613363852348173, 1.3968113538046523, -0.6176682002638111, -1.843012465236674, -1.7061506709410292]
             # default
             # jointConfigHor =
 
@@ -150,6 +152,9 @@ class Scoop(smach.State):
             # default
             # jointConfigHor =
 
+            # default
+            # jointConfigHor = 
+
             self.isLeftToRight = False
             horizontalPose.position.x += 0.000
             horizontalPose.position.y += 0.000
@@ -158,6 +163,9 @@ class Scoop(smach.State):
         elif self.targetBin == "D":  #
             # vertical pose
             # jointConfigHor = [-2.223934986801738, 3.13, 1.2092354002259527, 0.9307218279859997, -1.8873873503542566, 2.2149979825293564, -1.2486240605659136, 0.28324722321298806]
+
+            # default
+            jointConfigHor = [2.608074188232422, -0.29658669233322144, 0.8934586644172668, 1.7289633750915527, 1.573803424835205, 1.2867212295532227, 1.4699939489364624, -2.8265552520751953]
 
             # default
             jointConfigHor = [2.608074188232422, -0.29658669233322144, 0.8934586644172668, 1.7289633750915527, 1.573803424835205, 1.2867212295532227, 1.4699939489364624, -2.8265552520751953]
@@ -175,6 +183,9 @@ class Scoop(smach.State):
             # default
             jointConfigHor = [2.9667019844055176, 1.4224945306777954, -0.7801656126976013, -0.2995363175868988, 2.195582151412964, 1.864424467086792, 1.6602683067321777, 2.5383474826812744]
 
+            # default
+            jointConfigHor = [2.9667019844055176, 1.4224945306777954, -0.7801656126976013, -0.2995363175868988, 2.195582151412964, 1.864424467086792, 1.6602683067321777, 2.5383474826812744]
+
             self.shortRow = True
             self.isLeftToRight = True
             horizontalPose.position.x += 0.000
@@ -188,6 +199,7 @@ class Scoop(smach.State):
             # default
             # jointConfigHor = [1.5194422006607056,1.810523509979248, -1.2088792324066162, 1.3328773975372314, -1.8696491718292236, 1.8829082250595093, -1.2678426504135132, 1.606799840927124]
             jointConfigHor = [1.7185487089792388, 1.628701886968344, -1.9, -1.289229684257566, 2.0208721134965324, 0.9377729352449973, 1.4027401168916545, 0.09704192362409228]
+
 
             self.shortRow = True
             self.isLeftToRight = False
@@ -231,6 +243,9 @@ class Scoop(smach.State):
             jointConfigHor = [2.2079043637321725, 0.8601312830660215, -1.9, -0.9939683067758994, 1.9120743451785713, 1.4944922595683932, 1.4339132032870154, -0.5700904832953211]
 
 
+            # default
+            jointConfigHor = [1.5194591283798218, 1.251114845275879, -1.8047455549240112, 2.224393606185913, -1.9810069799423218, 1.1204286813735962, -1.827457070350647, 0.8016403913497925]
+
             self.shortRow = True
             self.isLeftToRight = False
             horizontalPose.position.x += 0.000
@@ -269,6 +284,9 @@ class Scoop(smach.State):
             # jointConfigHor = [1.7551809549331665, 0.04665006324648857, -1.8453619480133057, 1.8693605661392212, -1.189427375793457, 1.5698546171188354, -1.871213436126709, 0.8811066150665283]
             jointConfigHor = [-0.12513779447492768, -2.336026338817234, -0.9455866795141264, -2.5098342621859016, -2.172419746644237, -0.8552426475281811, 1.7569769188312936, -2.2410209148173426]
 
+            # default
+            jointConfigHor = [1.7551809549331665, 0.04665006324648857, -1.8453619480133057, 1.8693605661392212, -1.189427375793457, 1.5698546171188354, -1.871213436126709, 0.8811066150665283]
+
             self.isLeftToRight = False
             horizontalPose.position.x += 0.000
             horizontalPose.position.y += 0.000
@@ -306,27 +324,30 @@ class Scoop(smach.State):
             # OUT + UP
             poses.append(deepcopy(poses[-1]))
             # poses[-1].position.x += -0.4586
-            poses[-1].position.x += -0.3586
+            poses[-1].position.x += -0.300
             # poses[-1].position.y += 0.05
-            poses[-1].position.z += 0.05
-
-            if not follow_path(self.arm, poses):
-                return 'Failure'
-
-            # poses = [self.convertFrameRobotToShelf(self.arm.
-            #                                        get_current_pose().pose)]
-
-            # poses.append(deepcopy(poses[-1]))
             # poses[-1].position.z += 0.05
 
-            # rospy.loginfo("planning cartesian path to final bin pose")
-            # if not follow_path(self.arm, poses):
-            #     return 'Failure'
+            if not follow_path(self.arm, poses):
+                rospy.loginfo("failed half out")
+                return 'Failure'
+
+            poses = [self.convertFrameRobotToShelf(self.arm.
+                                                   get_current_pose().pose)]
+
+            poses.append(deepcopy(poses[-1]))
+            poses[-1].position.x += -0.10
+            poses[-1].position.z += 0.05
+
+            rospy.loginfo("planning cartesian path to final bin pose")
+            if not follow_path(self.arm, poses):
+                rospy.loginfo("failed out")
+                return 'Failure'
 
         elif self.targetBin == "B":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
-            # OUT + UP
+            # OVER (FOR JOINT LIMITS)
             poses.append(deepcopy(poses[-1]))
             poses[-1].position.y += 0.05
 
@@ -499,32 +520,30 @@ class Scoop(smach.State):
 
         #######################################################################
         rospy.loginfo("made it out")
-        add_shelf()
-        rospy.sleep(50)
-        return 'Failure'
+
         #######################################################################
 
 
         # bins C, F, I, L
-        target_pose = Pose()
-        target_pose.position.x = 0.49195
-        target_pose.position.y = -0.39594
-        target_pose.position.z = 0.64392
-        target_pose.orientation.x = 0.16997
-        target_pose.orientation.y = -0.63061
-        target_pose.orientation.z = 0.73307
-        target_pose.orientation.w = 0.18988
-
-
-        #bins A, D, G, J,
-        # target_pose = Pose()
-        # target_pose.position.x = 0.24128
-        # target_pose.position.y = 0.65743
-        # target_pose.position.z = 0.72495
-        # target_pose.orientation.x = -0.52171
-        # target_pose.orientation.y = -0.28389
-        # target_pose.orientation.z = -0.029079
-        # target_pose.orientation.w = 0.80398
+        if self.targetBin == 'C' or self.targetBin == 'F' or self.targetBin == 'I' or self.targetBin == 'L' or self.targetBin == 'B' or self.targetBin == 'E' or self.targetBin == 'H' or self.targetBin == 'K':
+            target_pose = Pose()
+            target_pose.position.x = 0.49195
+            target_pose.position.y = -0.39594
+            target_pose.position.z = 0.64392
+            target_pose.orientation.x = 0.16997
+            target_pose.orientation.y = -0.63061
+            target_pose.orientation.z = 0.73307
+            target_pose.orientation.w = 0.18988
+        else:
+            #bins A, D, G, J,
+            target_pose = Pose()
+            target_pose.position.x = 0.24128
+            target_pose.position.y = 0.65743
+            target_pose.position.z = 0.72495
+            target_pose.orientation.x = -0.52171
+            target_pose.orientation.y = -0.28389
+            target_pose.orientation.z = -0.029079
+            target_pose.orientation.w = 0.80398
         rospy.loginfo("Trying to follow constrained path")
 
         if not self.follow_constrained_path(target_pose):
@@ -551,40 +570,46 @@ class Scoop(smach.State):
         poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
 
-        # TODO: FIX THIS STUFF
-        # Tilt little by little
-        poses.append(deepcopy(poses[-1]))
-        poses[-1].position.x = 0.472985  # 0.482178
-        poses[-1].position.y = -0.351667  # -0.335627
-        poses[-1].position.y += 0.02
-        poses[-1].position.z = 0.753171  # 0.706449
-        poses[-1].orientation.x = 0.143945
-        poses[-1].orientation.y = -0.605741
-        poses[-1].orientation.z = 0.757694
-        poses[-1].orientation.w = 0.195594
-        poses[-1] = self.convertFrameRobotToShelf(poses[-1])
+        if self.targetBin == 'C' or self.targetBin == 'F' or self.targetBin == 'I' or self.targetBin == 'L' or self.targetBin == 'B' or self.targetBin == 'E' or self.targetBin == 'H' or self.targetBin == 'K':
 
-        poses.append(deepcopy(poses[-1]))
-        poses[-1].position.x = 0.472985  # 0.482178
-        poses[-1].position.y = -0.351667  # -0.335627
-        poses[-1].position.y += 0.02
-        poses[-1].position.z = 0.753171  # 0.706449
-        poses[-1].orientation.x = 0.113945
-        poses[-1].orientation.y = -0.525741
-        poses[-1].orientation.z = 0.827694
-        poses[-1].orientation.w = 0.215594
-        poses[-1] = self.convertFrameRobotToShelf(poses[-1])
 
-        poses.append(deepcopy(poses[-1]))
-        poses[-1].position.x = 0.472985  # 0.482178
-        poses[-1].position.y = -0.351667  # -0.335627
-        poses[-1].position.y += 0.02
-        poses[-1].position.z = 0.753171  # 0.706449
-        poses[-1].orientation.x = 0.112873
-        poses[-1].orientation.y = -0.520793
-        poses[-1].orientation.z = 0.819904
-        poses[-1].orientation.w = 0.209268
-        poses[-1] = self.convertFrameRobotToShelf(poses[-1])
+            # TODO: FIX THIS STUFF
+            # Tilt little by little
+            poses.append(deepcopy(poses[-1]))
+            poses[-1].position.x = 0.472985  # 0.482178
+            poses[-1].position.y = -0.351667  # -0.335627
+            poses[-1].position.y += 0.02
+            poses[-1].position.z = 0.753171  # 0.706449
+            poses[-1].orientation.x = 0.143945
+            poses[-1].orientation.y = -0.605741
+            poses[-1].orientation.z = 0.757694
+            poses[-1].orientation.w = 0.195594
+            poses[-1] = self.convertFrameRobotToShelf(poses[-1])
+
+            poses.append(deepcopy(poses[-1]))
+            poses[-1].position.x = 0.472985  # 0.482178
+            poses[-1].position.y = -0.351667  # -0.335627
+            poses[-1].position.y += 0.02
+            poses[-1].position.z = 0.753171  # 0.706449
+            poses[-1].orientation.x = 0.113945
+            poses[-1].orientation.y = -0.525741
+            poses[-1].orientation.z = 0.827694
+            poses[-1].orientation.w = 0.215594
+            poses[-1] = self.convertFrameRobotToShelf(poses[-1])
+
+            poses.append(deepcopy(poses[-1]))
+            poses[-1].position.x = 0.472985  # 0.482178
+            poses[-1].position.y = -0.351667  # -0.335627
+            poses[-1].position.y += 0.02
+            poses[-1].position.z = 0.753171  # 0.706449
+            poses[-1].orientation.x = 0.112873
+            poses[-1].orientation.y = -0.520793
+            poses[-1].orientation.z = 0.819904
+            poses[-1].orientation.w = 0.209268
+            poses[-1] = self.convertFrameRobotToShelf(poses[-1])
+
+        
+
 
         print "Planning Cartesian Path Dump....."
         if not follow_path(self.arm, poses):
@@ -672,27 +697,28 @@ class Scoop(smach.State):
         #     rospy.loginfo("FAILED going to horizontal pose")
         #     return False
 
-        # THIS BLOCK OF CODE FOR OBTAINING JOINT CONFIGURATIONS FOR PLANNING ONLY, SHOULD BE COMMENTED OUT FOR ACTUAL RUNS
-        rospy.sleep(1.0)
-        rospy.loginfo("going to horiztonal pose")
-        self.arm.set_pose_target(horizontalPose)
-        plan = self.arm.plan()
-        if not len(plan.joint_trajectory.points) > 0:
-            return False
-        add_shelf(Shelf.FULL)
-        if not self.move(plan.joint_trajectory):
-            rospy.loginfo("FAILED going to horiztonal pose")
-            return False
 
-        horizontalPose = self.convertFrameShelfToRobot(horizontalPose)
-        rospy.loginfo(horizontalPose)
-        rospy.loginfo(self.arm.get_current_joint_values())
+        # # THIS BLOCK OF CODE FOR OBTAINING JOINT CONFIGURATIONS FOR PLANNING ONLY, SHOULD BE COMMENTED OUT FOR ACTUAL RUNS
+        # rospy.sleep(1.0)
+        # rospy.loginfo("going to horiztonal pose")
+        # self.arm.set_pose_target(horizontalPose)
+        # plan = self.arm.plan()
+        # if not len(plan.joint_trajectory.points) > 0:
+        #     return False
+        # add_shelf(Shelf.FULL)
+        # if not self.move(plan.joint_trajectory):
+        #     rospy.loginfo("FAILED going to horiztonal pose")
+        #     return False
+        
+        # horizontalPose = self.convertFrameShelfToRobot(horizontalPose)
+        # rospy.loginfo(horizontalPose)
 
         raw_input("Hit enter to continue ")
-        with open("horizontal_joint_config.txt", "a+") as out_file:
-            joint_config = self.arm.get_current_joint_values()
-            out_file.write(str(self.targetBin) + "\t" + str(joint_config) + "\n")
-        ##################################################################################################
+        # with open("horizontal_joint_config.txt", "a+") as out_file:
+        #     joint_config = self.arm.get_current_joint_values()
+        #     out_file.write(str(self.targetBin) + "\t" + str(joint_config) + "\n")
+        # # rospy.sleep(15.0)
+        # ##################################################################################################
 
         remove_shelf()
         # IN
@@ -806,20 +832,22 @@ class Scoop(smach.State):
             rospy.loginfo("FAILED lifting objects")
             return False
 
-        # AWAY FROM WALL
+        # AWAY FROM WAL
+        # # AWAY FROM WALL
         # rospy.loginfo("moving away from wall")
         # poses = [self.convertFrameRobotToShelf(self.arm.
         #                                        get_current_pose().pose)]
         # poses.append(deepcopy(poses[-1]))
         # if self.rightColumn:
         #     poses[-1].position.y += -0.02
+        #     poses[-1].position.y += -0.05
         # elif not self.rightColumn:
         #     poses[-1].position.y += 0.05
         #     # STILL NEED TO TEST THIS
 
-        if not follow_path(self.arm, poses):
-            rospy.loginfo("FAILED moving away from wall")
-            return False
+        # if not follow_path(self.arm, poses):
+        #     rospy.loginfo("FAILED moving away from wall")
+        #     return False
 
         return True
 
@@ -947,4 +975,4 @@ def make_vector(x, y, z):
 #         return True
 #     else:
 #         rospy.logerr("Failed to execute cartesian path")
-#         return False
+

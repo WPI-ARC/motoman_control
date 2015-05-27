@@ -42,7 +42,7 @@ class Grasping:
         self.padding = 0.015  # Extra padding between object and gripper is 1 cm.
         self.fingerlength = 0.115  # palm to finger tip offset is 11.5 cm
         self.gripperwidth = 0.155 - self.padding  # gripper width is 15.5 cm
-        self.z_lowerboundoffset = 0.065 # Palm center to bottom of hand is 6.5 cm
+        self.z_lowerboundoffset = 0.065 + 0.02 # Palm center to bottom of hand is 6.5 cm
         self.approachpose_offset = 0.3 # Set aproach pose to be 30cm back from the front of the bin
         # palm -15 deg offset about z-axis
         self.hand_theta = 0.261799
@@ -131,7 +131,7 @@ class Grasping:
     def get_object_height_offset(self, req):
         if req.item == 'cheezit_big_original':
             item = '../env/cheezit.env.xml'
-            self.objectheightoffset = 0.0
+            self.objectheightoffset = 0.01
         elif req.item == 'kyjen_squeakin_eggs_plush_puppies':
             item = '../env/colorballs.env.xml'
             self.objectheightoffset = 0.0
@@ -140,7 +140,7 @@ class Grasping:
             self.objectheightoffset = 0.0
         elif req.item == 'feline_greenies_dental_treats':
             item = '../env/dentaltreat.env.xml'
-            self.objectheightoffset = 0.015
+            self.objectheightoffset = 0.0
         elif req.item == 'expo_dry_erase_board_eraser':
             item = '../env/eraser.env.xml'
             self.objectheightoffset = 0.0
@@ -228,7 +228,7 @@ class Grasping:
         obj_depth = abs(max_x-min_x)
         edge_offset = min_x
         extensions = 0.15 # 15cm finger extensions
-        offset = numpy.true_divide(obj_depth, 2)
+        offset = numpy.true_divide(obj_depth, 4)
         if offset > self.fingerlength + extensions:
             offset = 0.10
         if offset < 0.10:

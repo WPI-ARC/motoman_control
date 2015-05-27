@@ -14,7 +14,7 @@ depth = 0.87  # Depth of shelf
 palm_offset = 0.165  # Offset from tool to palm
 
 # Currently shelf + orientation are not calibrated
-z = -0.045 -.09
+z = -0.155
 orientation = {
     "x": 0.5,
     "y": 0.5,

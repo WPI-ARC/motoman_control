@@ -526,7 +526,8 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, moto
     // Get a map for the target joint states
     std::map<std::string, double> target_joint_values = GenerateNameValueMap(full_jointTraj.joint_names, full_jointTraj.points[full_jointTraj.points.size() - 1].positions);
     // Wait for the trajectory to finish, plus a little buffer time
-    ros::Duration trajectory_exec_duration = (full_jointTraj.points[full_jointTraj.points.size() - 1].time_from_start * EXEC_TIME_FRACTION) + ros::Duration(EXEC_TIME_BUFFER);
+    // ros::Duration trajectory_exec_duration = (full_jointTraj.points[full_jointTraj.points.size() - 1].time_from_start * EXEC_TIME_FRACTION) + ros::Duration(EXEC_TIME_BUFFER);
+    ros::Duration trajectory_exec_duration = ros::Duration(2.0);
     trajectory_exec_duration.sleep();
     // Check if target reached
     for (int32_t checks = 0; checks < TARGET_REACHED_CHECKS; checks++)

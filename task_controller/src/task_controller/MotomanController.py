@@ -76,6 +76,7 @@ class MotomanController:
         self.running = True
         self.safed = False
         self.sm.userdata.sm_input = "Testing"
+        self.sm.userdata.gripper_status = "open"
         print "Starting..."
         print self.sm.userdata.sm_input
         print "...starting"
