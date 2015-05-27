@@ -32,6 +32,25 @@ RIGHT_HOME = [0.0, -1.0030564513590334, -1.49978651413566, 0.457500317369117, -2
 # RIGHT_HOME = [0.0, -1.003053069114685, -1.3010714054107666, 0.45768821239471436, -2.1770224571228027,
 #               0.4510662853717804, -1.2044178247451782, -1.5581636428833008]
 
+def check_collision(traj):
+    # Check plan for collisions
+    collisions, success = check_collisions(CheckTrajectoryValidityQuery(
+        initial_state=JointState(
+            header=Header(stamp=rospy.Time.now()),
+            name=robot.sda10f.get_joints(),
+            position=robot.sda10f.get_current_joint_values()
+        ),
+        trajectory=traj,
+        check_type=CheckTrajectoryValidityQuery.CHECK_ENVIRONMENT_COLLISION,
+    ))
+    if not success:
+        rospy.logerr("Verifying plan was unsuccessful")
+        return False
+    if collisions.result.status != CheckTrajectoryValidityResult.SUCCESS:
+        rospy.logerr("Can't execute plan, it is invalid. Status=%s" % collisions.result.status)
+        return False
+    return True
+
 def move(group, traj):
     robot_state.wait_to_continue()
     try:
@@ -39,24 +58,10 @@ def move(group, traj):
             rospy.logerr("Not moving since initial joint values are not within tolerance")
             return False
 
-        # Check plan for collisions
-        collisions, success = check_collisions(CheckTrajectoryValidityQuery(
-	    initial_state=JointState(
-	        header=Header(stamp=rospy.Time.now()),
-	        name=robot.sda10f.get_joints(),
-	        position=robot.sda10f.get_current_joint_values()
-	    ),
-	    trajectory=traj,
-	    check_type=CheckTrajectoryValidityQuery.CHECK_ENVIRONMENT_COLLISION,
-        ))
-        if not success:
-	    rospy.logerr("Verifying plan was unsuccessful")
-	    return False
-        if collisions.result.status != CheckTrajectoryValidityResult.SUCCESS:
-	    rospy.logerr("Can't execute plan, it is invalid. Status=%s" % collisions.result.status)
-	    return False
+        if not check_collision(traj):
+            return False
 
-        raw_input("Continue...")
+        # raw_input("Continue...")
 
         result = _move(traj)
         if not check_joint_values(group, traj.joint_names, traj.points[-1].positions):
@@ -110,6 +115,9 @@ def goto_pose(group, pose, times=[5, 20, 40, 60], shelf=SIMPLE_SHELF):
             rospy.loginfo("Planning for "+str(t)+" seconds...")
             plan = group.plan(pose)
 
+            if not check_collision(plan.joint_trajectory):
+                continue
+
             if len(plan.joint_trajectory.points) > 0:
                 if move(group, plan.joint_trajectory):
                     return True
@@ -137,6 +145,9 @@ def follow_path(group, path, collision_checking=True):
             "Cartesian trajectory could not be completed. Only solved for: '"
             + str(success) + "'..."
         )
+        return False
+
+    if not check_collision(traj.joint_trajectory):
         return False
 
     if move(group, traj.joint_trajectory):

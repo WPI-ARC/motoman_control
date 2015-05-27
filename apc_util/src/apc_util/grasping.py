@@ -5,7 +5,7 @@ from copy import deepcopy
 from threading import Lock
 from robotiq_s_model_articulated_msgs.msg import SModelRobotInput
 
-from moveit import goto_pose, follow_path, move, robot_state
+from moveit import goto_pose, follow_path, move, robot_state, check_collision
 from shelf import FULL_SHELF
 from services import _grasp_generator, _gripper_control, _compute_ik, get_cartesian_path
 from moveit_msgs.msg import RobotState
@@ -155,19 +155,23 @@ def plan_grasps(group, grasps):
 
         if response.fraction < 1:
             continue
+        if not check_collision(response.solution.joint_trajectory):
+            continue
 
         # Plan Retreat
         poses = [grasp.pregrasp]
         poses.append(deepcopy(poses[-1]))
         poses[-1].position.z += 0.032
         poses.append(deepcopy(poses[-1]))
-        poses[-1].position.x = 0.48
+        poses[-1].position.x = 0.4
         retreat_response, success = get_cartesian_path(
             group_name=group.get_name(),
-            start_state=JointState(
-                name=response.solution.joint_trajectory.joint_names,
-                position=response.solution.joint_trajectory.points[-1].positions
-            ),
+            start_state=RobotState(
+                joint_state=JointState(
+                    name=response.solution.joint_trajectory.joint_names,
+                    position=response.solution.joint_trajectory.points[-1].positions
+                )
+            ),  
             waypoints=poses,
             max_step=0.01,
             jump_threshold=0.0,
@@ -180,6 +184,8 @@ def plan_grasps(group, grasps):
         rospy.loginfo("Cartesian path had status code: "+str(retreat_response.error_code))
 
         if retreat_response.fraction < 1:
+            continue
+        if not check_collision(retreat_response.solution.joint_trajectory):
             continue
 
         group.set_planner_id("RRTConnectkConfigDefault")
@@ -194,8 +200,8 @@ def plan_grasps(group, grasps):
         if not approach_plan:
             rospy.logwarn("Failed to find plan to approach pose")
             continue
-
-        # TODO: Plan retreat
+        if not check_collision(approach_plan.joint_trajectory):
+            continue
 
         rospy.loginfo("Found grasp")
         rospy.loginfo(ik_solution.solution.joint_state)
@@ -219,6 +225,6 @@ def execute_grasp(group, grasp, plan_to_approach, plan_to_grasp, plan_to_retreat
         follow_path(group, [grasp.approach])  # If grasp fails, move back to approach pose
         return False
     if not move(group, plan_to_retreat.joint_trajectory):
-        rospy.logerr("Failed to execute approach")
+        rospy.logerr("Failed to execute retreat")
         return False
     return True

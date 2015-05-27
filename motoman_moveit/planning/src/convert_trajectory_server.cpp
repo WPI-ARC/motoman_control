@@ -17,6 +17,10 @@
 #define EXEC_TIME_BUFFER 1.0
 #define EXEC_TIME_FRACTION 1.25
 #define REMOVE_TRAJECTORY_VELOCITIES true
+#define TARGET_REACHED_CHECKS 10
+#define TARGET_REACHED_CHECK_WAIT 0.5
+#define ADD_TRAJECTORY_END_STATE true
+#define TRAJECTORY_END_STATE_DELAY 1.0
 
 // Globals
 bool g_simulation_execution = false;
@@ -250,6 +254,57 @@ trajectory_msgs::JointTrajectory GenerateFullTrajectory(const std::map<std::stri
     return full_trajectory;
 }
 
+bool CheckIfTargetReached(const std::map<std::string, double>& target_joint_values)
+{
+    // Now, check to see if we've reached the target
+    // Copy the current joint states
+    g_joint_state_mutex.lock();
+    std::vector<sensor_msgs::JointState> check_current_states = g_joint_states;
+    g_joint_state_mutex.unlock();
+    // Insert all joints states into a map
+    std::map<std::string, double> check_current_joint_values;
+    for (size_t sdx = 0; sdx < check_current_states.size(); sdx++)
+    {
+        const sensor_msgs::JointState& check_current_state = check_current_states[sdx];
+        if (check_current_state.name.size() != check_current_state.position.size())
+        {
+            ROS_ERROR("Invalid joint state for group %zu when trying to check if trajectory execution finished", sdx);
+            return false;
+        }
+        for (size_t idx = 0; idx < check_current_state.name.size(); idx++)
+        {
+            std::string joint_name = check_current_state.name[idx];
+            double joint_position = check_current_state.position[idx];
+            check_current_joint_values[joint_name] = joint_position;
+        }
+    }
+    // Make sure the target is reached within the desired tolerance
+    std::map<std::string, double>::const_iterator target_joint_values_itr;
+    for (target_joint_values_itr = target_joint_values.begin(); target_joint_values_itr != target_joint_values.end(); ++target_joint_values_itr)
+    {
+        std::string joint_name = target_joint_values_itr->first;
+        double target_joint_value = target_joint_values_itr->second;
+        // Look up the joint in the joint state
+        std::map<std::string, double>::const_iterator found_state_value = check_current_joint_values.find(joint_name);
+        if (found_state_value != check_current_joint_values.end())
+        {
+            double state_joint_value = found_state_value->second;
+            double joint_value_delta = fabs(target_joint_value - state_joint_value);
+            if (joint_value_delta >= TARGET_REACHED_THRESHOLD)
+            {
+                ROS_ERROR("Joint %s did not reach target value %f, is at %f instead", joint_name.c_str(), target_joint_value, state_joint_value);
+                return false;
+            }
+        }
+        else
+        {
+            ROS_ERROR("Couldn't find joint state value for joint %s when trying to check if trajectory execution finished", joint_name.c_str());
+            return false;
+        }
+    }
+    return true;
+}
+
 bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, motoman_moveit::convert_trajectory_server::Response &res)
 {
     if (req.jointTraj.points.size() == 0)
@@ -339,6 +394,14 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, moto
         res.success = false;
         return true;
     }
+    trajectory_msgs::JointTrajectory full_jointTraj = req.jointTraj;
+    if (ADD_TRAJECTORY_END_STATE)
+    {
+        ROS_INFO("Adding additional trajectory end state delayed by %f", TRAJECTORY_END_STATE_DELAY);
+        trajectory_msgs::JointTrajectoryPoint additional_end_state = full_jointTraj.points[full_jointTraj.points.size() - 1];
+        additional_end_state.time_from_start = additional_end_state.time_from_start + ros::Duration(TRAJECTORY_END_STATE_DELAY);
+        full_jointTraj.points.push_back(additional_end_state);
+    }
     // Simulation-only execution
     if (g_simulation_execution)
     {
@@ -360,7 +423,7 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, moto
         complete_joint_names[13] = "arm_right_joint_7_t";
         complete_joint_names[14] = "torso_joint_b1";
         complete_joint_names[15] = "torso_joint_b2";
-        trajectory_msgs::JointTrajectory full_trajectory = GenerateFullTrajectory(current_joint_values, req.jointTraj, complete_joint_names);
+        trajectory_msgs::JointTrajectory full_trajectory = GenerateFullTrajectory(current_joint_values, full_jointTraj, complete_joint_names);
         ROS_INFO("Executing trajectory (simulation)...");
         g_simulation_execution_pub.publish(full_trajectory);
         ROS_INFO("Trajectory execution started, waiting for execution to finish");
@@ -377,7 +440,7 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, moto
         left_arm_group_names[4] = "arm_left_joint_5_r";
         left_arm_group_names[5] = "arm_left_joint_6_b";
         left_arm_group_names[6] = "arm_left_joint_7_t";
-        std::vector<motoman_msgs::DynamicJointsGroup> left_arm_group_points = BuildGroupPoints(current_joint_values, req.jointTraj, left_arm_group_names, 0);
+        std::vector<motoman_msgs::DynamicJointsGroup> left_arm_group_points = BuildGroupPoints(current_joint_values, full_jointTraj, left_arm_group_names, 0);
         ROS_INFO("Generated left arm group trajectory with %zu points", left_arm_group_points.size());
         std::vector<std::string> right_arm_group_names(7);
         right_arm_group_names[0] = "arm_right_joint_1_s";
@@ -387,18 +450,18 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, moto
         right_arm_group_names[4] = "arm_right_joint_5_r";
         right_arm_group_names[5] = "arm_right_joint_6_b";
         right_arm_group_names[6] = "arm_right_joint_7_t";
-        std::vector<motoman_msgs::DynamicJointsGroup> right_arm_group_points = BuildGroupPoints(current_joint_values, req.jointTraj, right_arm_group_names, 1);
+        std::vector<motoman_msgs::DynamicJointsGroup> right_arm_group_points = BuildGroupPoints(current_joint_values, full_jointTraj, right_arm_group_names, 1);
         ROS_INFO("Generated right arm group trajectory with %zu points", right_arm_group_points.size());
         std::vector<std::string> torso_1_group_names(1);
         torso_1_group_names[0] = "torso_joint_b1";
-        std::vector<motoman_msgs::DynamicJointsGroup> torso_1_group_points = BuildGroupPoints(current_joint_values, req.jointTraj, torso_1_group_names, 2);
+        std::vector<motoman_msgs::DynamicJointsGroup> torso_1_group_points = BuildGroupPoints(current_joint_values, full_jointTraj, torso_1_group_names, 2);
         ROS_INFO("Generated torso 1 group trajectory with %zu points", torso_1_group_points.size());
         std::vector<std::string> torso_2_group_names(1);
         torso_2_group_names[0] = "torso_joint_b2";
-        std::vector<motoman_msgs::DynamicJointsGroup> torso_2_group_points = BuildGroupPoints(current_joint_values, req.jointTraj, torso_2_group_names, 3);
+        std::vector<motoman_msgs::DynamicJointsGroup> torso_2_group_points = BuildGroupPoints(current_joint_values, full_jointTraj, torso_2_group_names, 3);
         ROS_INFO("Generated torso 2 group trajectory with %zu points", torso_2_group_points.size());
         // Safety check
-        size_t expected_size = req.jointTraj.points.size();
+        size_t expected_size = full_jointTraj.points.size();
         if (left_arm_group_points.size() != expected_size || right_arm_group_points.size() != expected_size || torso_1_group_points.size() != expected_size || torso_2_group_points.size() != expected_size)
         {
             ROS_ERROR("Failure generating trajectories for each group");
@@ -460,62 +523,29 @@ bool move_callback(motoman_moveit::convert_trajectory_server::Request &req, moto
             ROS_INFO("Trajectory execution service call returned SUCCESS, waiting for execution to finish");
         }
     }
+    // Get a map for the target joint states
+    std::map<std::string, double> target_joint_values = GenerateNameValueMap(full_jointTraj.joint_names, full_jointTraj.points[full_jointTraj.points.size() - 1].positions);
     // Wait for the trajectory to finish, plus a little buffer time
-    ros::Duration trajectory_exec_duration = (req.jointTraj.points[req.jointTraj.points.size() - 1].time_from_start * EXEC_TIME_FRACTION) + ros::Duration(EXEC_TIME_BUFFER);
+    ros::Duration trajectory_exec_duration = (full_jointTraj.points[full_jointTraj.points.size() - 1].time_from_start * EXEC_TIME_FRACTION) + ros::Duration(EXEC_TIME_BUFFER);
     trajectory_exec_duration.sleep();
-    // Now, check to see if we've reached the target
-    // Copy the current joint states
-    g_joint_state_mutex.lock();
-    std::vector<sensor_msgs::JointState> check_current_states = g_joint_states;
-    g_joint_state_mutex.unlock();
-    // Insert all joints states into a map
-    std::map<std::string, double> check_current_joint_values;
-    for (size_t sdx = 0; sdx < current_states.size(); sdx++)
+    // Check if target reached
+    for (int32_t checks = 0; checks < TARGET_REACHED_CHECKS; checks++)
     {
-        const sensor_msgs::JointState& check_current_state = check_current_states[sdx];
-        if (check_current_state.name.size() != check_current_state.position.size())
+        ros::Duration(TARGET_REACHED_CHECK_WAIT).sleep();
+        bool target_reached = CheckIfTargetReached(target_joint_values);
+        if (target_reached)
         {
-            ROS_ERROR("Invalid joint state for group %zu when trying to check if trajectory execution finished", sdx);
-            res.success = false;
+            ROS_INFO("Target reached on check %d of %d", checks, TARGET_REACHED_CHECKS);
+            res.success = true;
             return true;
-        }
-        for (size_t idx = 0; idx < check_current_state.name.size(); idx++)
-        {
-            std::string joint_name = check_current_state.name[idx];
-            double joint_position = check_current_state.position[idx];
-            check_current_joint_values[joint_name] = joint_position;
-        }
-    }
-    // Get an equivalent map for the target joint states
-    std::map<std::string, double> target_joint_values = GenerateNameValueMap(req.jointTraj.joint_names, req.jointTraj.points[req.jointTraj.points.size() - 1].positions);
-    // Make sure the target is reached within the desired tolerance
-    std::map<std::string, double>::const_iterator target_joint_values_itr;
-    for (target_joint_values_itr = target_joint_values.begin(); target_joint_values_itr != target_joint_values.end(); ++target_joint_values_itr)
-    {
-        std::string joint_name = target_joint_values_itr->first;
-        double target_joint_value = target_joint_values_itr->second;
-        // Look up the joint in the joint state
-        std::map<std::string, double>::const_iterator found_state_value = check_current_joint_values.find(joint_name);
-        if (found_state_value != check_current_joint_values.end())
-        {
-            double state_joint_value = found_state_value->second;
-            double joint_value_delta = fabs(target_joint_value - state_joint_value);
-            if (joint_value_delta >= TARGET_REACHED_THRESHOLD)
-            {
-                ROS_ERROR("Joint %s did not reach target value %f, is at %f instead", joint_name.c_str(), target_joint_value, state_joint_value);
-                res.success = false;
-                return true;
-            }
         }
         else
         {
-            ROS_ERROR("Couldn't find joint state value for joint %s when trying to check if trajectory execution finished", joint_name.c_str());
-            res.success = false;
-            return true;
+            ROS_WARN("Target not reached on check %d of %d", checks, TARGET_REACHED_CHECKS);
         }
     }
-    ROS_INFO("Target reached");
-    res.success = true;
+    ROS_ERROR("Target not reached in %d checks", TARGET_REACHED_CHECKS);
+    res.success = false;
     return true;
 }
 
