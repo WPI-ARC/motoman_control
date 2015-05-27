@@ -54,12 +54,21 @@ class PickItem(smach.State):
                 # 
                 min_x, max_x, min_y, max_y, min_z, _ = rospy.get_param("/shelf"+"/bins/"+userdata.bin)
                 # TODO: Convert to base frame
-                Tbase_shelf = numpy.array([PoseToMatrix(pose)]) # Transform form base to shelf
+                rospy.logerr('>>>>>>>>>>>>>>>>>>>>>> before converting bin bound>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+                Tbase_shelf = PoseToMatrix(pose) # Transform form base to shelf
+                rospy.logerr('pose msg')
+                rospy.logerr(str(pose))
+                rospy.logerr(type(pose))
+                rospy.logerr('transform base to shelf')
+                rospy.logerr(str(Tbase_shelf))
+                rospy.logerr(type(Tbase_shelf))
+
                 min_y_base = numpy.dot(Tbase_shelf, numpy.array([[0], [min_y], [0], [1]])) [1]
                 max_y_base = numpy.dot(Tbase_shelf, numpy.array([[0], [max_y], [0], [1]])) [1]
                 min_x_base = numpy.dot(Tbase_shelf, numpy.array([[min_x], [0], [0], [1]])) [0]
                 max_x_base = numpy.dot(Tbase_shelf, numpy.array([[max_x], [0], [0], [1]])) [0]
                 min_z_base = numpy.dot(Tbase_shelf, numpy.array([[0], [0], [min_z], [1]])) [2]
+
                 rospy.logerr('>>>>>>>>>>>>>>>>>>>>>> after conver bin bound>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
                 
                 cutoff1, cutoff2 = min_y_base + (0.14 * sqrt(2)/2), max_y_base - (0.14 * sqrt(2)/2)
