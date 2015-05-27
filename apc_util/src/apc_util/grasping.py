@@ -201,6 +201,7 @@ def execute_wallgrasp_right(group, bin_min_x, bin_min_y, bin_max_y, bin_min_z):
         quat = QuaternionFromAxisAngle( [0, 0, 1], numpy.pi/4.0 )
         Rotz = PoseFromComponents([0, 0, 0], quat)
         Rotz_msg = ComposePoses(unit_vector, Rotz)
+        rospy.logerr('>>>>>>>>>>>>>>>>>>>>>> after rotation >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
 
         pregrasp.position.x = x_msg
         pregrasp.position.y = y_msg
