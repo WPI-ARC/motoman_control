@@ -132,7 +132,7 @@ class Scoop(smach.State):
 
         # SCOOP
         self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
-        self.arm.set_planning_time(15)
+        self.arm.set_planning_time(10)
         self.arm.set_planner_id("RRTConnectkConfigDefault")
         self.arm.set_pose_reference_frame("/shelf")
 
@@ -184,60 +184,24 @@ class Scoop(smach.State):
         # ##################################################################
 
 
-        horizontalPose = self.convertFrameRobotToShelf(horizontalPose)
-        rospy.loginfo("planning to horizontal config")
-        self.arm.set_pose_reference_frame("/base_link")
 
-        # add_shelf(Shelf.PADDED)
+
+
+        add_shelf(Shelf.PADDED)
         # remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED
-        # self.arm.set_pose_target(horizontalPose)
-        # self.arm.set_joint_value_target(jointConfigHor)
-        target_pose = Pose()
-        target_pose.position.x = 0.57313
-        target_pose.position.y = -0.74604
-        target_pose.position.z= 1.2178
-        target_pose.orientation.x = 0
-        target_pose.orientation.y = 0.70711
-        target_pose.orientation.z = 0.70711
-        target_pose.orientation.w = 0
+        self.arm.set_joint_value_target(jointConfigHor)
+
+        rospy.loginfo("planning to jointConfigHor")
         plan = self.arm.plan()
-        if not self.move(plan.joint_trajectory):
+
+        rospy.loginfo("Moving to jointConfigHor")
+        if not move(self.arm, plan.joint_trajectory):
+            rospy.logerr("Failed to get to jointConfigHor")
             return 'Failure'
-        #
-        #
-        # quat1 = transformations.quaternion_about_axis(-1.57079633, (0, 0, 1))
-        # rospy.loginfo(quat1)
-        #
-        # quat2 = transformations.quaternion_multiply( quat1, [0.16997, -0.63061, 0.73307, 0.18988])
-        # rospy.loginfo(quat2)
-        # #
-        # #
-        # target_pose.orientation.x = quat2[0]
-        # target_pose.orientation.y = quat2[1]
-        # target_pose.orientation.z = quat2[2]
-        # target_pose.orientation.w = quat2[3]
-        #
-        #
-        # self.arm.set_pose_target(target_pose)
-        # plan = self.arm.plan()
-        # if not self.move(plan.joint_trajectory):
-        #     return 'Failure'
 
-        rospy.sleep(5)
 
-        target_pose = Pose()
-        target_pose.position.x = 0.71689
-        target_pose.position.y = -0.69707
-        target_pose.position.z = 1.2177
-        target_pose.orientation.x = -0.28911
-        target_pose.orientation.y =  0.64506
-        target_pose.orientation.z =0.64562
-        target_pose.orientation.w = -0.28895
 
-        if not self.follow_constrained_path(target_pose):
-            rospy.loginfo("FAILED to follow constrained path")
-            return 'Failure'
-        
+        horizontalPose = self.convertFrameRobotToShelf(horizontalPose)
         if not self.scoopBin(horizontalPose):
             return 'Failure'
         # rospy.sleep(100)
@@ -755,9 +719,10 @@ class Scoop(smach.State):
         # add_shelf(Shelf.PADDED)
         remove_shelf()
         self.arm.set_goal_tolerance(0.01)
+        self.arm.set_planner_id("RRTstarkConfigDefault")
         self.arm.set_pose_reference_frame("/base_link")
         self.arm.set_pose_target(target_pose)
-        self.arm.set_planning_time(120)
+        self.arm.set_planning_time(20)
         rospy.loginfo("planning constrained path")
         plan = self.arm.plan()
         rospy.loginfo("moving constrained path")
