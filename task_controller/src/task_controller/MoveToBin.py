@@ -22,6 +22,7 @@ class MoveToBin(smach.State):
         from apc_util.moveit import goto_pose
         from apc_util.shelf import bin_pose
         target = bin_pose(userdata.bin).pose
+        target.position.z += 0.02
         if userdata.bin in "IKL":
             target.position.x -= 0.1
             target.position.z += 0.1

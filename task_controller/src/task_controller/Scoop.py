@@ -103,7 +103,7 @@ class Scoop(smach.State):
         if self.targetBin == "A":  # SCOOP SUCCESS
             # horiztonal pose
             jointConfigHor = [2.787122819843751, 1.1426674464611235, -0.4407243014959283, -2.938360463288102, -1.7825824022519545, 1.877092883918891, -1.8864029108808542, -1.7389067722224323]
-
+            # jointConfigHor = [2.782707824398671, 1.1213539604121765, -0.5105509676099902, -2.95, -1.8127950575104665, 1.8751692165531906, -1.8956069620580396, -1.843186568028629]
             # default
             # jointConfigHor = [2.608074188232422, -0.29658669233322144, 0.8934586644172668, 1.7289633750915527, 1.573803424835205, 1.2867212295532227, 1.4699939489364624, -2.8265552520751953]
 
@@ -122,6 +122,7 @@ class Scoop(smach.State):
 
             # horizontal pose  DOESN"T FINISH CARTESIAN PATH INTO BIN (69%)
             jointConfigHor = [-2.8819607919477774, -2.5683663777443138, 1.9, -2.241769564971686, 1.1787675479307382, -0.5392291309261772, -1.8531964931997877, -1.8695438375092903]
+
             # jointConfigHor = [-2.831730496183794, -2.7264830881170523, 1.6366395998456265, -2.1613363852348173, 1.3968113538046523, -0.6176682002638111, -1.843012465236674, -1.7061506709410292]
             # default
             # jointConfigHor = 
@@ -663,27 +664,27 @@ class Scoop(smach.State):
         #     rospy.loginfo("FAILED going to horizontal pose")
         #     return False
 
-        # THIS BLOCK OF CODE FOR OBTAINING JOINT CONFIGURATIONS FOR PLANNING ONLY, SHOULD BE COMMENTED OUT FOR ACTUAL RUNS
-        rospy.sleep(1.0)
-        rospy.loginfo("going to horiztonal pose")
-        self.arm.set_pose_target(horizontalPose)
-        plan = self.arm.plan()
-        if not len(plan.joint_trajectory.points) > 0:
-            return False
-        add_shelf(Shelf.FULL)
-        if not self.move(plan.joint_trajectory):
-            rospy.loginfo("FAILED going to horiztonal pose")
-            return False
+        # # THIS BLOCK OF CODE FOR OBTAINING JOINT CONFIGURATIONS FOR PLANNING ONLY, SHOULD BE COMMENTED OUT FOR ACTUAL RUNS
+        # rospy.sleep(1.0)
+        # rospy.loginfo("going to horiztonal pose")
+        # self.arm.set_pose_target(horizontalPose)
+        # plan = self.arm.plan()
+        # if not len(plan.joint_trajectory.points) > 0:
+        #     return False
+        # add_shelf(Shelf.FULL)
+        # if not self.move(plan.joint_trajectory):
+        #     rospy.loginfo("FAILED going to horiztonal pose")
+        #     return False
         
-        horizontalPose = self.convertFrameShelfToRobot(horizontalPose)
-        rospy.loginfo(horizontalPose)
+        # horizontalPose = self.convertFrameShelfToRobot(horizontalPose)
+        # rospy.loginfo(horizontalPose)
 
         raw_input("Hit enter to continue ")
-        with open("horizontal_joint_config.txt", "a+") as out_file:
-            joint_config = self.arm.get_current_joint_values()
-            out_file.write(str(self.targetBin) + "\t" + str(joint_config) + "\n")
-        # rospy.sleep(15.0)
-        ##################################################################################################
+        # with open("horizontal_joint_config.txt", "a+") as out_file:
+        #     joint_config = self.arm.get_current_joint_values()
+        #     out_file.write(str(self.targetBin) + "\t" + str(joint_config) + "\n")
+        # # rospy.sleep(15.0)
+        # ##################################################################################################
 
         remove_shelf()
         # IN

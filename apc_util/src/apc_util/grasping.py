@@ -15,7 +15,12 @@ from moveit_msgs.msg import PositionIKRequest
 from moveit_msgs.msg import MoveItErrorCodes
 from geometry_msgs.msg import PoseStamped
 import traceback
-
+from apc_util.shelf import get_shelf_pose
+from apc_util.transformation_helpers import *
+import numpy
+from geometry_msgs.msg import Pose
+from apc_util.transformation_helpers import *
+from copy import deepcopy
 
 class Gripper(object):
     def __init__(self):
@@ -104,6 +109,137 @@ def generate_grasps(item, pose, shelf_pose, pointcloud, bin):
                  % (item, pose, bin))
     return None, False
 
+def execute_wallgrasp_left(group, bin_min_x, bin_max_x, bin_min_y, bin_max_y, bin_min_z):
+    try:
+        poses = []
+        x_depth = (bin_max_x - bin_min_x) / 2.0
+        if x_depth > 0.10:
+            x_depth = 0.10
+        theta = numpy.pi/4.0
+        x = self.fingerlength * numpy.cos(theta)
+        y = self.fingerlength * numpy.sin(theta)
+
+        # Bin values
+        point_x = bin_min_x
+        point_y = bin_max_y
+
+        # pregrasp left
+        y_msg = point_y - y
+        x_msg = point_x - x + 0.07 # extra 7cm to move past the vertical beam
+
+        # pregrasp message
+        pregrasp = Pose()
+        approach = Pose()
+
+        unit_vector = PoseFromComponents([0, 0, 0], [0, 0, 0, 1])
+        quat = QuaternionFromAxisAngle( [0, 0, 1], -numpy.pi/4.0 )
+        Rotz = PoseFromComponents([0, 0, 0], quat)
+        Rotz_msg = ComposePoses(unit_vector, Rotz)
+
+        pregrasp.position.x = x_msg
+        pregrasp.position.y = y_msg
+        pregrasp.postiion.z = bin_min_z + 0.02
+        pregrasp.rotation = Rotz_msg.rotation
+        approach = deepcopy(pregrasp)
+        approach.position.x -= 0.1 # set approach to be 10cm back from pregrasp
+
+        self.plan
+
+        # Cartesian move
+        poses.append(approach)
+        poses.append(pregrasp)
+        poses.append(deepcopy(poses[-1])) # move 1cm into wall
+        poses[-1].position.y += 0.01
+        poses.append(deepcopy(poses[-1])) # move forward into bin
+        poses[-1].position.x += x_depth
+
+        if not follow_path(self.arm, poses, False):
+            return False, "open"
+
+        if not gripper.grab():
+            rospy.loginfo("Executing cartesian retreat")
+            follow_path(group, [grasp.approach])  # If grasp fails, move back to approach pose
+            return False, "closed"
+
+        # TODO: Retreat
+        retreats.append(deepcopy(poses[-1]))
+        retreats.append(deepcopy(retreats[-1]))
+        retreats[-1].position.y -= 0.02
+        retreats.append(deepcopy(retreats[-1]))
+        retreats[-1].position.x -= x_depth - 0.05
+
+        if not follow_path(self.arm, retreats, False):
+            return False, "closed"
+    except:
+        print traceback.format_exc()
+        rospy.logerr(str(traceback.format_exc()))
+
+    return success
+
+def execute_wallgrasp_right(group, bin_min_x, bin_min_y, bin_max_y, bin_min_z):
+    try:
+        poses = []
+        retreats = []
+
+        theta = numpy.pi/4.0
+        x = self.fingerlength * numpy.cos(theta)
+        y = self.fingerlength * numpy.sin(theta)
+
+        # Bin values
+        point_x = bin_min_x
+        point_y = bin_max_y
+
+        # pregrasp right
+        y_msg_right = right_point_y + y
+        x_msg_right = right_point_x - x + 0.07 # extra 7cm to move past the vertical beam
+
+        # pregrasp message
+        pregrasp = Pose()
+        approach = Pose()
+
+        unit_vector = PoseFromComponents([0, 0, 0], [0, 0, 0, 1])
+        quat = QuaternionFromAxisAngle( [0, 0, 1], numpy.pi/4.0 )
+        Rotz = PoseFromComponents([0, 0, 0], quat)
+        Rotz_msg = ComposePoses(unit_vector, Rotz)
+        rospy.logerr('>>>>>>>>>>>>>>>>>>>>>> after rotation >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+
+        pregrasp.position.x = x_msg
+        pregrasp.position.y = y_msg
+        pregrasp.postiion.z = bin_min_z + 0.02
+        pregrasp.rotation = Rotz_msg.rotation
+        approach = deepcopy(pregrasp)
+        approach.position.x -= 0.1 # set approach to be 10cm back from pregrasp
+
+        # Cartesian move
+        poses.append(approach)
+        poses.append(pregrasp)
+        poses.append(deepcopy(poses[-1])) # move 1cm into wall
+        poses[-1].position.y -= 0.01
+        poses.append(deepcopy(poses[-1])) # move forward into bin
+        poses[-1].position.x += x_depth
+
+        if not follow_path(self.arm, poses, False):
+            return False, "open"
+
+        if not gripper.grab():
+            rospy.loginfo("Executing cartesian retreat")
+            follow_path(group, [grasp.approach])  # If grasp fails, move back to approach pose
+            return False, "closed"
+
+        # TODO: Retreat
+        retreats.append(deepcopy(poses[-1]))
+        retreats.append(deepcopy(retreats[-1]))
+        retreats[-1].position.y += 0.02
+        retreats.append(deepcopy(retreats[-1]))
+        retreats[-1].position.x -= x_depth - 0.05
+
+        if not follow_path(self.arm, retreats, False):
+            return False, "closed"
+    except:
+        print traceback.format_exc()
+        rospy.logerr(str(traceback.format_exc()))
+
+    return success
 
 def plan_grasps(group, grasps):
     cur_state = RobotState(
@@ -177,6 +313,7 @@ def plan_grasps(group, grasps):
             jump_threshold=0.0,
             avoid_collisions=True
         )
+
         if not success:
             continue
 
@@ -215,16 +352,16 @@ def execute_grasp(group, grasp, plan_to_approach, plan_to_grasp, plan_to_retreat
     #    return False
     if not move(group, plan_to_approach.joint_trajectory):
         rospy.logerr("Failed to got to approach pose")
-        return False
+        return False, 'open'
     rospy.loginfo("Executing cartesian approach")
     if not move(group, plan_to_grasp.joint_trajectory):
         rospy.logerr("Failed to execute approach")
-        return False
+        return False, 'open'
     if not gripper.grab():
         rospy.loginfo("Executing cartesian retreat")
         follow_path(group, [grasp.approach])  # If grasp fails, move back to approach pose
-        return False
+        return False, 'closed'
     if not move(group, plan_to_retreat.joint_trajectory):
         rospy.logerr("Failed to execute retreat")
-        return False
-    return True
+        return False, 'closed'
+    return True, 'closed'

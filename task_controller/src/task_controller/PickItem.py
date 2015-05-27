@@ -1,15 +1,16 @@
 import rospy
 import smach
+import numpy
 
 from sensor_msgs.msg import PointCloud2
 from geometry_msgs.msg import PoseStamped
 from math import sqrt
 
 from apc_util.collision import scene
-from apc_util.grasping import plan_grasps, execute_grasp, gripper, generate_grasps
+from apc_util.grasping import plan_grasps, execute_grasp, gripper, generate_grasps, execute_wallgrasp_left, execute_wallgrasp_right
 from apc_util.shelf import NO_SHELF, BIN, PADDED_SHELF, get_shelf_pose
 from apc_util.smach import on_exception
-
+from apc_util.transformation_helpers import *
 
 class PickItem(smach.State):
     """
@@ -18,7 +19,7 @@ class PickItem(smach.State):
 
     def __init__(self, robot):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],
-                             input_keys=['item', 'pose', 'points', 'bin'])
+                             input_keys=['item', 'pose', 'points', 'bin', 'gripper_status'], output_keys=['gripper_status'])
         self.arm = robot.arm_left_torso
 
         self.points = rospy.Publisher("/grasp_points", PointCloud2)
@@ -50,9 +51,33 @@ class PickItem(smach.State):
                 rospy.loginfo("Grasp: %s" % grasp)
             except StopIteration:
                 rospy.logwarn("No online grasps found.")
+                # 
+                min_x, max_x, min_y, max_y, min_z, _ = rospy.get_param("/shelf"+"/bins/"+userdata.bin)
+                # TODO: Convert to base frame
+                Tbase_shelf = numpy.array([PoseToMatrix(pose)]) # Transform form base to shelf
+                min_y_base = numpy.dot(Tbase_shelf, numpy.array([[0], [min_y], [0], [1]])) [1]
+                max_y_base = numpy.dot(Tbase_shelf, numpy.array([[0], [max_y], [0], [1]])) [1]
+                min_x_base = numpy.dot(Tbase_shelf, numpy.array([[min_x], [0], [0], [1]])) [0]
+                max_x_base = numpy.dot(Tbase_shelf, numpy.array([[max_x], [0], [0], [1]])) [0]
+                min_z_base = numpy.dot(Tbase_shelf, numpy.array([[0], [0], [min_z], [1]])) [2]
+                rospy.logerr('>>>>>>>>>>>>>>>>>>>>>> after conver bin bound>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+                
+                cutoff1, cutoff2 = min_y_base + (0.14 * sqrt(2)/2), max_y_base - (0.14 * sqrt(2)/2)
+                if userdata.pose.position.y < cutoff1:
+                    success = execute_wallgrasp_left(self.arm, min_x_base, max_x_base, min_y_base, max_y_base, min_z_base)
+                    if not success:
+                        return 'Failure'
+                elif userdata.pose.position.y < cutoff1:                    
+                    pass  # TODO: center grasp
+                else:
+                    success = execute_wallgrasp_right(self.arm, min_x_base, max_x_base, min_y_base, max_y_base, min_z_base)
+                    if not success:
+                        return 'Failure'
                 return "Failure"
 
-            if not execute_grasp(self.arm, grasp, plan_to_approach, plan_to_grasp, plan_to_retreat, shelf=NO_SHELF):
+            success, gripper_status = execute_grasp(self.arm, grasp, plan_to_approach, plan_to_grasp, plan_to_retreat, shelf=NO_SHELF)
+            userdata.gripper_status = gripper_status
+            if not success:
                 return "Failure"
 
         pose = PoseStamped()

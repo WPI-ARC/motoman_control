@@ -16,11 +16,19 @@ class ErrorHandler(smach.State):
 
     def __init__(self):
         smach.State.__init__(self, outcomes=['Continue', 'Failed', 'Fatal'],
-                             input_keys=['bin'])
+                             input_keys=['bin', 'gripper_status'], output_keys=['gripper_status'])
 
     @on_exception(failure_state="Failed")
     def execute(self, userdata):
         rospy.loginfo("ErrorHandler executing...")
+
+        if userdata.gripper_status == "closed":
+            for i in range(100):
+                rospy.logerr("********** Going to drop the item in 30 seconds **********")
+            for i in range(30):
+                rospy.logerr("********** Going to drop the item in %s seconds **********" % (30-i))
+                rospy.sleep(1)
+
         while robot_state.is_stopped():
             rospy.logwarn("Waiting until e-stop is removed to handle errors")
             rospy.sleep(1)
@@ -31,6 +39,7 @@ class ErrorHandler(smach.State):
 
         rospy.loginfo("Setting gripper to open state for safety")
         gripper.open()
+        userdata.gripper_status = "open"
 
         if robot_state.has_error():
             rospy.logerr("Robot alarm is set, going home should clear it")
