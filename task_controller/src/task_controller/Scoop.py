@@ -14,7 +14,11 @@ from std_msgs.msg import *
 
 from apc_util.moveit import follow_path, move
 # from apc_util.moveit import goto_pose, execute_known_trajectory
+<<<<<<< HEAD
 from apc_util.shelf import bin_pose, bin_pose_tray, add_shelf, remove_shelf, Shelf, get_shelf_pose, NO_SHELF, SIMPLE_SHELF, PADDED_SHELF, FULL_SHELF
+=======
+from apc_util.shelf import bin_pose, bin_pose_tray, add_shelf, remove_shelf, Shelf, get_shelf_pose, NO_SHELF, SIMPLE_SHELF, FULL_SHELF, PADDED_SHELF, add_padded_lab, remove_padded_lab
+>>>>>>> cb82b8e658d55fbebbd4b73a0e26395baeb67ace
 from apc_util.smach import on_exception
 # from constrained_path_generator.msg import *
 # from constrained_path_generator.srv import *
@@ -458,25 +462,25 @@ class Scoop(smach.State):
 
 
         # bins C, F, I, L
-        # target_pose = Pose()
-        # target_pose.position.x = 0.49195
-        # target_pose.position.y = -0.39594
-        # target_pose.position.z = 0.64392
-        # target_pose.orientation.x = 0.16997
-        # target_pose.orientation.y = -0.63061
-        # target_pose.orientation.z = 0.73307
-        # target_pose.orientation.w = 0.18988
+        target_pose = Pose()
+        target_pose.position.x = 0.49195
+        target_pose.position.y = -0.39594
+        target_pose.position.z = 0.64392
+        target_pose.orientation.x = 0.16997
+        target_pose.orientation.y = -0.63061
+        target_pose.orientation.z = 0.73307
+        target_pose.orientation.w = 0.18988
 
 
         #bins A, D, G, J,
-        target_pose = Pose()
-        target_pose.position.x = 0.24128
-        target_pose.position.y = 0.65743
-        target_pose.position.z = 0.72495
-        target_pose.orientation.x = -0.52171
-        target_pose.orientation.y = -0.28389
-        target_pose.orientation.z = -0.029079
-        target_pose.orientation.w = 0.80398
+        # target_pose = Pose()
+        # target_pose.position.x = 0.24128
+        # target_pose.position.y = 0.65743
+        # target_pose.position.z = 0.72495
+        # target_pose.orientation.x = -0.52171
+        # target_pose.orientation.y = -0.28389
+        # target_pose.orientation.z = -0.029079
+        # target_pose.orientation.w = 0.80398
         rospy.loginfo("Trying to follow constrained path")
 
         if not self.follow_constrained_path(target_pose):
@@ -776,10 +780,26 @@ class Scoop(smach.State):
         return True
 
     def follow_constrained_path(self, target_pose):
+
+        add_padded_lab()
+
+        tray_orientation = [0, 0, 0.966657, 0.256075]
+        target_pose_o = [target_pose.orientation.x,
+                         target_pose.orientation.y,
+                         target_pose.orientation.z,
+                         target_pose.orientation.w]
+        transformed_pose = transformations.quaternion_multiply(tray_orientation, target_pose_o)
+        rospy.loginfo(transformed_pose)
+        link_target_orientation = Pose()
+        link_target_orientation.orientation.x = transformed_pose[0]
+        link_target_orientation.orientation.y = transformed_pose[1]
+        link_target_orientation.orientation.z = transformed_pose[2]
+        link_target_orientation.orientation.w = transformed_pose[3]
+
         constraints = Constraints()
         orientation_constraint = OrientationConstraint( header=Header(stamp=rospy.Time.now(), frame_id="/base_link"),
-                                                        orientation=target_pose.orientation,
-                                                        link_name="arm_right_link_7_t",
+                                                        orientation=link_target_orientation.orientation,
+                                                        link_name="traybody_hand_right",
                                                         absolute_x_axis_tolerance=0.15,
                                                         absolute_y_axis_tolerance=3.14,
                                                         absolute_z_axis_tolerance=0.15,
@@ -793,23 +813,30 @@ class Scoop(smach.State):
         # constraints.position_constraints.append(position_constraint)
         constraints.orientation_constraints.append(orientation_constraint)
         self.arm.set_path_constraints(constraints)
+<<<<<<< HEAD
         # add_shelf(Shelf.FULL)
         remove_shelf()
+=======
+        add_shelf(Shelf.PADDED)
+        # remove_shelf()
+>>>>>>> cb82b8e658d55fbebbd4b73a0e26395baeb67ace
         self.arm.set_goal_tolerance(0.01)
         self.arm.set_planner_id("RRTstarkConfigDefault")
         self.arm.set_pose_reference_frame("/base_link")
         self.arm.set_pose_target(target_pose)
-        self.arm.set_planning_time(20)
+        self.arm.set_planning_time(30)
         rospy.loginfo("planning constrained path")
         plan = self.arm.plan()
         if not len(plan.joint_trajectory.points) > 0:
             return 'Failure'
         rospy.loginfo("moving constrained path")
+        remove_padded_lab()
         result = move(self.arm, plan.joint_trajectory)
         if not result:
             return 'Failure'
 
         rospy.loginfo("Success constrained path")
+        self.arm.clear_path_constraints()
         rospy.sleep(50)
 
         if result:
@@ -818,6 +845,7 @@ class Scoop(smach.State):
             rospy.logerr("constrained path failed to move")
 
         self.arm.clear_path_constraints()
+
 
         return result
 

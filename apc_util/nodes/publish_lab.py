@@ -137,22 +137,22 @@ if __name__ == '__main__':
     #     size=(0.01, 6, 3)
     # )
 
-    pose = PoseStamped()
-    pose.header.frame_id = "/base_link"
-    pose.header.stamp = rospy.Time.now()
-    pose.pose.position.x = 1.4732
-    pose.pose.position.y = 0
-    pose.pose.position.z = 0.4 - 0.127
-    pose.pose.orientation.x = 0
-    pose.pose.orientation.y = 0
-    pose.pose.orientation.z = 0
-    pose.pose.orientation.w = 1
-
-    scene.add_box(
-        name="table",
-        pose=pose,
-        size=(0.762, 2.44, 0.8)
-    )
+    # pose = PoseStamped()
+    # pose.header.frame_id = "/base_link"
+    # pose.header.stamp = rospy.Time.now()
+    # pose.pose.position.x = 1.4732
+    # pose.pose.position.y = 0
+    # pose.pose.position.z = 0.4 - 0.127
+    # pose.pose.orientation.x = 0
+    # pose.pose.orientation.y = 0
+    # pose.pose.orientation.z = 0
+    # pose.pose.orientation.w = 1
+    #
+    # scene.add_box(
+    #     name="table",
+    #     pose=pose,
+    #     size=(0.762, 2.44, 0.8)
+    # )
 
     pose = PoseStamped()
     pose.header.frame_id = "/base_link"
