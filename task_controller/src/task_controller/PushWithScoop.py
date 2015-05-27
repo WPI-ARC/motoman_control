@@ -108,8 +108,8 @@ class PushWithScoop(smach.State):
             verticalPose.position.z += 0.000
 
         elif targetBin == "G":  # SUCCESS!
-            # calibrated pose
-            jointConfigVert = [-3.0778138189525697, -2.3246408984053084, -0.6736506201571455, -0.946359191105711, -2.4200039133049778, -2.3, -0.31842623885311, 0.9511259625949199]
+            # calibrated pose ???????????????????????????????????????????????????
+            jointConfigVert = [0.9511259625949199, -3.0778138189525697, -2.3246408984053084, -0.6736506201571455, -0.946359191105711, -2.4200039133049778, -2.3, -0.31842623885311]
 
             self.shortRow = True
             self.isLeftToRight = True
