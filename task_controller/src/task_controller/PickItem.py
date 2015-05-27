@@ -18,7 +18,7 @@ class PickItem(smach.State):
 
     def __init__(self, robot):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],
-                             input_keys=['item', 'pose', 'points', 'bin'], output_keys=['gripper_status'])
+                             input_keys=['item', 'pose', 'points', 'bin', 'gripper_status'], output_keys=['gripper_status'])
         self.arm = robot.arm_left_torso
 
         self.points = rospy.Publisher("/grasp_points", PointCloud2)
