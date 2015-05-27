@@ -146,7 +146,7 @@ class Grasping:
             self.objectheightoffset = 0.0
         elif req.item == 'elmers_washable_no_run_school_glue':
             item = '../env/glue.env.xml'
-            self.objectheightoffset = -0.05
+            self.objectheightoffset = 0.0
         elif req.item == 'sharpie_accent_tank_style_highlighters':
             item = '../env/highlighters.env.xml'
             self.objectheightoffset = 0.0
