@@ -30,15 +30,15 @@ class PushWithScoop(smach.State):
 
     @on_exception(failure_state="Failure")
     def execute(self, userdata):
-        return 'Success'
+        # return 'Success'
 
-        targetBin = userdata.bin
+        self.targetBin = userdata.bin
         # startBin = "C"
 
         add_shelf(Shelf.PADDED)
-        rospy.loginfo("Trying to push with scoop in bin '"+targetBin+"' ")
+        rospy.loginfo("Trying to push with scoop in bin '"+self.targetBin+"' ")
 
-        verticalPose = bin_pose_tray(targetBin).pose
+        verticalPose = bin_pose_tray(self.targetBin).pose
         verticalPose.position.x += -0.364436
         verticalPose.position.y += 0.12305766
         verticalPose.position.z += 0.027
@@ -49,7 +49,7 @@ class PushWithScoop(smach.State):
                
         jointConfigVert = [0, 0, 0, 0, 0, 0, 0, 0]
 
-        if targetBin == "A":  # SUCCESS!
+        if self.targetBin == "A":  # SUCCESS!
             # calibrated pose
             jointConfigVert = [1.9681722954889078, -0.023200618121380513, 1.5089116451880789, 1.8039264439517484, 1.9849145300443676, 1.248039336029401, 1.620441408283454, -3.13]
 
@@ -59,7 +59,7 @@ class PushWithScoop(smach.State):
             verticalPose.position.z += 0.000
             # ^^ FINE POSITION TUNING FOR INDIVIDUAL BINS
 
-        elif targetBin == "B":  # SUCCESS! 
+        elif self.targetBin == "B":  # SUCCESS!
             # calibrated pose
             jointConfigVert = [-2.691808686026977, -2.8018998306066116, 1.3848981009275314, -2.282453315654881, 1.8152513141302793, -0.6202050989860174, -1.624154936000525, -0.3587748187263247]
  
@@ -68,7 +68,7 @@ class PushWithScoop(smach.State):
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
 
-        elif targetBin == "C":  # SUCCESS!
+        elif self.targetBin == "C":  # SUCCESS!
             # calibrated pose
             jointConfigVert = [0.1128913227811488, 0.17736465719817437, -1.0755894763756846, 1.734991297482921, 1.9132498375426665, 2.425141013887845, -1.0310688499779752, -2.4997632535514924]
 
@@ -77,7 +77,7 @@ class PushWithScoop(smach.State):
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
 
-        elif targetBin == "D":  # SUCCESS!
+        elif self.targetBin == "D":  # SUCCESS!
             # calibrated pose 
             jointConfigVert = [-2.223934986801738, 3.13, 1.2092354002259527, 0.9307218279859997, -1.8873873503542566, 2.2149979825293564, -1.2486240605659136, 0.28324722321298806]
 
@@ -87,7 +87,7 @@ class PushWithScoop(smach.State):
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
 
-        elif targetBin == "E":  # SUCCESS!
+        elif self.targetBin == "E":  # SUCCESS!
             # calibrated pose
             jointConfigVert = [2.9544418528587726, 1.3567262870651748, -1.3266391225690815, -0.22451889273765355, 2.064895928713241, 1.7098359105053893, 1.747522515305617, 2.125112210336924]
 
@@ -97,7 +97,7 @@ class PushWithScoop(smach.State):
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
 
-        elif targetBin == "F":  # NO VERTICAL POSE (collides with shelf????)
+        elif self.targetBin == "F":  # NO VERTICAL POSE (collides with shelf????)
             # old
             jointConfigVert = [0.1128913227811488, 0.17736465719817437, -1.0755894763756846, 1.734991297482921, 1.9132498375426665, 2.425141013887845, -1.0310688499779752, -2.4997632535514924]
 
@@ -107,9 +107,9 @@ class PushWithScoop(smach.State):
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
 
-        elif targetBin == "G":  # SUCCESS!
-            # calibrated pose ???????????????????????????????????????????????????
-            jointConfigVert = [0.9511259625949199, -3.0778138189525697, -2.3246408984053084, -0.6736506201571455, -0.946359191105711, -2.4200039133049778, -2.3, -0.31842623885311]
+        elif self.targetBin == "G":  # SUCCESS!
+            # calibrated pose THIS IS NOT THE RIGHT CONFIG< TORSO OUT OF RANGE
+            jointConfigVert = [-3.0778138189525697, -2.3246408984053084, -0.6736506201571455, -0.946359191105711, -2.4200039133049778, -2.3, -0.31842623885311, 0.9511259625949199]
 
             self.shortRow = True
             self.isLeftToRight = True
@@ -117,7 +117,7 @@ class PushWithScoop(smach.State):
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
 
-        elif targetBin == "H":  # NO VERTICAL POSE - no valid goal states, in collision with cylinder around torso
+        elif self.targetBin == "H":  # NO VERTICAL POSE - no valid goal states, in collision with cylinder around torso
             # pose FAILED
             jointConfigVert = [2.4718291585873913, 1.1047984538173783, 1.5290256049994881, -2.1169639224415793, -2.0890748066865283, -2.178313072949579, 1.57456751422334, -1.7351008864298179]
 
@@ -128,7 +128,7 @@ class PushWithScoop(smach.State):
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
 
-        elif targetBin == "I":  # NO VERTICAL POSE - no valid goal states, in collision with cylinder around torso
+        elif self.targetBin == "I":  # NO VERTICAL POSE - no valid goal states, in collision with cylinder around torso
             # old
             jointConfigVert = [1.3418513542538393, -1.9163393148721648, 1.8999111796476877, 1.9555683274308242, 2.085973354202339, 0.8327696820366999, 1.521983626079816, 0.9235781887349414]
 
@@ -138,7 +138,7 @@ class PushWithScoop(smach.State):
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
 
-        elif targetBin == "J":  # FAILED - pushing items (completed 85%)
+        elif self.targetBin == "J":  # FAILED - pushing items (completed 85%)
             # calibrated pose
             jointConfigVert = [-2.814859477213427, 1.171284271024935, 1.2964470093710962, -1.8496939730019695, 2.154119940035741, -2.417159189716691, 0.29654290371162795, -3.13]
 
@@ -147,7 +147,7 @@ class PushWithScoop(smach.State):
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
 
-        elif targetBin == "K":  # NO VERTICAL POSE - no valid goal states, in collision with cylinder around torso
+        elif self.targetBin == "K":  # NO VERTICAL POSE - no valid goal states, in collision with cylinder around torso
             # old
             jointConfigVert = [2.7000695658667015, -0.8731849060533569, -0.5379493727737572, 2.7276986404944212, -2.206815270597627, 1.0851166746411938, 1.5169290144011378, 1.6070088457908016]
 
@@ -156,7 +156,7 @@ class PushWithScoop(smach.State):
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
 
-        elif targetBin == "L":  # SUCCESS!
+        elif self.targetBin == "L":  # SUCCESS!
             # calibrated pose
             jointConfigVert = [1.2086075801715137, 0.23124532053402494, -1.7309804228879488, -1.2106734273580417, 1.8133929146598422, 1.1998904379674205, 1.7356579754157866, -3.13]
 
@@ -256,16 +256,16 @@ class PushWithScoop(smach.State):
         remove_shelf()
 
         # TODO: USE FOLLOWING CODE BLOCK ONCE PATHS ARE PRE-COMPUTED #####################
-        # if not execute_known_trajectory(self.arm, 'Pick', targetBin):
+        # if not execute_known_trajectory(self.arm, 'Pick', self.targetBin):
         # if not execute_known_trajectory(self.arm, 'Pick', startBin):
         #     return 'Failure'
         # remove_shelf()
-        # if not execute_known_trajectory(self.arm, 'Dump', targetBin):
+        # if not execute_known_trajectory(self.arm, 'Dump', self.targetBin):
         #     return 'Failure'
         # add_shelf()
-        # if not execute_known_trajectory(self.arm, 'Lift', targetBin):
+        # if not execute_known_trajectory(self.arm, 'Lift', self.targetBin):
         #     return 'Failure'
-        # if not execute_known_trajectory(self.arm, 'Home', targetBin):
+        # if not execute_known_trajectory(self.arm, 'Home', self.targetBin):
         #     return 'Failure'
         # return 'Success'
         ##################################################################################
@@ -337,6 +337,10 @@ class PushWithScoop(smach.State):
 
         verticalPose = self.convertFrameShelfToRobot(verticalPose)
         rospy.loginfo(verticalPose)
+
+        with open("vertical_joint_config.txt", "a+") as out_file:
+            joint_config = self.arm.get_current_joint_values()
+            out_file.write(str(self.targetBin) + "\t" + str(joint_config) + "\n")
         raw_input("Hit enter to continue ")
         # rospy.sleep(15.0)
         ####################################################################################################
