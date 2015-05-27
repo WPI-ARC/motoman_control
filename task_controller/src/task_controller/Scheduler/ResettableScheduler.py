@@ -21,7 +21,7 @@ class ResettableScheduler(smach.State):
             no_scoop = rospy.get_param("/no_scoop")
             # Add suggested scoop if it makes sense
             if data.new_information.name not in no_scoop and len(data.new_information.contents) <= 2:
-                self.schedule.append(data.new_information)
+                self.insert_scoop(data.new_information)
         data.new_information = None
 
         schedule, location = [], 0
@@ -63,3 +63,12 @@ class ResettableScheduler(smach.State):
         self.schedule, self.location = schedule, 0
         self._m.release()
         rospy.loginfo("New schedule loaded")
+
+    def insert_scoop(self, item):
+        if len(item.contents) > 1:
+            self.schedule.append(item)
+            return
+        for i, action in enumerate(self.schedule):
+            if len(action.contents) > 1:
+                self.schedule.insert(i, item)
+                return
