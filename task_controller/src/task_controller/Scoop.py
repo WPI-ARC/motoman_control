@@ -38,8 +38,6 @@ class Scoop(smach.State):
 
     @on_exception(failure_state="Failure")
     def execute(self, userdata):
-        # COMMENT OUT THIS RETURN UNLESS 'PushWithScoop' IS CALLING EVERYTHING
-        # return 'Success'
 
         self.targetBin = userdata.bin
         jointConfigHor = [0, 0, 0, 0, 0, 0, 0, 0]
@@ -536,26 +534,27 @@ class Scoop(smach.State):
         #######################################################################
 
 
-        # bins C, F, I, L
-        target_pose = Pose()
-        target_pose.position.x = 0.49195
-        target_pose.position.y = -0.39594
-        target_pose.position.z = 0.64392
-        target_pose.orientation.x = 0.16997
-        target_pose.orientation.y = -0.63061
-        target_pose.orientation.z = 0.73307
-        target_pose.orientation.w = 0.18988
+        if self.targetBin == 'C' or self.targetBin == 'F' or self.targetBin == 'I' or self.targetBin == 'L' or self.targetBin == 'B' or self.targetBin == 'E' or self.targetBin == 'H' or self.targetBin == 'K':
+            rospy.loginfo("Bin C/F/I/L/B/E/H/K")
+            target_pose = Pose()
+            target_pose.position.x = 0.49195
+            target_pose.position.y = -0.39594
+            target_pose.position.z = 0.64392
+            target_pose.orientation.x = 0.16997
+            target_pose.orientation.y = -0.63061
+            target_pose.orientation.z = 0.73307
+            target_pose.orientation.w = 0.18988
 
+        else:
+            target_pose = Pose()
+            target_pose.position.x = 0.24128
+            target_pose.position.y = 0.65743
+            target_pose.position.z = 0.72495
+            target_pose.orientation.x = -0.52171
+            target_pose.orientation.y = -0.28389
+            target_pose.orientation.z = -0.029079
+            target_pose.orientation.w = 0.80398
 
-        #bins A, D, G, J,
-        # target_pose = Pose()
-        # target_pose.position.x = 0.24128
-        # target_pose.position.y = 0.65743
-        # target_pose.position.z = 0.72495
-        # target_pose.orientation.x = -0.52171
-        # target_pose.orientation.y = -0.28389
-        # target_pose.orientation.z = -0.029079
-        # target_pose.orientation.w = 0.80398
         rospy.loginfo("Trying to follow constrained path")
 
         if not self.follow_constrained_path(target_pose):
@@ -664,6 +663,7 @@ class Scoop(smach.State):
         return pose
 
     def scoopBin(self, horizontalPose):
+        # add_shelf()
         remove_shelf()
 
         # # rospy.loginfo("planning cartesian path into bin")
@@ -841,25 +841,55 @@ class Scoop(smach.State):
         return True
 
     def follow_constrained_path(self, target_pose):
+        add_shelf(Shelf.PADDED)
 
-        add_padded_lab()
+        if self.targetBin == 'C' or self.targetBin == 'F' or self.targetBin == 'B' or self.targetBin == 'E':
+            other_pose = self.arm.get_current_pose().pose
+            other_pose.position.z -= 0.3
+            # other_pose.position.x += 0.15
+            other_pose.position.y += 0.1
 
-        tray_orientation = [0, 0, 0.966657, 0.256075]
-        target_pose_o = [target_pose.orientation.x,
-                         target_pose.orientation.y,
-                         target_pose.orientation.z,
-                         target_pose.orientation.w]
-        transformed_pose = transformations.quaternion_multiply(tray_orientation, target_pose_o)
-        rospy.loginfo(transformed_pose)
-        link_target_orientation = Pose()
-        link_target_orientation.orientation.x = transformed_pose[0]
-        link_target_orientation.orientation.y = transformed_pose[1]
-        link_target_orientation.orientation.z = transformed_pose[2]
-        link_target_orientation.orientation.w = transformed_pose[3]
+
+        elif self.targetBin == 'I' or self.targetBin == 'L' or self.targetBin == 'H' or self.targetBin == 'K':
+            other_pose = self.arm.get_current_pose().pose
+            other_pose.position.z += 0.15
+            other_pose.position.y -= 0.15
+            other_pose.position.x += 0.1
+
+
+        elif self.targetBin == 'A' or self.targetBin == 'D':
+            other_pose = self.arm.get_current_pose().pose
+            other_pose.position.z -= 0.15
+            other_pose.position.x += 0.1
+
+
+        else:
+            other_pose = self.arm.get_current_pose().pose
+            other_pose.position.z -= 0.15
+            other_pose.position.x += 0.1
+
+
+        other_pose.orientation = target_pose.orientation
+
+        self.arm.set_pose_target(other_pose)
+        self.arm.set_planning_time(15)
+        self.arm.set_goal_position_tolerance(1.5)
+        plan = self.arm.plan()
+
+        if not plan.joint_trajectory:
+            rospy.logerr("Failed to get plan for first step in constrained path")
+            return False
+
+        if not move(self.arm, plan.joint_trajectory):
+            rospy.logerr("Failed to move first step in constrained path")
+            return False
+
+        right_side_orientation = quat_to_tray(target_pose.orientation)
+
 
         constraints = Constraints()
         orientation_constraint = OrientationConstraint( header=Header(stamp=rospy.Time.now(), frame_id="/base_link"),
-                                                        orientation=link_target_orientation.orientation,
+                                                        orientation= right_side_orientation,
                                                         link_name="traybody_hand_right",
                                                         absolute_x_axis_tolerance=0.15,
                                                         absolute_y_axis_tolerance=3.14,
@@ -874,34 +904,27 @@ class Scoop(smach.State):
         # constraints.position_constraints.append(position_constraint)
         constraints.orientation_constraints.append(orientation_constraint)
         self.arm.set_path_constraints(constraints)
-        add_shelf(Shelf.PADDED)
+        # add_shelf(Shelf.PADDED)
         # remove_shelf()
         self.arm.set_goal_tolerance(0.01)
-        self.arm.set_planner_id("RRTstarkConfigDefault")
+
         self.arm.set_pose_reference_frame("/base_link")
         self.arm.set_pose_target(target_pose)
-        self.arm.set_planning_time(30)
+        self.arm.set_planning_time(25)
         rospy.loginfo("planning constrained path")
         plan = self.arm.plan()
-        rospy.loginfo("moving constrained path")
         remove_padded_lab()
-        result = move(self.arm, plan.joint_trajectory)
-        if not result:
-            return 'Failure'
+
+        if not plan.joint_trajectory:
+            plan = self.arm.plan()
+
+
+        if not move(self.arm, plan.joint_trajectory):
+            return False
 
         rospy.loginfo("Success constrained path")
         self.arm.clear_path_constraints()
-        rospy.sleep(50)
-
-        if result:
-            rospy.loginfo("constrained path moved successfully")
-        else:
-            rospy.logerr("constrained path failed to move")
-
-        self.arm.clear_path_constraints()
-
-
-        return result
+        return True
 
 
 
@@ -963,3 +986,17 @@ def make_vector(x, y, z):
 #     else:
 #         rospy.logerr("Failed to execute cartesian path")
 #         return False
+
+
+def quat_to_tray(q1):
+    q2 = Quaternion()
+    q2.x =-0.262
+    q2.y = 0.965
+    q2.z = 0
+    q2.w = 0
+    qOut = Quaternion()
+    qOut.w = q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z
+    qOut.x = q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y
+    qOut.y = q1.w * q2.y - q1.x * q2.z + q1.y * q2.w + q1.z * q2.x
+    qOut.z = q1.w * q2.z + q1.x * q2.y - q1.y * q2.x + q1.z * q2.w
+    return qOut
