@@ -809,13 +809,8 @@ class Scoop(smach.State):
         # constraints.position_constraints.append(position_constraint)
         constraints.orientation_constraints.append(orientation_constraint)
         self.arm.set_path_constraints(constraints)
-<<<<<<< HEAD
-        # add_shelf(Shelf.FULL)
-        remove_shelf()
-=======
         add_shelf(Shelf.PADDED)
         # remove_shelf()
->>>>>>> cb82b8e658d55fbebbd4b73a0e26395baeb67ace
         self.arm.set_goal_tolerance(0.01)
         self.arm.set_planner_id("RRTstarkConfigDefault")
         self.arm.set_pose_reference_frame("/base_link")
