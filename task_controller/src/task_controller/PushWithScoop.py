@@ -30,7 +30,7 @@ class PushWithScoop(smach.State):
 
     @on_exception(failure_state="Failure")
     def execute(self, userdata):
-        # return 'Success'
+        return 'Success'
 
         self.targetBin = userdata.bin
         # startBin = "C"
@@ -46,7 +46,7 @@ class PushWithScoop(smach.State):
         # verticalPose.position.z += 0.022
 
         
-        # verticalPose.position.x += 0.05
+        verticalPose.position.x += 0.08
                
         jointConfigVert = [0, 0, 0, 0, 0, 0, 0, 0]
 
@@ -397,8 +397,8 @@ class PushWithScoop(smach.State):
                                                get_current_pose().pose)]
 
         poses.append(deepcopy(poses[-1]))
-        xDist1 = 0.12
-        # xDist1 = 0.07
+        # xDist1 = 0.12
+        xDist1 = 0.04
         poses[-1].position.x += xDist1
         if self.isLeftToRight:
             poses[-1].position.y += 0.05

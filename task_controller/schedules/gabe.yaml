@@ -1,6 +1,48 @@
 - action: scoop
-  bin: F
+  bin: G
   item: "crayola_64_ct"
   others: []
-
-
+# - action: scoop
+#   bin: B
+#   item: "crayola_64_ct"
+#   others: []
+# - action: scoop
+#   bin: C
+#   item: "crayola_64_ct"
+#   others: []
+# - action: scoop
+#   bin: D
+#   item: "crayola_64_ct"
+#   others: []
+# - action: scoop
+#   bin: E
+#   item: "crayola_64_ct"
+#   others: []
+# - action: scoop
+#   bin: F
+#   item: "crayola_64_ct"
+#   others: []
+# - action: scoop
+#   bin: G
+#   item: "crayola_64_ct"
+#   others: []
+# - action: scoop
+#   bin: H
+#   item: "crayola_64_ct"
+#   others: []
+# - action: scoop
+#   bin: I
+#   item: "crayola_64_ct"
+#   others: []
+# - action: scoop
+#   bin: J
+#   item: "crayola_64_ct"
+#   others: []
+# - action: scoop
+#   bin: K
+#   item: "crayola_64_ct"
+#   others: []
+# - action: scoop
+#   bin: L
+#   item: "crayola_64_ct"
+#   others: []

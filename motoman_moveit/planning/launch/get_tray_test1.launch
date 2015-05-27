@@ -1,8 +1,0 @@
-<launch>
-  <node name="get_tray_server" pkg="motoman_moveit" type="get_tray_server" output="screen"/>
-  <!--
-<node name="attach_tray_server" pkg="motoman_moveit" type="attach_tray_server" output="screen"/>
-  -->
-<node name="get_tray_test1" pkg="motoman_moveit" type="get_tray_test1" respawn="false" output="screen" />
-
-</launch>
