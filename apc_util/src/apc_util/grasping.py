@@ -109,67 +109,6 @@ def generate_grasps(item, pose, shelf_pose, pointcloud, bin):
                  % (item, pose, bin))
     return None, False
 
-def retreat_cheezit(self, grasp, group, response):
-    # Special case for retreating for object cheezit
-    # Get Bin bounds
-    Tbase_shelf = PoseToMatrix(get_shelf_pose())
-    bin_bounds = rospy.get_param("/shelf/bins/"+req.bin)
-    _, _, bin_min_y, bin_max_y, _, _ = bin_bounds
-    poses = [grasp.pregrasp]
-    # Move up to allow rotation w/o collision. 1.5cm*sin(45deg)=1.06066cm
-    poses.append(deepcopy(poses[-1]))
-    poses[-1].position.z += 0.015 
-    # Move object to center of bin along y-axis and Rotate 90 deg about z
-    Ttemp = PoseToMatrix(poses[-1])
-    rotate_angle = numpy.pi/4.0
-    Rotz = numpy.array([[numpy.cos(rotate_angle), -numpy.sin(rotate_angle), 0, 0],
-                        [numpy.sin(rotate_angle), numpy.cos(rotate_angle), 0, 0],
-                        [0, 0, 1, 0],
-                        [0, 0, 0, 1]])
-    Trotate = numpy.dot(Ttemp, Rotz)
-    poses.append(PoseFromMatrix(Trotate))
-    bin_y_mid_base = numpy.dot(Tbase_shelf, numpy.array([ [(bin_max_y + bin_min_y)/2.0], [0], [0], [1] ]))
-    poses[-1].position.y = bin_y_mid_base[1]
-    # Move object out of bin
-    poses.append(deepcopy(poses[-1]))
-    poses[-1].position.x = 0.4
-    retreat_response, success = get_cartesian_path(
-        group_name=group.get_name(),
-        start_state=RobotState(
-            joint_state=JointState(
-                name=response.solution.joint_trajectory.joint_names,
-                position=response.solution.joint_trajectory.points[-1].positions
-            )
-        ),  
-        waypoints=poses,
-        max_step=0.01,
-        jump_threshold=0.0,
-        avoid_collisions=True
-    )
-    return retreat_response, success
-
-def retreat_normal(self, grasp, group, response):
-    # Normal retreat for object
-    poses = [grasp.pregrasp]
-    poses.append(deepcopy(poses[-1]))
-    poses[-1].position.z += 0.032
-    poses.append(deepcopy(poses[-1]))
-    poses[-1].position.x = 0.4
-    retreat_response, success = get_cartesian_path(
-        group_name=group.get_name(),
-        start_state=RobotState(
-            joint_state=JointState(
-                name=response.solution.joint_trajectory.joint_names,
-                position=response.solution.joint_trajectory.points[-1].positions
-            )
-        ),  
-        waypoints=poses,
-        max_step=0.01,
-        jump_threshold=0.0,
-        avoid_collisions=True
-    )
-    return retreat_response, success
-
 def execute_wallgrasp_left(group, bin_min_x, bin_max_x, bin_min_y, bin_max_y, bin_min_z):
     try:
         poses = []
@@ -373,11 +312,6 @@ def plan_grasps(group, grasps):
             jump_threshold=0.0,
             avoid_collisions=True
         )
-
-        # if  ischeezit:
-        #     retreat_response, success = self.retreat_cheezit(grasp, group, response)
-        # else:
-        #     retreat_response, success = self.retreat_normal(grasp, group, response)
 
         if not success:
             continue

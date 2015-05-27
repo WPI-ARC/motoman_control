@@ -44,9 +44,6 @@ class PickItem(smach.State):
 
         #with PADDED_SHELF:
         with BIN(userdata.bin):
-            # ischeezit = userdata.item == "cheezit_big_original"
-            # grasps = plan_grasps(self.arm, grasps, ischeezit)
-
             grasps = plan_grasps(self.arm, grasps)
 
             try:
