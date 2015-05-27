@@ -33,7 +33,7 @@ class PushWithScoop(smach.State):
         return 'Success'
 
         targetBin = userdata.bin
-        startBin = "C"
+        # startBin = "C"
 
         add_shelf(Shelf.PADDED)
         rospy.loginfo("Trying to push with scoop in bin '"+targetBin+"' ")
@@ -42,6 +42,7 @@ class PushWithScoop(smach.State):
         verticalPose.position.x += -0.364436
         verticalPose.position.y += 0.12305766
         verticalPose.position.z += 0.027
+        # verticalPose.position.z += 0.022
 
         
         # verticalPose.position.x += 0.10
@@ -49,261 +50,117 @@ class PushWithScoop(smach.State):
         jointConfigVert = [0, 0, 0, 0, 0, 0, 0, 0]
 
         if targetBin == "A":  # SUCCESS!
-            jointConfigVert = [2.5595746841414515, 0.464565161611615,
-                               0.7995587587134984, 1.4159480744835042,
-                               2.2800272291503196, 1.3764880379224627,
-                               1.6300233677200444, -3.047011403282726]
-            # jointConfigVert = [2.608074188232422, -0.29658669233322144,
-            #                    0.8934586644172668, 1.7289633750915527,
-            #                    1.573803424835205, 1.2867212295532227,
-            #                    1.4699939489364624, -2.8265552520751953]
-            # jointConfigVert = [1.8550660233112988, 1.6181294232479404, -1.9, -1.756166935994761, -1.7730111631047138, 1.957310590193865, 1.9, -0.7786028921501054]
-            
             # calibrated pose
-            jointConfigVert = [2.6137727006975755, 0.27899243349947583, 0.7389160268552958, 1.4653395180902151, 2.189070343882386, 1.4118932987747352, 1.560457381601488, -3.0869455473464407]
+            jointConfigVert = [1.9681722954889078, -0.023200618121380513, 1.5089116451880789, 1.8039264439517484, 1.9849145300443676, 1.248039336029401, 1.620441408283454, -3.13]
 
-            startBin = "A"
             self.isLeftToRight = True
-            rospy.loginfo("Start bin is A")
-            # FINE POSITION TUNING FOR INDIVIDUAL BIN
+            verticalPose.position.x += 0.000
+            verticalPose.position.y += 0.000
+            verticalPose.position.z += 0.000
+            # ^^ FINE POSITION TUNING FOR INDIVIDUAL BINS
+
+        elif targetBin == "B":  # SUCCESS! 
+            # calibrated pose
+            jointConfigVert = [-2.691808686026977, -2.8018998306066116, 1.3848981009275314, -2.282453315654881, 1.8152513141302793, -0.6202050989860174, -1.624154936000525, -0.3587748187263247]
+ 
+            self.isLeftToRight = True
             verticalPose.position.x += 0.000
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
 
-        elif targetBin == "B":  # SUCCESS! ?
-            # jointConfigVert = [-2.5986629014403406, -3.13,
-            #                    1.124880809692111, -2.1124974525884332,
-            #                    2.2554161000398736, -0.7326626517880344,
-            #                    -1.6110166411827231, -0.35330049905878025]
-            
+        elif targetBin == "C":  # SUCCESS!
             # calibrated pose
-            jointConfigVert = [2.6137727006975755, 0.27899243349947583,
-                               0.7389160268552958, 1.4653395180902151,
-                               2.189070343882386, 1.4118932987747352,
-                               1.560457381601488, -3.0869455473464407]
+            jointConfigVert = [0.1128913227811488, 0.17736465719817437, -1.0755894763756846, 1.734991297482921, 1.9132498375426665, 2.425141013887845, -1.0310688499779752, -2.4997632535514924]
 
-
-            # jointConfigVert = [-2.5978700168593374, -3.13,
-            #                    1.1255868983950605, -2.1128080197842634,
-            #                    2.25490606375529, -0.7316401551593789,
-            #                    -1.6112575301010594, -0.3519577358500504]
-            startBin = "B"
-            self.isLeftToRight = True
-            rospy.loginfo("Start bin is B")
-            verticalPose.position.x += 0.000
-            verticalPose.position.y += 0.000
-            verticalPose.position.z += 0.000
-
-        elif targetBin == "C":  # SUCCESS!??
-            # jointConfigVert = [-0.0016260933939344995, -0.18668142488256312,
-            #                    -1.1687536891942618, 1.5983031252014734,
-            #                    2.290626346507633, 2.6421657959603513,
-            #                    -1.1015965088612327, -2.3296530515276337]
-            # jointConfigVert = [-0.0016374592439972815, -0.1865226293880318,
-            #                    -1.1688353367091011, 1.5983587793581666,
-            #                    2.2906470149164506, 2.6426032256816816,
-            #                    -1.1016744572816994, -2.32926361562009]
-            # jointConfigVert = [0.0040605606931176505, -0.042725640701036766,
-            #                        -1.1746684600577848, 1.5461580759549074,
-            #                        2.1642181196951555, 2.6403918192892895,
-            #                        -1.0958055610071453, -2.3301066646967525]
-            
-            # calibrated pose?
-            jointConfigVert = [0.004158356610633061, -0.043309078200721274,
-                               -1.174495592917089, 1.5465294842620085,
-                               2.16411681064316, 2.6409477619605117,
-                               -1.09564314286045, -2.3294694471020616]
-
-
-            startBin = "C"
             self.isLeftToRight = False
-            rospy.loginfo("Start bin is C")
             verticalPose.position.x += 0.000
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
 
         elif targetBin == "D":  # SUCCESS!
-            # jointConfigVert = [2.905459411335167, 1.9791786685536243,
-            #                    0.44221823283736134, -0.15580747083376772,
-            #                    2.2349300507549397, 1.8704137525544255,
-            #                    1.8999704363459953, -2.7326506516615354]
-            # jointConfigVert = [2.70, 2.7412068843841553,
-            #                0.09522612392902374, -1.1803146600723267,
-            #                2.0825026512145996, 1.8705755472183228,
-            #                1.5874949216842651, -2.919917583465576]
-            # jointConfigVert = [-2.1951535608033046, 3.018454266779244,
-            #                    0.5807550111192726, 0.6298542142851014,
-            #                    -2.036710154955131, 1.8853789121877667,
-            #                    -0.6420257478504342, 0.4298769819321938]
+            # calibrated pose 
+            jointConfigVert = [-2.223934986801738, 3.13, 1.2092354002259527, 0.9307218279859997, -1.8873873503542566, 2.2149979825293564, -1.2486240605659136, 0.28324722321298806]
 
-            # calibrated pose
-            jointConfigVert = [-2.2398608492713974, 3.13, 0.5933260431529276, 0.6862511575930882, -1.9933141457383554, 1.813331954923848, -0.7744940568463594, 0.42078248185188505]
-
-            startBin = "D"
-            self.isLeftToRight = True
-            self.shortRow = True
-            rospy.loginfo("Start bin is D")
-            verticalPose.position.x += 0.000
-            verticalPose.position.y += 0.000
-            verticalPose.position.z += 0.000
-
-        elif targetBin == "E":  # mostly success
-            # jointConfigVert = [2.89667019844055176, 1.4224945306777954, 
-            #                   -0.7801656126976013, -0.2995363175868988,
-            #                   2.195582151412964, 1.864424467086792,
-            #                   1.6602683067321777, 2.2383474826812744];
-            # jointConfigVert = [2.70, 1.4224945306777954, 
-            #                   -0.7801656126976013, -0.2995363175868988,
-            #                   2.00, 1.864424467086792,
-            #                   1.5602683067321777, 2.2383474826812744];
-
-            # calibrated pose
-            jointConfigVert = [2.896731181332888, 1.4224328959161416,
-                               -0.7801878328930121, -0.29955686652762814,
-                               2.19562926767692, 1.8643866096824873,
-                               1.6603444430029486, 2.2383027052730324]
-
-
-            startBin = "E"
-            rospy.loginfo("Start bin is E")
             self.shortRow = True
             self.isLeftToRight = True
             verticalPose.position.x += 0.000
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
 
-        elif targetBin == "F":
-            # jointConfigVert = [1.5194422006607056,1.810523509979248,
-            #                -1.2088792324066162, 1.3328773975372314,
-            #                -1.8696491718292236, 1.8829082250595093,
-            #                -1.2678426504135132, 1.606799840927124]
+        elif targetBin == "E":  # SUCCESS!
+            # calibrated pose
+            jointConfigVert = [2.9544418528587726, 1.3567262870651748, -1.3266391225690815, -0.22451889273765355, 2.064895928713241, 1.7098359105053893, 1.747522515305617, 2.125112210336924]
 
-            # calibrated pose, THIS CONFIG DOES NOT WORK, has invalid goal state?
-            jointConfigVert = [1.7063605500004102,1.1749238170939902,
-                               -1.526817689242944, -1.1213039820084452,
-                               1.5413271651472102, -1.749239622770513,
-                               -1.5439300754469097, 1.7140113060163809];
+            self.shortRow = True
+            self.isLeftToRight = True
+            verticalPose.position.x += 0.000
+            verticalPose.position.y += 0.000
+            verticalPose.position.z += 0.000
 
+        elif targetBin == "F":  # NO VERTICAL POSE (collides with shelf????)
+            # old
+            jointConfigVert = [0.1128913227811488, 0.17736465719817437, -1.0755894763756846, 1.734991297482921, 1.9132498375426665, 2.425141013887845, -1.0310688499779752, -2.4997632535514924]
 
-            startBin = "F"
-            rospy.loginfo("Start bin is F")
             self.shortRow = True
             self.isLeftToRight = False
             verticalPose.position.x += 0.000
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
 
-        elif targetBin == "G":
-            # jointConfigVert = [2.4718597530192796, 1.1048811085600885,
-            #                    1.5289698505492917, -2.1170583249526715,
-            #                    -2.089052808535928, -2.178255911290856,
-            #                    1.5745535013303766, -1.735037580794114];
+        elif targetBin == "G":  # SUCCESS!
+            # calibrated pose
+            jointConfigVert = [-3.0778138189525697, -2.3246408984053084, -0.6736506201571455, -0.946359191105711, -2.4200039133049778, -2.3, -0.31842623885311, 0.9511259625949199]
 
-            # calibrated pose but torso is flipped around
-            jointConfigVert = [-1.72846998032329, 0.527944370647683, -1.285662669980829, 2.2452045118101553, -1.7400052769824363, -1.7215820650867517, -0.6760469606491811, -2.5538767782227345]
-
-            startBin = "G"
-            rospy.loginfo("Start bin is G")
             self.shortRow = True
             self.isLeftToRight = True
             verticalPose.position.x += 0.000
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
 
-        elif targetBin == "H":
-            # jointConfigVert = [2.95, 1.8770301342010498,
-            #                1.2306787967681885, -0.586269199848175,
-            #                2.2546935081481934, 1.669684886932373,
-            #                1.7160991430282593, 0.7149554491043091]
-            # jointConfigVert = [2.5, 1.8770301342010498,
-            #                    1.2306787967681885, 0.0,
-            #                    1.8046935081481934, 1.669684886932373,
-            #                    1.4160991430282593, 0.7149554491043091]
-
-            # calibrated pose??
+        elif targetBin == "H":  # NO VERTICAL POSE - no valid goal states, in collision with cylinder around torso
+            # pose FAILED
             jointConfigVert = [2.4718291585873913, 1.1047984538173783, 1.5290256049994881, -2.1169639224415793, -2.0890748066865283, -2.178313072949579, 1.57456751422334, -1.7351008864298179]
 
-            startBin = "H"
-            rospy.loginfo("Start bin is H")
+
             self.shortRow = True
             self.isLeftToRight = True
             verticalPose.position.x += 0.000
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
 
-        elif targetBin == "I":
-            # jointConfigVert = [1.5194591283798218, 1.251114845275879,
-            #                -1.8047455549240112, 2.224393606185913,
-            #                -1.9810069799423218, 1.1204286813735962,
-            #                -1.827457070350647, 0.8016403913497925]
+        elif targetBin == "I":  # NO VERTICAL POSE - no valid goal states, in collision with cylinder around torso
+            # old
+            jointConfigVert = [1.3418513542538393, -1.9163393148721648, 1.8999111796476877, 1.9555683274308242, 2.085973354202339, 0.8327696820366999, 1.521983626079816, 0.9235781887349414]
 
-            # calibrated pose???
-            jointConfigVert = [1.3418513542538393, -1.9163393148721648, 
-                               1.8999111796476877, 1.9555683274308242,
-                               2.085973354202339, 0.8327696820366999,
-                               1.521983626079816, 0.9235781887349414]
-
-            startBin = "I"
-            rospy.loginfo("Start bin is I")
             self.shortRow = True
             self.isLeftToRight = False
             verticalPose.position.x += 0.000
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
 
-        elif targetBin == "J":  # PUSH SUCCESS!
-            # jointConfigVert = [2.608074188232422, 0.4578932821750641,
-            #                1.8810696601867676, -0.5525216460227966,
-            #                1.9467278718948364, 0.23977181315422058,
-            #                0.7547944784164429, -0.43715447187423706]
+        elif targetBin == "J":  # FAILED - pushing items (completed 85%)
+            # calibrated pose
+            jointConfigVert = [-2.814859477213427, 1.171284271024935, 1.2964470093710962, -1.8496939730019695, 2.154119940035741, -2.417159189716691, 0.29654290371162795, -3.13]
 
-            # calibrated pose??
-            jointConfigVert = [2.957, 0.5288634230001568, 1.9, -1.1030885861508928, 2.1357994781192318, 0.38148062542826117, 0.4869255952258231, 0.28968305534108246]
-
-            startBin = "J"
             self.isLeftToRight = True
             verticalPose.position.x += 0.000
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
-            rospy.loginfo("Start bin is J")
 
-        elif targetBin == "K":
-            # jointConfigVert = [2.95, -0.873210072517395,
-            #                -0.5380352735519409, 2.7276151180267334,
-            #                -2.2068514823913574, 1.085071086883545,
-            #                1.8169622421264648, 1.6070705652236938]
-            jointConfigVert = [2.70, -0.873210072517395,
-                           -0.5380352735519409, 2.7276151180267334,
-                           -2.2068514823913574, 1.085071086883545,
-                           1.5169622421264648, 1.6070705652236938]
-            
+        elif targetBin == "K":  # NO VERTICAL POSE - no valid goal states, in collision with cylinder around torso
+            # old
+            jointConfigVert = [2.7000695658667015, -0.8731849060533569, -0.5379493727737572, 2.7276986404944212, -2.206815270597627, 1.0851166746411938, 1.5169290144011378, 1.6070088457908016]
 
-            # calibrated pose
-
-
-            startBin = "K"
             self.isLeftToRight = True
             verticalPose.position.x += 0.000
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
-            rospy.loginfo("Start bin is K")
 
-        elif targetBin == "L":
-            # jointConfigVert = [1.7551809549331665, 0.04665006324648857,
-            #                -1.8453619480133057, 1.8693605661392212,
-            #                -1.189427375793457, 1.5698546171188354,
-            #                -1.871213436126709, 0.8811066150665283]
-            jointConfigVert = [0.9074255864220171,0.08074085792646817,
-                               -1.1945154197247605, -1.106070858741708,
-                               1.9850889243853769, 1.1827696548230184,
-                               1.5891019593508724, -2.824429110575666]
-
+        elif targetBin == "L":  # SUCCESS!
             # calibrated pose
+            jointConfigVert = [1.2086075801715137, 0.23124532053402494, -1.7309804228879488, -1.2106734273580417, 1.8133929146598422, 1.1998904379674205, 1.7356579754157866, -3.13]
 
-
-            startBin = "L"
             self.isLeftToRight = False
-            rospy.loginfo("Start bin is L")
             verticalPose.position.x += 0.000
             verticalPose.position.y += 0.000
             verticalPose.position.z += 0.000
@@ -416,6 +273,7 @@ class PushWithScoop(smach.State):
         self.arm.set_planning_time(15)
         self.arm.set_planner_id("RRTConnectkConfigDefault")
         # remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED HERE
+        # add_shelf(Shelf.PADDED)
         add_shelf(Shelf.PADDED)
         self.arm.set_joint_value_target(jointConfigVert)
         plan = self.arm.plan()
@@ -425,7 +283,7 @@ class PushWithScoop(smach.State):
         self.arm.set_pose_reference_frame("/shelf")
 
         verticalPose = self.convertFrameRobotToShelf(verticalPose)
-        rospy.loginfo(verticalPose)
+        # rospy.loginfo(verticalPose)
         if not self.pushToSide(verticalPose, jointConfigVert):
             return 'Failure'
         return 'Success'
@@ -466,18 +324,20 @@ class PushWithScoop(smach.State):
         #     # rospy.sleep(10)
         #     return False
 
-        # # THIS BLOCK OF CODE FOR OBTAINING JOINT CONFIGURATIONS FOR PLANNING ONLY, SHOULD BE COMMENTED OUT FOR ACTUAL RUNS
-        # remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED HERE
-        # rospy.sleep(1.0)
-        # self.arm.set_pose_target(verticalPose)
-        # plan = self.arm.plan()
-        # rospy.loginfo("going to vertical pose")
-        # if not self.move(plan.joint_trajectory):
-        #     rospy.loginfo("FAILED going to vertical pose")
-        #     return False
+        # THIS BLOCK OF CODE FOR OBTAINING JOINT CONFIGURATIONS FOR PLANNING ONLY, SHOULD BE COMMENTED OUT FOR ACTUAL RUNS
+        remove_shelf()  # SHELF SHOULD NOT ACTUALLY BE REMOVED HERE
+        rospy.sleep(1.0)
+        self.arm.set_pose_target(verticalPose)
+        plan = self.arm.plan()
+        rospy.loginfo("going to vertical pose")
+        if not self.move(plan.joint_trajectory):
+            rospy.loginfo("FAILED going to vertical pose")
+            return False
 
+
+        verticalPose = self.convertFrameShelfToRobot(verticalPose)
         rospy.loginfo(verticalPose)
-        # raw_input("Hit enter to continue ")
+        raw_input("Hit enter to continue ")
         # rospy.sleep(15.0)
         ####################################################################################################
 
@@ -499,7 +359,8 @@ class PushWithScoop(smach.State):
             poses[-1].position.z += -xDist*0.0875  # 5 degrees
 
         poses.append(deepcopy(poses[-1]))
-        xDist = 0.35
+        # xDist = 0.35
+        xDist = 0.25
         poses[-1].position.x += xDist
         if self.isLeftToRight:
             poses[-1].position.y += 0.03
@@ -567,8 +428,8 @@ class PushWithScoop(smach.State):
                                                get_current_pose().pose)]
 
         poses.append(deepcopy(poses[-1]))
-        xDist = -0.12
-        # xDist = -0.02
+        # xDist = -0.12
+        xDist = -0.02
         poses[-1].position.x += xDist
         if self.isLeftToRight:
             poses[-1].position.y += -0.05
@@ -578,8 +439,7 @@ class PushWithScoop(smach.State):
             poses[-1].position.z += xDist*0.0875  # 5 degrees
 
         poses.append(deepcopy(poses[-1]))
-        xDist = -0.35
-        poses[-1].position.x += xDist
+        poses[-1].position.x += -xDist
         if self.isLeftToRight:
             poses[-1].position.y += -0.03
         else:
@@ -631,6 +491,27 @@ class PushWithScoop(smach.State):
         pose.position.x += -(shelf_position.x)
         pose.position.y += -(shelf_position.y)
         pose.position.z += -(shelf_position.z)
+
+        # pose.position.x += -1.3535731570096812
+        # pose.position.y += -0.08215183129781853
+        # pose.position.z += 0.135
+
+        # pose.position.x += -1.39485775456
+        # pose.position.y += -0.0744959997413
+        # pose.position.z += 0.045
+
+        # pose.position.x += -1.40009583376
+        # pose.position.y += -0.0841733373195
+        # pose.position.z += 0.045
+
+        return pose
+
+    def convertFrameShelfToRobot(self, pose):
+        shelf_position = get_shelf_pose().pose.position
+
+        pose.position.x += (shelf_position.x)
+        pose.position.y += (shelf_position.y)
+        pose.position.z += (shelf_position.z)
 
         # pose.position.x += -1.3535731570096812
         # pose.position.y += -0.08215183129781853

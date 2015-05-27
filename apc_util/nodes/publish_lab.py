@@ -13,7 +13,7 @@ from geometry_msgs.msg import Pose, Point, Quaternion
 
 def add_order_bin(x, y):
     # Necessary parameters
-    bin_width, bin_depth, bin_height = 0.65, 0.4, 0.53
+    bin_width, bin_depth, bin_height = 0.65, 0.4, 0.43
     interior_width, interior_depth, interior_height = 0.45, 0.29, 0.18
     wall_width, wall_depth = (bin_width-interior_width)/2, (bin_depth-interior_depth)/2
     base_height = bin_height-interior_height
@@ -136,6 +136,40 @@ if __name__ == '__main__':
     #     pose=pose,
     #     size=(0.01, 6, 3)
     # )
+
+    pose = PoseStamped()
+    pose.header.frame_id = "/base_link"
+    pose.header.stamp = rospy.Time.now()
+    pose.pose.position.x = 1.4732
+    pose.pose.position.y = 0
+    pose.pose.position.z = 0.4 - 0.127
+    pose.pose.orientation.x = 0
+    pose.pose.orientation.y = 0
+    pose.pose.orientation.z = 0
+    pose.pose.orientation.w = 1
+
+    scene.add_box(
+        name="table",
+        pose=pose,
+        size=(0.762, 2.44, 0.8)
+    )
+
+    pose = PoseStamped()
+    pose.header.frame_id = "/base_link"
+    pose.header.stamp = rospy.Time.now()
+    pose.pose.position.x = -0.55
+    pose.pose.position.y = 0
+    pose.pose.position.z = 0.15
+    pose.pose.orientation.x = 0
+    pose.pose.orientation.y = 0
+    pose.pose.orientation.z = 0
+    pose.pose.orientation.w = 1
+
+    scene.add_box(
+        name="back_wiring",
+        pose=pose,
+        size=(0.5, 0.6, 0.3)
+    )
 
     pose = PoseStamped()
     pose.header.frame_id = "/base_link"

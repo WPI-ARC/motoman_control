@@ -75,7 +75,14 @@ def get_planning_scene(components):
 def get_cartesian_path(group_name, start_state, waypoints, max_step, jump_threshold, avoid_collisions):
     for i in range(5):
         try:
-            result = _get_cartesian_path(group_name, start_state, waypoints, max_step, jump_threshold, avoid_collisions)
+            result = _get_cartesian_path(
+                group_name=group_name,
+                start_state=start_state,
+                waypoints=waypoints,
+                max_step=max_step,
+                jump_threshold=jump_threshold,
+                avoid_collisions=avoid_collisions
+            )
             return result, True
         except rospy.ServiceException as e:
             rospy.logwarn("Failure with get_cartesian_path(%s, %s, %s, %s, %s, %s): %s"

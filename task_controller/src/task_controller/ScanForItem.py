@@ -45,10 +45,6 @@ class ScanForItem(smach.State):
                 if not success:
                     continue
 
-                if not publish_pointcloud_collision(response.result.collision_cloud):
-                    rospy.logwarn("Failed to publish pointcloud collisions")
-                    continue
-
                 userdata.pose = response.result.pose
                 userdata.points = response.result.pointcloud
                 return 'Success'

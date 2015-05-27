@@ -199,8 +199,6 @@ class Scoop(smach.State):
             rospy.logerr("Failed to get to jointConfigHor")
             return 'Failure'
 
-
-
         horizontalPose = self.convertFrameRobotToShelf(horizontalPose)
         if not self.scoopBin(horizontalPose):
             return 'Failure'
