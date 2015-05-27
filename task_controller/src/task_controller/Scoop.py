@@ -14,11 +14,7 @@ from std_msgs.msg import *
 
 from apc_util.moveit import follow_path, move
 # from apc_util.moveit import goto_pose, execute_known_trajectory
-<<<<<<< HEAD
-from apc_util.shelf import bin_pose, bin_pose_tray, add_shelf, remove_shelf, Shelf, get_shelf_pose, NO_SHELF, SIMPLE_SHELF, PADDED_SHELF, FULL_SHELF
-=======
 from apc_util.shelf import bin_pose, bin_pose_tray, add_shelf, remove_shelf, Shelf, get_shelf_pose, NO_SHELF, SIMPLE_SHELF, FULL_SHELF, PADDED_SHELF, add_padded_lab, remove_padded_lab
->>>>>>> cb82b8e658d55fbebbd4b73a0e26395baeb67ace
 from apc_util.smach import on_exception
 # from constrained_path_generator.msg import *
 # from constrained_path_generator.srv import *
