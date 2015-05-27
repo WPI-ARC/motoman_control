@@ -18,7 +18,7 @@ class PickItem(smach.State):
 
     def __init__(self, robot):
         smach.State.__init__(self, outcomes=['Success', 'Failure', 'Fatal'],
-                             input_keys=['item', 'pose', 'points', 'bin'])
+                             input_keys=['item', 'pose', 'points', 'bin'], output_keys=['gripper_status'])
         self.arm = robot.arm_left_torso
 
         self.points = rospy.Publisher("/grasp_points", PointCloud2)
@@ -52,7 +52,9 @@ class PickItem(smach.State):
                 rospy.logwarn("No online grasps found.")
                 return "Failure"
 
-            if not execute_grasp(self.arm, grasp, plan_to_approach, plan_to_grasp, plan_to_retreat, shelf=NO_SHELF):
+            success, gripper_status = execute_grasp(self.arm, grasp, plan_to_approach, plan_to_grasp, plan_to_retreat, shelf=NO_SHELF)
+            userdata.gripper_status = gripper_status
+            if not success:
                 return "Failure"
 
         pose = PoseStamped()

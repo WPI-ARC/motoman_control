@@ -215,16 +215,16 @@ def execute_grasp(group, grasp, plan_to_approach, plan_to_grasp, plan_to_retreat
     #    return False
     if not move(group, plan_to_approach.joint_trajectory):
         rospy.logerr("Failed to got to approach pose")
-        return False
+        return False, 'open'
     rospy.loginfo("Executing cartesian approach")
     if not move(group, plan_to_grasp.joint_trajectory):
         rospy.logerr("Failed to execute approach")
-        return False
+        return False, 'open'
     if not gripper.grab():
         rospy.loginfo("Executing cartesian retreat")
         follow_path(group, [grasp.approach])  # If grasp fails, move back to approach pose
-        return False
+        return False, 'closed'
     if not move(group, plan_to_retreat.joint_trajectory):
         rospy.logerr("Failed to execute retreat")
-        return False
-    return True
+        return False, 'closed'
+    return True, 'closed'
