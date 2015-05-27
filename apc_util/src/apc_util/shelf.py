@@ -119,6 +119,51 @@ def add_shelf(quality=Shelf.SIMPLE):
                 return
 
 
+def add_padded_lab():
+    rospy.loginfo("Adding padded order bin")
+    poses = []
+    objects = []
+
+    o_b_pose = Pose()
+    o_b_pose.orientation=Quaternion(x=0, y=0, z=0, w=1)
+    o_b_pose.position=Point(x=0.5, y=0.2, z=0.22)
+
+    objects.append(SolidPrimitive(
+        type=SolidPrimitive.BOX,
+        dimensions=[0.43, 0.68, 0.46])
+    )
+    poses.append(o_b_pose)
+
+    wiring_pose = Pose()
+    wiring_pose.orientation=Quaternion(x=0, y=0, z=0, w=1)
+    wiring_pose.position=Point(x=-.55, y=0, z=0.15)
+
+    objects.append(SolidPrimitive(
+        type=SolidPrimitive.BOX,
+        dimensions=[0.6, 0.7, 0.4]
+    ))
+
+    poses.append(wiring_pose)
+
+    co = CollisionObject()
+    co.operation = CollisionObject.ADD
+    co.id = "padded_lab"
+    co.header.frame_id = "/base_link"
+    co.header.stamp = rospy.Time.now()
+    co.primitives = objects
+    co.primitive_poses = poses
+
+    scene._pub_co.publish(co)
+
+
+def remove_padded_lab():
+    rospy.loginfo("Removing padded lab")
+    remove_object("padded_lab")
+    for dx, dy in [(0, 0), (1, 1), (1, -1), (-1, -1), (-1, 1)]:
+        remove_object("padded_lab"+str(dx)+str(dy))
+    rospy.sleep(5)
+
+
 def add_bin(bin, prefix="/shelf"):
     # Necessary parameters
     _, max_x, min_y, max_y, min_z, max_z = rospy.get_param(prefix+"/bins/"+bin)

@@ -14,7 +14,7 @@ from std_msgs.msg import *
 
 from apc_util.moveit import follow_path, move
 # from apc_util.moveit import goto_pose, execute_known_trajectory
-from apc_util.shelf import bin_pose, bin_pose_tray, add_shelf, remove_shelf, Shelf, get_shelf_pose, NO_SHELF, SIMPLE_SHELF, FULL_SHELF, PADDED_SHELF
+from apc_util.shelf import bin_pose, bin_pose_tray, add_shelf, remove_shelf, Shelf, get_shelf_pose, NO_SHELF, SIMPLE_SHELF, FULL_SHELF, PADDED_SHELF, add_padded_lab, remove_padded_lab
 from apc_util.smach import on_exception
 # from constrained_path_generator.msg import *
 # from constrained_path_generator.srv import *
@@ -44,7 +44,7 @@ class Scoop(smach.State):
         self.targetBin = userdata.bin
         jointConfigHor = [0, 0, 0, 0, 0, 0, 0, 0]
 
-        rospy.loginfo("Trying to scoop from bin '"+self.self.targetBin+"' ")
+        rospy.loginfo("Trying to scoop from bin '"+self.targetBin+"' ")
 
         # SCOOP
         self.arm.set_workspace([-3, -3, -3, 3, 3, 3])
@@ -53,7 +53,7 @@ class Scoop(smach.State):
         self.arm.set_pose_reference_frame("/shelf")
 
         # horiztonal pose relative to bin
-        horizontalPose = bin_pose_tray(self.self.targetBin).pose
+        horizontalPose = bin_pose_tray(self.targetBin).pose
         horizontalPose.position.x += -0.307581
         horizontalPose.position.y += -0.011221
         # horizontalPose.position.z += 0.05463
@@ -73,16 +73,16 @@ class Scoop(smach.State):
         middleOffset = -0.120
         rightOffset = 0.170
 
-        if (self.self.targetBin == "A" or self.self.targetBin == "D" or
-                self.self.targetBin == "G" or self.self.targetBin == "J"):
+        if (self.targetBin == "A" or self.targetBin == "D" or
+                self.targetBin == "G" or self.targetBin == "J"):
             horizontalPose.position.y += leftOffset
 
-        elif (self.self.targetBin == "B" or self.self.targetBin == "E" or
-                self.self.targetBin == "H" or self.self.targetBin == "K"):
+        elif (self.targetBin == "B" or self.targetBin == "E" or
+                self.targetBin == "H" or self.targetBin == "K"):
             horizontalPose.position.y += middleOffset
 
-        elif (self.self.targetBin == "C" or self.self.targetBin == "F" or
-                self.self.targetBin == "I" or self.self.targetBin == "L"):
+        elif (self.targetBin == "C" or self.targetBin == "F" or
+                self.targetBin == "I" or self.targetBin == "L"):
             horizontalPose.position.y += rightOffset
             self.rightColumn = True
 
@@ -333,7 +333,7 @@ class Scoop(smach.State):
         # add_shelf(Shelf.PADDED)
         rospy.loginfo("planning cartesian path out of bin")
 
-        if self.self.targetBin == "A":
+        if self.targetBin == "A":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -356,7 +356,7 @@ class Scoop(smach.State):
             # if not follow_path(self.arm, poses):
             #     return 'Failure'
 
-        elif self.self.targetBin == "B":
+        elif self.targetBin == "B":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -380,7 +380,7 @@ class Scoop(smach.State):
             if not follow_path(self.arm, poses):
                 return 'Failure'
 
-        elif self.self.targetBin == "C":
+        elif self.targetBin == "C":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -421,7 +421,7 @@ class Scoop(smach.State):
             # if not follow_path(self.arm, poses):
             #     return 'Failure'
 
-        elif self.self.targetBin == "D":
+        elif self.targetBin == "D":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -433,7 +433,7 @@ class Scoop(smach.State):
             if not follow_path(self.arm, poses):
                 return 'Failure'
 
-        elif self.self.targetBin == "E":
+        elif self.targetBin == "E":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -445,7 +445,7 @@ class Scoop(smach.State):
             if not follow_path(self.arm, poses):
                 return 'Failure'
 
-        elif self.self.targetBin == "F":
+        elif self.targetBin == "F":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -457,7 +457,7 @@ class Scoop(smach.State):
             if not follow_path(self.arm, poses):
                 return 'Failure'
 
-        elif self.self.targetBin == "G":
+        elif self.targetBin == "G":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -469,7 +469,7 @@ class Scoop(smach.State):
             if not follow_path(self.arm, poses):
                 return 'Failure'
 
-        elif self.self.targetBin == "H":
+        elif self.targetBin == "H":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -481,7 +481,7 @@ class Scoop(smach.State):
             if not follow_path(self.arm, poses):
                 return 'Failure'
 
-        elif self.self.targetBin == "I":
+        elif self.targetBin == "I":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -493,7 +493,7 @@ class Scoop(smach.State):
             if not follow_path(self.arm, poses):
                 return 'Failure'
 
-        elif self.self.targetBin == "J":
+        elif self.targetBin == "J":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -505,7 +505,7 @@ class Scoop(smach.State):
             if not follow_path(self.arm, poses):
                 return 'Failure'
 
-        elif self.self.targetBin == "K":
+        elif self.targetBin == "K":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -518,7 +518,7 @@ class Scoop(smach.State):
             if not follow_path(self.arm, poses):
                 return 'Failure'
 
-        elif self.self.targetBin == "L":
+        elif self.targetBin == "L":
             poses = [self.convertFrameRobotToShelf(self.arm.
                                                get_current_pose().pose)]
             # OUT + UP
@@ -537,25 +537,25 @@ class Scoop(smach.State):
 
 
         # bins C, F, I, L
-        # target_pose = Pose()
-        # target_pose.position.x = 0.49195
-        # target_pose.position.y = -0.39594
-        # target_pose.position.z = 0.64392
-        # target_pose.orientation.x = 0.16997
-        # target_pose.orientation.y = -0.63061
-        # target_pose.orientation.z = 0.73307
-        # target_pose.orientation.w = 0.18988
+        target_pose = Pose()
+        target_pose.position.x = 0.49195
+        target_pose.position.y = -0.39594
+        target_pose.position.z = 0.64392
+        target_pose.orientation.x = 0.16997
+        target_pose.orientation.y = -0.63061
+        target_pose.orientation.z = 0.73307
+        target_pose.orientation.w = 0.18988
 
 
         #bins A, D, G, J,
-        target_pose = Pose()
-        target_pose.position.x = 0.24128
-        target_pose.position.y = 0.65743
-        target_pose.position.z = 0.72495
-        target_pose.orientation.x = -0.52171
-        target_pose.orientation.y = -0.28389
-        target_pose.orientation.z = -0.029079
-        target_pose.orientation.w = 0.80398
+        # target_pose = Pose()
+        # target_pose.position.x = 0.24128
+        # target_pose.position.y = 0.65743
+        # target_pose.position.z = 0.72495
+        # target_pose.orientation.x = -0.52171
+        # target_pose.orientation.y = -0.28389
+        # target_pose.orientation.z = -0.029079
+        # target_pose.orientation.w = 0.80398
         rospy.loginfo("Trying to follow constrained path")
 
         if not self.follow_constrained_path(target_pose):
@@ -698,21 +698,21 @@ class Scoop(smach.State):
         #     return False
 
         # THIS BLOCK OF CODE FOR OBTAINING JOINT CONFIGURATIONS FOR PLANNING ONLY, SHOULD BE COMMENTED OUT FOR ACTUAL RUNS
-        rospy.sleep(1.0)
-        rospy.loginfo("going to horiztonal pose")
-        self.arm.set_pose_target(horizontalPose)
-        plan = self.arm.plan()
-        if not self.move(plan.joint_trajectory):
-            rospy.loginfo("FAILED going to horiztonal pose")
-            return False
-        
-        horizontalPose = self.convertFrameShelfToRobot(horizontalPose)
-        rospy.loginfo(horizontalPose)
-
-        # raw_input("Hit enter to continue ")
-        with open("horizontal_joint_config.txt", "a+") as out_file:
-            joint_config = self.arm.get_current_joint_values()
-            out_file.write(str(self.self.targetBin) + "\t" + str(joint_config) + "\n")
+        # rospy.sleep(1.0)
+        # rospy.loginfo("going to horiztonal pose")
+        # self.arm.set_pose_target(horizontalPose)
+        # plan = self.arm.plan()
+        # if not self.move(plan.joint_trajectory):
+        #     rospy.loginfo("FAILED going to horiztonal pose")
+        #     return False
+        #
+        # horizontalPose = self.convertFrameShelfToRobot(horizontalPose)
+        # rospy.loginfo(horizontalPose)
+        #
+        # # raw_input("Hit enter to continue ")
+        # with open("horizontal_joint_config.txt", "a+") as out_file:
+        #     joint_config = self.arm.get_current_joint_values()
+        #     out_file.write(str(self.targetBin) + "\t" + str(joint_config) + "\n")
         # rospy.sleep(15.0)
         ##################################################################################################
 
@@ -841,10 +841,26 @@ class Scoop(smach.State):
         return True
 
     def follow_constrained_path(self, target_pose):
+
+        add_padded_lab()
+
+        tray_orientation = [0, 0, 0.966657, 0.256075]
+        target_pose_o = [target_pose.orientation.x,
+                         target_pose.orientation.y,
+                         target_pose.orientation.z,
+                         target_pose.orientation.w]
+        transformed_pose = transformations.quaternion_multiply(tray_orientation, target_pose_o)
+        rospy.loginfo(transformed_pose)
+        link_target_orientation = Pose()
+        link_target_orientation.orientation.x = transformed_pose[0]
+        link_target_orientation.orientation.y = transformed_pose[1]
+        link_target_orientation.orientation.z = transformed_pose[2]
+        link_target_orientation.orientation.w = transformed_pose[3]
+
         constraints = Constraints()
         orientation_constraint = OrientationConstraint( header=Header(stamp=rospy.Time.now(), frame_id="/base_link"),
-                                                        orientation=target_pose.orientation,
-                                                        link_name="arm_right_link_7_t",
+                                                        orientation=link_target_orientation.orientation,
+                                                        link_name="traybody_hand_right",
                                                         absolute_x_axis_tolerance=0.15,
                                                         absolute_y_axis_tolerance=3.14,
                                                         absolute_z_axis_tolerance=0.15,
@@ -858,21 +874,23 @@ class Scoop(smach.State):
         # constraints.position_constraints.append(position_constraint)
         constraints.orientation_constraints.append(orientation_constraint)
         self.arm.set_path_constraints(constraints)
-        # add_shelf(Shelf.PADDED)
-        remove_shelf()
+        add_shelf(Shelf.PADDED)
+        # remove_shelf()
         self.arm.set_goal_tolerance(0.01)
         self.arm.set_planner_id("RRTstarkConfigDefault")
         self.arm.set_pose_reference_frame("/base_link")
         self.arm.set_pose_target(target_pose)
-        self.arm.set_planning_time(20)
+        self.arm.set_planning_time(30)
         rospy.loginfo("planning constrained path")
         plan = self.arm.plan()
         rospy.loginfo("moving constrained path")
+        remove_padded_lab()
         result = move(self.arm, plan.joint_trajectory)
         if not result:
             return 'Failure'
 
         rospy.loginfo("Success constrained path")
+        self.arm.clear_path_constraints()
         rospy.sleep(50)
 
         if result:
@@ -881,6 +899,7 @@ class Scoop(smach.State):
             rospy.logerr("constrained path failed to move")
 
         self.arm.clear_path_constraints()
+
 
         return result
 
