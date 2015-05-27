@@ -608,7 +608,7 @@ class Scoop(smach.State):
             poses[-1].orientation.w = 0.209268
             poses[-1] = self.convertFrameRobotToShelf(poses[-1])
 
-        
+
 
 
         print "Planning Cartesian Path Dump....."
@@ -712,8 +712,6 @@ class Scoop(smach.State):
         
         # horizontalPose = self.convertFrameShelfToRobot(horizontalPose)
         # rospy.loginfo(horizontalPose)
-
-        raw_input("Hit enter to continue ")
         # with open("horizontal_joint_config.txt", "a+") as out_file:
         #     joint_config = self.arm.get_current_joint_values()
         #     out_file.write(str(self.targetBin) + "\t" + str(joint_config) + "\n")
@@ -855,22 +853,24 @@ class Scoop(smach.State):
 
         add_padded_lab()
 
-        tray_orientation = [0, 0, 0.966657, 0.256075]
-        target_pose_o = [target_pose.orientation.x,
-                         target_pose.orientation.y,
-                         target_pose.orientation.z,
-                         target_pose.orientation.w]
-        transformed_pose = transformations.quaternion_multiply(tray_orientation, target_pose_o)
-        rospy.loginfo(transformed_pose)
-        link_target_orientation = Pose()
-        link_target_orientation.orientation.x = transformed_pose[0]
-        link_target_orientation.orientation.y = transformed_pose[1]
-        link_target_orientation.orientation.z = transformed_pose[2]
-        link_target_orientation.orientation.w = transformed_pose[3]
+
+        other_pose = self.arm.get_current_pose().pose
+        other_pose.orientation = target_pose.orientation
+
+
+        self.arm.set_pose_target(other_pose)
+        self.arm.set_goal_position_tolerance(0.7)
+        plan = self.arm.plan()
+
+        if not move(self.arm, plan.joint_trajectory):
+            return False
 
         constraints = Constraints()
+
+        link_target_orientation = calibrateOrientation(target_pose.orientation)
+
         orientation_constraint = OrientationConstraint( header=Header(stamp=rospy.Time.now(), frame_id="/base_link"),
-                                                        orientation=link_target_orientation.orientation,
+                                                        orientation=link_target_orientation,
                                                         link_name="traybody_hand_right",
                                                         absolute_x_axis_tolerance=0.15,
                                                         absolute_y_axis_tolerance=3.14,
@@ -904,16 +904,6 @@ class Scoop(smach.State):
 
         rospy.loginfo("Success constrained path")
         self.arm.clear_path_constraints()
-        rospy.sleep(50)
-
-        if result:
-            rospy.loginfo("constrained path moved successfully")
-        else:
-            rospy.logerr("constrained path failed to move")
-
-        self.arm.clear_path_constraints()
-
-
         return result
 
 
@@ -952,6 +942,18 @@ def make_vector(x, y, z):
     new_vector.y = y
     new_vector.z = z
     return new_vector
+
+def calibrateOrientation(orientation):
+    qIn = orientation
+    qOut = Quaternion()
+    qCal = make_quaternion(-0.262, 0.965, -0.000, -0.000)
+
+    qOut.w = qIn.w * qCal.w - qIn.x * qCal.x - qIn.y * qCal.y - qIn.z * qCal.z
+    qOut.x = qIn.w * qCal.x + qIn.x * qCal.w + qIn.y * qCal.z - qIn.z * qCal.y
+    qOut.y = qIn.w * qCal.y - qIn.x * qCal.z + qIn.y * qCal.w + qIn.z * qCal.x
+    qOut.z = qIn.w * qCal.z + qIn.x * qCal.y - qIn.y * qCal.x + qIn.z * qCal.w
+
+    return qOut
 
 # def follow_path(group, path, collision_checking=True):
 #     """Follows a cartesian path using a linear interpolation of the given
