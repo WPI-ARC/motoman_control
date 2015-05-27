@@ -227,7 +227,7 @@ def execute_wallgrasp_left(self, bin_min_x, bin_max_x, bin_min_y, bin_max_y, bin
 
     return success
 
-def execute_wallgrasps_right(self, bin_min_x, bin_min_y, bin_max_y, bin_min_z):
+def execute_wallgrasp_right(self, bin_min_x, bin_min_y, bin_max_y, bin_min_z):
     poses = []
     theta = numpy.pi/4.0
     x = self.fingerlength * numpy.cos(theta)
